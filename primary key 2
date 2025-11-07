@@ -1,0 +1,75 @@
+USE [ORCHESTRATION]
+GO
+
+/****** Object:  Table [dbo].[NEW_TO_THERAPY]    Script Date: 11/6/2025 4:20:02 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[NEW_TO_THERAPY](
+	[RPT_MO_KEY] [nvarchar](10) NULL,
+	[REPORTDATE] [date] NULL,
+	[HCONTRACT] [nvarchar](50) NULL,
+	[CDO] [nvarchar](50) NULL,
+	[CDO_SUBGROUP] [nvarchar](75) NULL,
+	[YEAR_DOS] [int] NULL,
+	[MONTH_DOS] [bigint] NULL,
+	[BYY] [smallint] NULL,
+	[MGMT_TYPE] [nvarchar](25) NULL,
+	[PBP] [nvarchar](5) NULL,
+	[PCP_NPI] [nvarchar](25) NULL,
+	[ENTY_ID] [bigint] NULL,
+	[PCP_TIN] [nvarchar](25) NULL,
+	[EMP_STATUS] [nvarchar](50) NULL,
+	[RISK_TYPE] [nvarchar](50) NULL,
+	[MEASURE_YEAR] [bigint] NULL,
+	[CONTRACT_PBP] [nvarchar](100) NULL,
+	[SUPER_CDO] [nvarchar](75) NULL,
+	[SUPER_CDO_SUBGROUP] [nvarchar](75) NULL,
+	[MAD_FILLS_2Y] [bigint] NULL,
+	[MAD_LATEST_FILL_DATE] [date] NULL,
+	[MAD_DAYS_SINCE_LAST_FILL] [bigint] NULL,
+	[MAD_NEW_TO_THERAPY] [bigint] NULL,
+	[MAD_FILLS_180D] [bigint] NULL,
+	[MAD_NTT_RESTART] [bigint] NULL,
+	[MAD_LATEST_FILL_DAYS_SUPPLY] [bigint] NULL,
+	[MAD_LATEST_FILL_QUANTITY] [bigint] NULL,
+	[MAC_FILLS_2Y] [bigint] NULL,
+	[MAC_LATEST_FILL_DATE] [date] NULL,
+	[MAC_DAYS_SINCE_LAST_FILL] [bigint] NULL,
+	[MAC_NEW_TO_THERAPY] [bigint] NULL,
+	[MAC_FILLS_180D] [bigint] NULL,
+	[MAC_NTT_RESTART] [bigint] NULL,
+	[MAC_LATEST_FILL_DAYS_SUPPLY] [bigint] NULL,
+	[MAC_LATEST_FILL_QUANTITY] [bigint] NULL,
+	[MAH_FILLS_2Y] [bigint] NULL,
+	[MAH_LATEST_FILL_DATE] [date] NULL,
+	[MAH_DAYS_SINCE_LAST_FILL] [bigint] NULL,
+	[MAH_NEW_TO_THERAPY] [bigint] NULL,
+	[MAH_FILLS_180D] [bigint] NULL,
+	[MAH_NTT_RESTART] [bigint] NULL,
+	[MAH_LATEST_FILL_DAYS_SUPPLY] [bigint] NULL,
+	[MAH_LATEST_FILL_QUANTITY] [bigint] NULL,
+	[MBI] [nvarchar](25) NULL,
+	[ENCRYPT] [nvarchar](25) NULL,
+	[REPORT_DATE] [date] NULL,
+	[OC_FLAG] [bit] NULL,
+	[EMR_FLAG] [bit] NULL,
+	[HC_OC_COMANAGED_FLAG] [bit] NULL,
+	[ENTERPRISE_INDV_ID] [nvarchar](25) NULL,
+	[CLAIMS_REFRESH_DATE] [date] NULL,
+	[MAC_NTT_GENERIC] [nvarchar](75) NULL,
+	[MAD_NTT_GENERIC] [nvarchar](75) NULL,
+	[MAH_NTT_GENERIC] [nvarchar](75) NULL,
+	[MAC_NTT_MED_NAME] [nvarchar](250) NULL,
+	[MAD_NTT_MED_NAME] [nvarchar](250) NULL,
+	[MAH_NTT_MED_NAME] [nvarchar](250) NULL,
+	[PROCESS_LOG_ID] [int] NULL,
+	[LOAD_DATETIME] [nvarchar](50) NULL,
+	[RECORD_ID] [bigint] NULL
+) ON [PRIMARY]
+GO
+
+
