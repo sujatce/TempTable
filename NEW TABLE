@@ -1,1 +1,6 @@
+[NEW_TO_THERAPY_ID] [bigint] IDENTITY(1,1) NOT NULL,   -- auto-increment primary key
+    [GMPI_ID] [int] NULL,
+    [PATIENT_MISMATCH] [bit] NULL,
+
+
 
