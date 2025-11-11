@@ -1,0 +1,126 @@
+NEW_TO_THERAPY_ID	GMPI_ID	PATIENT_MISMATCH
+
+WHERE NEW_TO_THERAPY_ID is going to be the primary key bigint, not null
+
+[GMPI_ID] [int] NULL,
+[PATIENT_MISMATCH] [bit] NULL,
+
+and these three columns should be in this order before the other columns 
+
+ NEW_TO_THERAPY_ID	primary key bigint, not null
+[GMPI_ID] [int] NULL,
+[PATIENT_MISMATCH] [bit] NULL,
+	[RPT_MO_KEY] [nvarchar](10) NULL,
+	[REPORTDATE] [date] NULL,
+	[HCONTRACT] [nvarchar](50) NULL,
+	[CDO] [nvarchar](50) NULL,
+	[CDO_SUBGROUP] [nvarchar](75) NULL,
+	[YEAR_DOS] [int] NULL,
+	[MONTH_DOS] [bigint] NULL,
+	[BYY] [smallint] NULL,
+	[MGMT_TYPE] [nvarchar](25) NULL,
+	[PBP] [nvarchar](5) NULL,
+	[PCP_NPI] [nvarchar](25) NULL,
+	[ENTY_ID] [bigint] NULL,
+	[PCP_TIN] [nvarchar](25) NULL,
+	[EMP_STATUS] [nvarchar](50) NULL,
+	[RISK_TYPE] [nvarchar](50) NULL,
+	[MEASURE_YEAR] [bigint] NULL,
+	[CONTRACT_PBP] [nvarchar](100) NULL,
+	[SUPER_CDO] [nvarchar](75) NULL,
+	[SUPER_CDO_SUBGROUP] [nvarchar](75) NULL,
+	[MAD_FILLS_2Y] [bigint] NULL,
+	[MAD_LATEST_FILL_DATE] [date] NULL,
+	[MAD_DAYS_SINCE_LAST_FILL] [bigint] NULL,
+	[MAD_NEW_TO_THERAPY] [bigint] NULL,
+	[MAD_FILLS_180D] [bigint] NULL,
+	[MAD_NTT_RESTART] [bigint] NULL,
+	[MAD_LATEST_FILL_DAYS_SUPPLY] [bigint] NULL,
+	[MAD_LATEST_FILL_QUANTITY] [bigint] NULL,
+	[MAC_FILLS_2Y] [bigint] NULL,
+	[MAC_LATEST_FILL_DATE] [date] NULL,
+	[MAC_DAYS_SINCE_LAST_FILL] [bigint] NULL,
+	[MAC_NEW_TO_THERAPY] [bigint] NULL,
+	[MAC_FILLS_180D] [bigint] NULL,
+	[MAC_NTT_RESTART] [bigint] NULL,
+	[MAC_LATEST_FILL_DAYS_SUPPLY] [bigint] NULL,
+	[MAC_LATEST_FILL_QUANTITY] [bigint] NULL,
+	[MAH_FILLS_2Y] [bigint] NULL,
+	[MAH_LATEST_FILL_DATE] [date] NULL,
+	[MAH_DAYS_SINCE_LAST_FILL] [bigint] NULL,
+	[MAH_NEW_TO_THERAPY] [bigint] NULL,
+	[MAH_FILLS_180D] [bigint] NULL,
+	[MAH_NTT_RESTART] [bigint] NULL,
+	[MAH_LATEST_FILL_DAYS_SUPPLY] [bigint] NULL,
+	[MAH_LATEST_FILL_QUANTITY] [bigint] NULL,
+	[MBI] [nvarchar](25) NULL,
+	[ENCRYPT] [nvarchar](25) NULL,
+	[REPORT_DATE] [date] NULL,
+	[OC_FLAG] [bit] NULL,
+	[EMR_FLAG] [bit] NULL,
+	[HC_OC_COMANAGED_FLAG] [bit] NULL,
+	[ENTERPRISE_INDV_ID] [nvarchar](25) NULL,
+	[CLAIMS_REFRESH_DATE] [date] NULL,
+	[MAC_NTT_GENERIC] [nvarchar](75) NULL,
+	[MAD_NTT_GENERIC] [nvarchar](75) NULL,
+	[MAH_NTT_GENERIC] [nvarchar](75) NULL,
+	[MAC_NTT_MED_NAME] [nvarchar](250) NULL,
+	[MAD_NTT_MED_NAME] [nvarchar](250) NULL,
+	[MAH_NTT_MED_NAME] [nvarchar](250) NULL,
+	[PROCESS_LOG_ID] [int] NULL,
+	[LOAD_DATETIME] [nvarchar](50) NOT NULL,
+	[RECORD_ID] [bigint] NOT NULL,
+	[USER_STORY] [varchar](25) NULL,
+	[INSERT_DATE] [datetime] NOT NULL,
+	[INSERT_USER] [varchar](75) NOT NULL,
+	[UPDATE_DATE] [datetime] NOT NULL,
+	[UPDATE_USER] [varchar](75) NOT NULL
+
+
+make the NEW_TO_THERAPY_ID to increment by 1 like how it is in this table 
+
+LOAD_DATETIME	RECORD_ID	NEW_TO_THERAPY_ID
+7/11/2025	1	1
+7/11/2025	2	2
+7/11/2025	3	3
+7/11/2025	4	4
+7/11/2025	5	5
+7/11/2025	6	6
+7/11/2025	7	7
+7/11/2025	8	8
+7/11/2025	9	9
+7/11/2025	10	10
+7/11/2025	11	11
+7/11/2025	12	12
+7/18/2025	1	13
+7/18/2025	2	14
+7/18/2025	3	15
+7/18/2025	4	16
+7/18/2025	5	17
+7/18/2025	6	18
+7/18/2025	7	19
+7/18/2025	8	20
+
+The primary key should be in such a way that 
+ONE LOOP GET ALL LOAD DATETIME, ORDER BY LOADDATETIME  - 19 RECORDS 
+FOR THE LOADDATETIME LOOP - GET ALL RECORDS IN IT - 1 MILLION RECORDS FOR EACH RUN
+CREATE THE PK AND ASSIGN IT START FROM 1 - INSERT TO THE TABLE ALONG WITH GMPI AND PK SEQUENCE 
+
+AUDIT COLUMNS, INSERT DATE AS LOAD DATE TIME, UPDATE DATE AS LOAD DATE TIME 
+USER STORY IS NULL
+INSERT USER AND UPDATE USER AS SA
+
+GMPI - GET THE LOAD DATE TIME FROM THE MRM BASED ON THE LDDTTIME AS REPORT MONTH
+IGNORE MBI 
+PATIENT_MISMATCH - WHEN THERE IS NO GMPI RECORD IN BI FOR THE MBI IN NTT TABLE , ASSIGN 1 TO PATIENT MISMATCH
+
+EVEN WHEN THERE IS NO GMPI/MEMBER RECORD IN MRM, STILL LOAD THE RECORD TO NTT TABLE
+DON’T EXCLUDE ANY RECORDS FROM NTT TABLE, ASSIGN BLANK IN GMPI AND PATIENT MISMATCH
+IN THIS CASE SHOULD BE 1, BECAUSE NO GMPI EXISTS 
+IF GMPI EXISTS, PATIENT MISMATCH MAKE IT NULL
+
+this is my managers requirements for the table
+lets work on creating the table first and then lets work on loading the table
+
+please let me know how to create the script for this table 
+lets have the table name as TEMP_NEW_TO_THERAPY table
