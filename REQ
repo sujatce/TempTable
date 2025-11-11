@@ -124,3 +124,40 @@ lets work on creating the table first and then lets work on loading the table
 
 please let me know how to create the script for this table 
 lets have the table name as TEMP_NEW_TO_THERAPY table
+
+
+
+
+
+next we need to create the alter table constrains right 
+
+AUDIT COLUMNS, INSERT DATE AS LOAD DATE TIME, UPDATE DATE AS LOAD DATE TIME 
+
+i will give the forma for the constrains let me know wht to change according to the instruction before 
+
+
+
+ALTER TABLE [dbo].[TEMP_NEW_TO_THERAPY] ADD  CONSTRAINT [DF_NEW_TO_THERAPY_DefaultInsertDate]  DEFAULT (getdate()) FOR [INSERT_DATE]
+GO
+
+ALTER TABLE [dbo].[TEMP_NEW_TO_THERAPY] ADD  CONSTRAINT [DF_NEW_TO_THERAPY_DefaultInsertUser]  DEFAULT (suser_name()) FOR [INSERT_USER]
+GO
+
+ALTER TABLE [dbo].[TEMP_NEW_TO_THERAPY] ADD  CONSTRAINT [DF_NEW_TO_THERAPY_DefaultUpdateDate]  DEFAULT (getdate()) FOR [UPDATE_DATE]
+GO
+
+ALTER TABLE [dbo].[TEMP_NEW_TO_THERAPY] ADD  CONSTRAINT [DF_NEW_TO_THERAPY_DefaultUpdateUser]  DEFAULT (suser_name()) FOR [UPDATE_USER]
+GO
+
+
+please let me know what to change the constraints according to the statment  I think we need to change the two lines 
+
+ALTER TABLE [dbo].[TEMP_NEW_TO_THERAPY] ADD  CONSTRAINT [DF_NEW_TO_THERAPY_DefaultInsertDate]  DEFAULT (getdate()) FOR [INSERT_DATE]
+GO
+
+ALTER TABLE [dbo].[TEMP_NEW_TO_THERAPY] ADD  CONSTRAINT [DF_NEW_TO_THERAPY_DefaultUpdateDate]  DEFAULT (getdate()) FOR [UPDATE_DATE]
+GO
+and the other two remains the same 
+
+
+
