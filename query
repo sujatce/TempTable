@@ -3,7 +3,8 @@ select [mrm].[GMPI_ID],
 	[mrm].[MEMBER_FIRST_NAME],
 	[mrm].[MBR_DATE_OF_BIRTH],
 	[mrm].[MBR_GENDER],
-	[mrm].[DATA_ENTITY]
+	[mrm].[DATA_ENTITY],
+	[dm].[MEMBER_MBI] 
 from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [mrm] 
 	inner join [BI_Analysis].[dbo].[DIM_MEMBER] as [dm] on [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
 where [mrm].[MEMBER_LAST_NAME] is not NULL 
