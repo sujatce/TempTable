@@ -1,23 +1,9 @@
-select [mrm].[GMPI_ID],
-	[mrm].[MEMBER_LAST_NAME],
-	[mrm].[MEMBER_FIRST_NAME],
-	[mrm].[MBR_DATE_OF_BIRTH],
-	[mrm].[MBR_GENDER],
-	[mrm].[DATA_ENTITY],
-	[dm].[MEMBER_MBI] 
-from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [mrm] 
-	inner join [BI_Analysis].[dbo].[DIM_MEMBER] as [dm] on [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
-where [mrm].[MEMBER_LAST_NAME] is not NULL 
-	and [mrm].[MEMBER_FIRST_NAME] is not NULL 
-	and [mrm].[MBR_DATE_OF_BIRTH] is not NULL 
-	and [mrm].[MBR_GENDER] is not NULL 
-	and [mrm].[DATA_ENTITY] = 'WellMed' 
-	and [mrm].[REPORT_MONTH] = 
-	(
-	select Max([rm].[REPORT_MONTH]) 
-	from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [rm] 
-	where [rm].[DATA_ENTITY] = 'WellMed'
-	) 
-	and [mrm].[ACTIVE_FLAG] = 1 
-	and [dm].[ACTIVE_FLAG] = 1 
-order by [mrm].[GMPI_ID]
+select distinct member_mbi from dbo.dim_member ; -- 2,582,937
+
+select distinct gmpi_id from dbo.dim_member; -- 2,902,759
+
+select distinct  member_mbi from dbo.dim_member 
+where gmpi_id is null; --0
+
+select distinct  gmpi_id from dbo.dim_member 
+where member_mbi is null; -- 499,283
