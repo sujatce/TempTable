@@ -1,9 +1,0 @@
-select distinct member_mbi from dbo.dim_member ; -- 2,582,937
-
-select distinct gmpi_id from dbo.dim_member; -- 2,902,759
-
-select distinct  member_mbi from dbo.dim_member 
-where gmpi_id is null; --0
-
-select distinct  gmpi_id from dbo.dim_member 
-where member_mbi is null; -- 499,283
