@@ -1,0 +1,11 @@
+select distinct [TO_DATE]([ASQN_DEV_ORCHESTRATION_DB].[DBO].[PILLS_ON_HAND].[LOAD_DATETIME]) as [LOAD_DATE] 
+from [ASQN_DEV_ORCHESTRATION_DB].[DBO].[PILLS_ON_HAND] 
+
+union all
+
+select Cast(Null as [Date]) as [LOAD_DATE] 
+where not exists 
+	(
+	select 1 
+	from [ASQN_DEV_ORCHESTRATION_DB].[DBO].[PILLS_ON_HAND]
+	)
