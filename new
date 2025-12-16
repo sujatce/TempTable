@@ -1,0 +1,11 @@
+select distinct [ORCHESTRATION].[dbo].[EPMP_RAW].[FILE_NAME] 
+from [ORCHESTRATION].[dbo].[EPMP_RAW] 
+
+union all
+
+select Cast(Null as [NVARCHAR](255)) as [Filename] 
+where not exists 
+	(
+	select 1 
+	from [ORCHESTRATION].[dbo].[EPMP_RAW]
+	)
