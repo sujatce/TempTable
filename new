@@ -1,11 +1,13 @@
-select distinct [ORCHESTRATION].[dbo].[EPMP_RAW].[FILE_NAME] 
-from [ORCHESTRATION].[dbo].[EPMP_RAW] 
+SELECT DISTINCT
+       LEFT([ORCHESTRATION].[dbo].[PILLS_ON_HAND].[LOAD_DATETIME], 10) AS [LOAD_DATE]
+FROM [ORCHESTRATION].[dbo].[PILLS_ON_HAND]
 
-union all
+UNION ALL
 
-select Cast(Null as [NVARCHAR](255)) as [Filename] 
-where not exists 
-	(
-	select 1 
-	from [ORCHESTRATION].[dbo].[EPMP_RAW]
-	)
+SELECT
+       CAST(NULL AS NVARCHAR(10)) AS [LOAD_DATE]
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [ORCHESTRATION].[dbo].[PILLS_ON_HAND]
+);
