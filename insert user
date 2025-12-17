@@ -1,9 +1,10 @@
-	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
-	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
-	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
-	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
-
-
-
-constraint PK_PILLS_ON_HAND_PRIMARYKEY primary key (PILLS_ON_HAND_ID)
-);
+Msg 1709, Level 16, State 1, Line 11
+Cannot use TEXTIMAGE_ON when a table has no text, ntext, image, varchar(max), nvarchar(max), non-FILESTREAM varbinary(max), xml or large CLR type columns.
+Msg 4902, Level 16, State 1, Line 107
+Cannot find the object "dbo.PILLS_ON_HAND" because it does not exist or you do not have permissions.
+Msg 4902, Level 16, State 1, Line 110
+Cannot find the object "dbo.PILLS_ON_HAND" because it does not exist or you do not have permissions.
+Msg 4902, Level 16, State 1, Line 113
+Cannot find the object "dbo.PILLS_ON_HAND" because it does not exist or you do not have permissions.
+Msg 4902, Level 16, State 1, Line 116
+Cannot find the object "dbo.PILLS_ON_HAND" because it does not exist or you do not have permissions.
