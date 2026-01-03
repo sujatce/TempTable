@@ -1,0 +1,21 @@
+Table Column	Description	Example	data_type	max_length	precision	is_nullable	is_identity
+SMS_UNSUBSCRIBED_ID	Auto-generated 	101	Bigint			0	1
+GMPI_ID	GMPI_ID of the member 	123456	Int		0	1	0
+PHONE_ID	PHONE_ID of the phone number of the member	32696909	Int		0	1	0
+TEMPLATE_ID	TEMPLATE_ID of the message sent to the phone number	1788409	Int		0	1	0
+PROGRAM_ID	PROGRAM_ID of the program for which the phone is subscribed	798366	Int		0	1	0
+MEMBER_FIRST_NAME	First Name of the member	Gaspara	varchar	50		1	0
+MEMBER_LAST_NAME	Last name of the member 	Schwoyer	varchar	60		1	0
+MEMBER_PHONE	Mobile phone number of the member	1234567890	VARCHAR	15	0	0	0
+STATUS	Subscription Status of the phone	unsubscribed	VARCHAR	75	0	1	0
+SOURCE	Source of the Message 	Inbound Message	VARCHAR	75	0	1	0
+UNSUBSCRIBE_PERFORMED_DATE	The Timestamp when phone was unsubscribed 	2023-03-15	date	3	0	0	0
+PHONE_CREATED_DATE	The Timestamp when phone was created	2023-03-16	date	3	10	1	0
+PHONE_UPDATED_DATE	The Timestamp when phone was updated	2023-03-17	date	3	10	1	0
+FILE_NAME	FILE NAME for the CSV created from the json by api call	WMHC_FOCUS_SP_20230315.CSV	varchar	250	0	0	0
+FILE_CREATION_DATE	Creation date of the file	2023-03-15	date	3	10	0	0
+USER_STORY	USER STORY associated with  creation - or with storing the data	US12345	varchar	50	0	0	0
+INSERT_DATE	DATE data when the row was first inserted	12/31/25 7:26 AM	datetime	8	23	0	0
+INSERT_USER	USER ID that first inserted data in the row	WM_Tableau_HCE	varchar	75	0	0	0
+UPDATE_DATE	DATE data when the row was last updated	12/31/25 7:26 AM	datetime	8	23	0	0
+UPDATE_USER	USER ID that last updated data in the row	WM_Tableau_HCE	varchar	75	0	0	0
