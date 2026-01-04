@@ -117,3 +117,18 @@ ALTER TABLE [dbo].[PILLS_ON_HAND] ADD  CONSTRAINT [DF_PILLSONHAND_LR_DefaultUpda
 GO
 
 
+USE [ORCHESTRATION]
+GO
+/****** Object:  Trigger [dbo].[TR_PILLSONHAND_LR_UpdateDateUser]    Script Date: 1/4/2026 8:37:09 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER TRIGGER [dbo].[TR_PILLSONHAND_LR_UpdateDateUser] ON [ORCHESTRATION].[dbo].[PILLS_ON_HAND]
+AFTER UPDATE AS BEGIN UPDATE orchestration.dbo.pills_on_hand
+SET [UPDATE_USER] = SUSER_NAME(),[UPDATE_DATE] = GETDATE()
+FROM inserted WHERE orchestration.dbo.pills_on_hand.[PILLS_ON_HAND_ID] = inserted.[PILLS_ON_HAND_ID] END;
+
+
+
