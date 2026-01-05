@@ -4,3 +4,12 @@ Unsubscribed_Report_20251029_152307.csv
 
 
 DateTimeParse(REGEX_Replace([FILE_NAME], ".*_(\d{8})\.csv$","$1"), "%Y%m%d")
+
+
+
+
+
+DateTimeParse(
+    REGEX_Replace([FILE_NAME], ".*_(\d{8})_\d{6}\.csv$", "$1"),
+    "%Y%m%d"
+)
