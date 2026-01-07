@@ -1,3 +1,16 @@
+						
+						
+Overview:	The xxx Central Quality Reporting team can source member consent data for recieving text sms for UHC membership for campaign outreach. Members who don’t want to receive SMS can unsubscribe themselves from this list.  This data will be stored in the SMS_UNSUBSCRIBED table.					
+						
+						
+						
+
+
+
+
+
+
+
 Table Column	Description	Example	data_type	max_length	precision	is_nullable	is_identity
 SMS_OPT_OUT_ID	Auto-generated 	101	Bigint			0	1
 GMPI_ID	GMPI_ID of the member 	123456	Int		0	1	0
