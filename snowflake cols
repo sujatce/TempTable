@@ -1,0 +1,33 @@
+| Column Name                    | Description                                                           | Example                             | Snowflake Data Type | Nullable | Identity |
+| ------------------------------ | --------------------------------------------------------------------- | ----------------------------------- | ------------------- | -------- | -------- |
+| **SMS_OPT_OUT_ID**             | Auto-generated unique identifier for each SMS opt-out record          | 101                                 | NUMBER(38,0)        | ❌        | ✅        |
+| **GMPI_ID**                    | GMPI identifier of the member                                         | 123456                              | NUMBER(38,0)        | ❌        | ❌        |
+| **PHONE_ID**                   | Phone identifier assigned by SMS Manager                              | 32696909                            | NUMBER(38,0)        | ❌        | ❌        |
+| **TEMPLATE_ID**                | Identifier of the SMS template sent to the phone number               | 1788409                             | NUMBER(38,0)        | ❌        | ❌        |
+| **PROGRAM_ID**                 | Identifier of the SMS program for which the phone was subscribed      | 798366                              | NUMBER(38,0)        | ❌        | ❌        |
+| **PROGRAM_NAME**               | Name of the SMS text campaign                                         | SMS TEXT CAMPAIGN – Spring Outreach | VARCHAR(150)        | ❌        | ❌        |
+| **MEMBER_LAST_NAME**           | Last name of the member                                               | Schwoyer                            | VARCHAR(60)         | ✅        | ❌        |
+| **MEMBER_FIRST_NAME**          | First name of the member                                              | Gaspara                             | VARCHAR(50)         | ✅        | ❌        |
+| **MEMBER_BIRTH_DATE**          | Date of birth of the member (used for BI analysis)                    | 1980-05-22                          | DATE                | ✅        | ❌        |
+| **MEMBER_PHONE**               | Mobile phone number of the member                                     | 1234567890                          | VARCHAR(15)         | ❌        | ❌        |
+| **STATUS**                     | Subscription status of the phone number                               | unsubscribed                        | VARCHAR(75)         | ❌        | ❌        |
+| **SOURCE**                     | Source through which the unsubscribe was triggered                    | Inbound Message                     | VARCHAR(75)         | ❌        | ❌        |
+| **SMS_OPT_OUT_DATE**           | Timestamp when the phone number was unsubscribed                      | 2025-12-31 07:26:00                 | TIMESTAMP_NTZ(3)    | ❌        | ❌        |
+| **PHONE_CREATED_DATE**         | Timestamp when the phone number was initially created in SMS Manager  | 2026-01-01 07:26:00                 | TIMESTAMP_NTZ(3)    | ✅        | ❌        |
+| **PHONE_UPDATED_DATE**         | Timestamp when the phone status was last updated in SMS Manager       | 2026-01-02 07:26:00                 | TIMESTAMP_NTZ(3)    | ✅        | ❌        |
+| **MBI**                        | Business Intelligence flag/indicator used for analysis                | Y                                   | VARCHAR(10)         | ✅        | ❌        |
+| **CONTRACT_ID**                | Contract identifier associated with the member (BI analysis)          | C123456                             | VARCHAR(50)         | ✅        | ❌        |
+| **CONTRACT_PBP**               | Plan Benefit Package identifier                                       | PBP001                              | VARCHAR(20)         | ✅        | ❌        |
+| **MBR_ELIG_INSURANCE_COMPANY** | Member’s eligible insurance company                                   | UHC                                 | VARCHAR(100)        | ✅        | ❌        |
+| **END_DATE**                   | End date of the unsubscribe record (reserved for future use)          | NULL                                | DATE                | ✅        | ❌        |
+| **FILE_NAME**                  | Name of the CSV file generated from the API JSON response             | WMHC_FOCUS_SP_20230315.CSV          | VARCHAR(250)        | ❌        | ❌        |
+| **FILE_CREATION_DATE**         | Creation date of the source file                                      | 2023-03-15                          | DATE                | ❌        | ❌        |
+| **USER_STORY**                 | User story or work item associated with data ingestion or enhancement | US12345                             | VARCHAR(50)         | ❌        | ❌        |
+| **INSERT_DATE**                | Timestamp when the row was first inserted into the table              | 2025-12-31 07:26:00                 | TIMESTAMP_NTZ(8)    | ❌        | ❌        |
+| **INSERT_USER**                | User or system that inserted the record                               | WM_Tableau_HCE                      | VARCHAR(75)         | ❌        | ❌        |
+| **UPDATE_DATE**                | Timestamp when the row was last updated                               | 2025-12-31 07:26:00                 | TIMESTAMP_NTZ(8)    | ❌        | ❌        |
+| **UPDATE_USER**                | User or system that last updated the record                           | WM_Tableau_HCE                      | VARCHAR(75)         | ❌        | ❌        |
+
+
+
+The XXX Central Quality Reporting team sources member consent data related to receiving SMS text messages for UHC membership campaign outreach. Members who choose not to receive SMS messages may opt out at any time. All SMS opt-out (unsubscribe) events are captured and stored in the SMS_OPT_OUT table.
