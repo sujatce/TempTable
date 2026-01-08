@@ -11,3 +11,17 @@ INNER JOIN ORCHESTRATION.dbo.DIM_MEMBER AS dm
 WHERE mrm.DATA_ENTITY = 'WellMed'
   AND mrm.REPORT_MONTH = '2025-09-01'
   AND mrm.ACTIVE_FLAG = 1;
+
+
+
+select distinct ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_OUT.FILE_NAME as FILE_NAME 
+from ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_OUT
+
+union all
+
+select Cast Null as varchar(50) as FILE_NAME
+where not exists 
+	(
+	select 1 
+	from ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_OUT
+	)
