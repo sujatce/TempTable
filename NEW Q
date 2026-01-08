@@ -1,10 +1,13 @@
-select [mrm].[GMPI_ID] ,
-[mrm].[MBR_DATE_OF_BIRTH] AS MEMBER_BIRTH_DATE,
-[mrm]. [MBR_ELIG_INSURANCE_COMPANY]
-[mrm]. [CONTRACT_ID]
-[mrm].[CONTRACT_PBP]
-       
-from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [mrm] 
-where [mrm].[DATA_ENTITY] = 'WellMed' 
-	and [mrm].[REPORT_MONTH] = '2025-09-01'
-	and [mrm].[ACTIVE_FLAG] = 1
+SELECT
+    mrm.GMPI_ID,
+    dm.MEMBER_MBI,
+    mrm.MBR_DATE_OF_BIRTH AS MEMBER_BIRTH_DATE,
+    mrm.MBR_ELIG_INSURANCE_COMPANY,
+    mrm.CONTRACT_ID,
+    mrm.CONTRACT_PBP
+FROM BI_Analysis.dbo.MEMBER_REPORT_MONTH AS mrm
+INNER JOIN ORCHESTRATION.dbo.DIM_MEMBER AS dm
+    ON mrm.GMPI_ID = dm.GMPI_ID
+WHERE mrm.DATA_ENTITY = 'WellMed'
+  AND mrm.REPORT_MONTH = '2025-09-01'
+  AND mrm.ACTIVE_FLAG = 1;
