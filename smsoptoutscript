@@ -1,0 +1,98 @@
+-- ============================================================
+-- 1) SEQUENCE (for SMS_OPT_OUT_ID)
+-- ============================================================
+CREATE OR REPLACE SEQUENCE SMS_OPT_OUT_ID_SEQ
+  START = 1
+  INCREMENT = 1
+  COMMENT = 'Sequence used to populate SMS_OPT_OUT.SMS_OPT_OUT_ID';
+
+-- ============================================================
+-- 2) TABLE: SMS_OPT_OUT
+-- ============================================================
+CREATE OR REPLACE TABLE SMS_OPT_OUT (
+  SMS_OPT_OUT_ID NUMBER(38,0) NOT NULL
+    DEFAULT SMS_OPT_OUT_ID_SEQ.NEXTVAL
+    COMMENT 'System-generated unique identifier for each SMS opt-out record, populated using a Snowflake sequence',
+
+  GMPI_ID NUMBER(38,0) NOT NULL
+    COMMENT 'GMPI identifier of the member',
+
+  MBI VARCHAR(20)
+    COMMENT 'Member Beneficiary Identifier of the member',
+
+  TEMPLATE_ID NUMBER(38,0) NOT NULL
+    COMMENT 'Business-defined identifier representing the SMS message template approved and provided by the business team for campaign communications',
+
+  PROGRAM_ID NUMBER(38,0) NOT NULL
+    COMMENT 'Business-defined identifier representing an SMS program for which the phone is subscribed, which may include one or more associated SMS message templates',
+
+  PROGRAM_NAME VARCHAR(255) NOT NULL
+    COMMENT 'Name of the program',
+
+  MEMBER_LAST_NAME VARCHAR(60) NOT NULL
+    COMMENT 'Last name of the member',
+
+  MEMBER_FIRST_NAME VARCHAR(50) NOT NULL
+    COMMENT 'First name of the member',
+
+  MEMBER_BIRTH_DATE DATE
+    COMMENT 'Date of birth of the member',
+
+  MEMBER_PHONE VARCHAR(15) NOT NULL
+    COMMENT 'Mobile phone number of the member',
+
+  STATUS VARCHAR(75) NOT NULL
+    COMMENT 'Subscription status of the phone number',
+
+  SOURCE VARCHAR(75) NOT NULL
+    COMMENT 'Source through which the unsubscribe was triggered',
+
+  OPT_OUT_START_DATE TIMESTAMP_NTZ(7) NOT NULL
+    COMMENT 'Timestamp when the phone number was unsubscribed',
+
+  PHONE_CREATED_DATE TIMESTAMP_NTZ(7) NOT NULL
+    COMMENT 'Timestamp when the phone number was set up for the member in SMS Manager',
+
+  PHONE_UPDATED_DATE TIMESTAMP_NTZ(7) NOT NULL
+    COMMENT 'Timestamp when a new member phone status is received in SMS Manager; in this dataset it will always match OPT_OUT_START_DATE',
+
+  CONTRACT_ID VARCHAR(50)
+    COMMENT 'Unique identifier assigned to a specific contract',
+
+  CONTRACT_PBP VARCHAR(50)
+    COMMENT 'Benefit plan or plan code specifying what benefits are included under the contract',
+
+  MBR_ELIG_INSURANCE_COMPANY VARCHAR(50)
+    COMMENT 'Member insurance company',
+
+  END_DATE DATE
+    COMMENT 'End date of the unsubscribe record (reserved for future use)',
+
+  FILE_NAME VARCHAR(250) NOT NULL
+    COMMENT 'Name of the CSV file generated from the API JSON response',
+
+  FILE_CREATION_DATE DATE NOT NULL
+    COMMENT 'Creation date of the source file',
+
+  USER_STORY VARCHAR(25)
+    COMMENT 'User story or work item associated with data ingestion or enhancement',
+
+  INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL
+    DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7))
+    COMMENT 'Timestamp when the row was first inserted into the table',
+
+  INSERT_USER VARCHAR(75) NOT NULL
+    DEFAULT CURRENT_USER()
+    COMMENT 'User or system that inserted the record',
+
+  UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL
+    DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7))
+    COMMENT 'Timestamp when the row was last updated',
+
+  UPDATE_USER VARCHAR(75) NOT NULL
+    DEFAULT CURRENT_USER()
+    COMMENT 'User or system that last updated the record',
+
+  CONSTRAINT PK_SMS_OPT_OUT PRIMARY KEY (SMS_OPT_OUT_ID)
+)
+COMMENT = 'Stores SMS opt-out (unsubscribe) events for UHC membership campaign outreach, sourced by the XXX Central Quality Reporting team.';
