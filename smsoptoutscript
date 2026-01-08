@@ -1,14 +1,14 @@
--- ============================================================
+
 -- 1) SEQUENCE (for SMS_OPT_OUT_ID)
--- ============================================================
+
 CREATE OR REPLACE SEQUENCE SMS_OPT_OUT_ID_SEQ
   START = 1
   INCREMENT = 1
   COMMENT = 'Sequence used to populate SMS_OPT_OUT.SMS_OPT_OUT_ID';
 
--- ============================================================
+
 -- 2) TABLE: SMS_OPT_OUT
--- ============================================================
+
 CREATE OR REPLACE TABLE SMS_OPT_OUT (
   SMS_OPT_OUT_ID NUMBER(38,0) NOT NULL
     DEFAULT SMS_OPT_OUT_ID_SEQ.NEXTVAL
@@ -21,7 +21,7 @@ CREATE OR REPLACE TABLE SMS_OPT_OUT (
     COMMENT 'Member Beneficiary Identifier of the member',
 
   TEMPLATE_ID NUMBER(38,0) NOT NULL
-    COMMENT 'Business-defined identifier representing the SMS message template approved and provided by the business team for campaign communications',
+    COMMENT 'Business-defined Identifier represent the SMS Message Template approved and provided by the business team for campaign communications. Template id changes for every month run.',
 
   PROGRAM_ID NUMBER(38,0) NOT NULL
     COMMENT 'Business-defined identifier representing an SMS program for which the phone is subscribed, which may include one or more associated SMS message templates',
@@ -95,4 +95,4 @@ CREATE OR REPLACE TABLE SMS_OPT_OUT (
 
   CONSTRAINT PK_SMS_OPT_OUT PRIMARY KEY (SMS_OPT_OUT_ID)
 )
-COMMENT = 'Stores SMS opt-out (unsubscribe) events for UHC membership campaign outreach, sourced by the XXX Central Quality Reporting team.';
+COMMENT = 'The Wellmed Central Quality Reporting team sources member consent data related to receiving SMS text messages for UHC membership campaign outreach. Members who choose not to receive SMS messages may opt out at any time. All SMS opt-out (unsubscribe) events are captured and stored in the SMS_OPT_OUT table.';
