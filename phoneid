@@ -1,2 +1,0 @@
-PHONE_ID NUMBER(38,0) NOT NULL
-    COMMENT 'Unique identifier assigned by the SMS Manager system to represent a specific phone number associated with a member',

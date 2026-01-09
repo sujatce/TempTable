@@ -1,0 +1,11 @@
+select [mrm].[gmpi_id],
+	[dm].[member_mbi] as [mbi],
+	[mrm].[mbr_date_of_birth] as [member_birth_date],
+	[mrm].[mbr_elig_insurance_company],
+	[mrm].[contract_id],
+	[mrm].[contract_pbp] 
+from [bi_analysis].[dbo].[member_report_month] as [mrm] 
+	inner join [bi_analysis].[dbo].[dim_member] as [dm] on [mrm].[gmpi_id] = [dm].[gmpi_id] 
+where [mrm].[data_entity] = 'WellMed' 
+	and [mrm].[report_month] = '2025-09-01' 
+	and [mrm].[active_flag] = 1
