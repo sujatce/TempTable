@@ -1,25 +1,17 @@
-DROP TABLE IF EXISTS SMS_OPT_OUT;
-DROP SEQUENCE IF EXISTS SMS_OPT_OUT_ID_SEQ;
-
-
-
-
-
-
 
 -- 1) SEQUENCE (for SMS_OPT_OUT_ID)
 
-CREATE OR REPLACE SEQUENCE SMS_OPT_OUT_ID_SEQ
+CREATE OR REPLACE SEQUENCE SMS_OPT_OUT_SEQ
   START = 1
   INCREMENT = 1
-  COMMENT = 'Sequence used to populate SMS_OPT_OUT.SMS_OPT_OUT_ID';
+  COMMENT = 'Sequence used to generate unique identifiers for SMS_OPT_OUT.SMS_OPT_OUT_ID';
 
 
 -- 2) TABLE: SMS_OPT_OUT
 
 CREATE OR REPLACE TABLE SMS_OPT_OUT (
   SMS_OPT_OUT_ID NUMBER(38,0) NOT NULL
-    DEFAULT SMS_OPT_OUT_ID_SEQ.NEXTVAL
+    DEFAULT SMS_OPT_OUT_SEQ.NEXTVAL
     COMMENT 'System-generated unique identifier for each SMS opt-out record, populated using a Snowflake sequence',
 
   GMPI_ID NUMBER(38,0) NOT NULL
@@ -101,6 +93,21 @@ CREATE OR REPLACE TABLE SMS_OPT_OUT (
     DEFAULT CURRENT_USER()
     COMMENT 'User or system that last updated the record',
 
-  CONSTRAINT PK_SMS_OPT_OUT PRIMARY KEY (SMS_OPT_OUT_ID)
+  CONSTRAINT PK_SMS_OPT_OUT_PRIMARYKEY PRIMARY KEY (SMS_OPT_OUT_ID)
 )
 COMMENT = 'The Wellmed Central Quality Reporting team sources member consent data related to receiving SMS text messages for UHC membership campaign outreach. Members who choose not to receive SMS messages may opt out at any time. All SMS opt-out (unsubscribe) events are captured and stored in the SMS_OPT_OUT table.';
+
+
+--Comment the column
+COMMENT ON COLUMN SMS_OPT_OUT.SMS_OPT_OUT_ID
+IS 'Primary key generated using SMS_OPT_OUT_SEQ sequence';
+
+
+
+SELECT * FROM ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_OUT
+
+
+
+DROP TABLE IF EXISTS SMS_OPT_OUT;
+DROP SEQUENCE IF EXISTS SMS_OPT_OUT_ID_SEQ;
+
