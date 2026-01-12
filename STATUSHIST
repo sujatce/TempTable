@@ -1,3 +1,0 @@
-CREATE OR REPLACE SEQUENCE SMS_OPT_OUT_SEQ
-start with 1 increment by 1 order;
-COMMENT 'Sequence used to generate unique identifiers for SMS_OPT_OUT.SMS_OPT_OUT_ID';
