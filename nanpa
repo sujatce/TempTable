@@ -18,3 +18,14 @@ INSERT_DATE	Timestamp when the row was first inserted into the table	12/31/2025 
 INSERT_USER	User or system that inserted the record	WM_Tableau_HCE	VARCHAR(75)	NO	NO
 UPDATE_DATE	Timestamp when the row was last updated	12/31/2025 7:26	TIMESTAMP_NTZ(7)	NO	NO
 UPDATE_USER	User or system that last updated the record	WM_Tableau_HCE	VARCHAR(75)	NO	NO
+
+
+
+
+The Wellmed Central Quality Reporting team regularly produces member campaign data for stakeholders.  Members should not be contacted at invalid phone numbers.  NANPA is a regulatory body that distributes area codes for north america.  We can filter on area codes to determine which are for business/government/toll free/not in use versus which are reasonably used for individual members. 					
+					
+					
+					
+
+
+PLEASE LET ME KNOW IF THIS IS A CORRECT DESCRIPTIN FOR THE CENTRAL OFFICE CODE ASSIGNMENT DATA SET AS THIS DATA SET IS STORED IN THE NANPA_NPA_NXX TABLE
