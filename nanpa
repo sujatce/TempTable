@@ -8,7 +8,7 @@ EFFECTIVE_DATE	The future date when a new code will be in service (for new codes
 USE	What is the Use of this code ? VC - vacant, AS - assigned to service provder, PR - codes are protected for a split, RV- code  have been reserved by a service provider, UA - unavailable for assignment	AS, UA	VARCHAR(5)	YES	NO
 ASSIGN_DATE	Date the code was assigned to the service provider by NANPA. This field is populated only for those codes assigned from January 2001 on.	2/21/2006	DATE	YES	NO
 INITIAL_GROWTH	Initial is the first geographic NXX code assigned at a unique switching entity or point of interconnection for a service provider. Growth is a code assigned to a switching entity or point of interconnection subsequent to the assignment of the first code, for the same purpose as a code that was previously assigned for a service provider to the same switching entity or point of interconnection.	I	VARCHAR(10)	YES	NO
-POOLED_CODE		Y,N	VARCHAR(10)	YES	NO
+POOLED_CODE	Flag indicating whether the NPA-NXX code participates in number pooling (Y- Pooled the 10,000 telephone numbers within this central office code are seperated into ten sequential blocks of 1,000 numbers each, and these smaller blocks are allocated to multile service providers , N- Full block assigned to one provider)	Y,N	VARCHAR(10)	YES	NO
 IN_SERVICE	Is this NPA in service (Yes/No)	Yes	VARCHAR(10)	YES	NO
 FILE_UPDATED	Date on which file was updated	1/8/2026	DATE	NO	NO
 FILE_NAME	Name of the file downloaded	CoCodeAssignment_Utilized_AllStates_Public_20260113.txt	VARCHAR(255)	NO	NO
