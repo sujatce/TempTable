@@ -21,11 +21,16 @@ UPDATE_USER	User or system that last updated the record	WM_Tableau_HCE	VARCHAR(7
 
 
 
+TABLE DESCRIPTION
+The Wellmed Central Quality Reporting team regularly produces member campaign data for stakeholders.  
+ To prevent members from being contacted using invalid or inappropriate phone numbers, reference data is required to validate telephone number prefixes.
 
-The Wellmed Central Quality Reporting team regularly produces member campaign data for stakeholders.  Members should not be contacted at invalid phone numbers.  NANPA is a regulatory body that distributes area codes for north america.  We can filter on area codes to determine which are for business/government/toll free/not in use versus which are reasonably used for individual members. 					
+The NANPA NPA-NXX (Central Office Code Assignment) dataset is sourced from the North American Numbering Plan Administrator (NANPA), the regulatory authority that manages telephone numbering resources across North America. It provides the authoritative mapping of area code and prefix combinations (NPA-NXX) to service providers, geographic rate centers, and usage classifications.
+
+This data enables identification of prefixes that are assigned, pooled, reserved, vacant, or otherwise unavailable, including those designated for business, government, toll-free, or non-service use. Downstream processes use this reference to filter out invalid or non-consumer phone number ranges and ensure outreach is limited to appropriate member numbers.
+This dataset is stored in the NANPA_NPA_NXX table. 					
 					
 					
 					
 
 
-PLEASE LET ME KNOW IF THIS IS A CORRECT DESCRIPTIN FOR THE CENTRAL OFFICE CODE ASSIGNMENT DATA SET AS THIS DATA SET IS STORED IN THE NANPA_NPA_NXX TABLE
