@@ -1,11 +1,1 @@
--Command "Expand-Archive -Force '\\nasv0618\WM_CQR\N\NANPA_CODES table\Data Source\CoCodeAssignment_Utilized_AllStates_Public.zip' '\\nasv0618\WM_CQR\N\NANPA_CODES table\Data Source\'"
-
-
-
-if contains([FileName],"CoCodeAssignment_Utilized_AllStates_Public") then "\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources"
-
-
-State	NPA-NXX	OCN 	Company                                                                                             	RateCenter	EffectiveDate	Use	AssignDate   	Initial/Growth	Pooled Code 	In Service  	File Updated 01/14/2026
-AK   	907-200	6872	"GCI COMMUNICATION CORP. DBA GENERAL COMMUNICATION"                                                 	VALDEZ    	             	AS 	02/21/2006   	I             	N           	Yes      
-AK   	907-201	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	ELMEDRFAFB	             	AS 	09/18/2014   	I             	Y           	Yes      
-AK   	907-202	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	ANCHORAGE 	             	AS 	07/25/2014   	G             	Y           	Yes      
+-Command "Expand-Archive -Force '%1' '\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources\'"
