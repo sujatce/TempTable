@@ -1,1 +1,5 @@
 -Command "Expand-Archive -Force '\\nasv0618\WM_CQR\N\NANPA_CODES table\Data Source\CoCodeAssignment_Utilized_AllStates_Public.zip' '\\nasv0618\WM_CQR\N\NANPA_CODES table\Data Source\'"
+
+
+
+if contains([FileName],"CoCodeAssignment_Utilized_AllStates_Public") then "\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources"
