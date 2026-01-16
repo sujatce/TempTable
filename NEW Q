@@ -15,3 +15,15 @@
 'powershell.exe -noexit  "& ' + 
 'Expand-Archive -Path ' + [source] + ' -DestinationPath '+  [destination] + '; exit"' + '
 exit'
+
+
+
+'powershell.exe -noexit  "& ' + 
+'Expand-Archive -Path ' + [source] + ' -DestinationPath '+  [destination] + '; exit"' + '
+exit'
+
+
+
+%temp%\RunCommand.bat
+
+%temp%\RunCommand.bat
