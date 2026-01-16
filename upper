@@ -2,3 +2,9 @@ DateTimeParse(
   REGEX_Replace([Name], ".*?(\\d{2}/\\d{2}/\\d{4})", "$1"),
   "%m/%d/%Y"
 )
+
+
+
+REGEX_Replace([Name], ".*?(\\d{1,2}/\\d{1,2}/\\d{4}).*", "$1")
+
+
