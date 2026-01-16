@@ -1,1 +1,3 @@
-'powershell.exe -Command "$srcDir=''' + [source_dir] + '''; $dstDir=''' + [destination_dir] + '''; $base=''' + [base_name] + '''; $dt=(Get-Date -Format yyyyMMdd); $newName=$base + $dt + ''.txt''; $txt=(Get-ChildItem -Path $srcDir -Filter ''CoCodeAssignment_Utilized_AllStates_Public*.txt'' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName; Rename-Item -Force -Path $txt -NewName (Join-Path $dstDir $newName)"'
+'powershell.exe -noexit  "& ' + 
+'Expand-Archive -Path ' + [source] + ' -DestinationPath '+  [destination] + '; exit"' + '
+exit'
