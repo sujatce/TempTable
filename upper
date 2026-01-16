@@ -1,17 +1,1 @@
-DateTimeParse(
-  REGEX_Replace([Name], ".*?(\\d{2}/\\d{2}/\\d{4})", "$1"),
-  "%m/%d/%Y"
-)
-
-
-
-REGEX_Replace([Name], ".*?(\\d{1,2}/\\d{1,2}/\\d{4}).*", "$1")
-
-
-
-REGEX_Replace([Name], ".*?([0-9]{1,2}/[0-9]{1,2}/[0-9]{4}).*", "$DateTimeParse(
-
-
-REGEX_Replace([Name], "[^0-9/]", ""),
-  "%m/%d/%Y"
-)
+\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Data Source\CoCodeAssignment_Utilized_AllStates_Public_20260115.txt
