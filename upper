@@ -8,3 +8,11 @@ DateTimeParse(
     "%Y%m%d"
 )
 
+
+
+REGEX_Replace([FileName], ".*[\\\\/]", "")
+
+DateTimeParse(
+  REGEX_Replace([ONLY_FILE_NAME], ".*_([0-9]{8})\\.[Tt][Xx][Tt]$", "$1"),
+  "%Y%m%d"
+)
