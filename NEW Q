@@ -1,1 +1,7 @@
 -Command "$zip = Get-ChildItem '\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources\CoCodeAssignment_Utilized_AllStates_Public_*.zip' | Sort-Object LastWriteTime -Descending | Select-Object -First 1; Expand-Archive -Force $zip.FullName '\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources\'"
+
+
+
+'"C:\Program Files\7-Zip\7z.exe" x "' 
++ [OUT_FILE] 
++ '" -o"\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources\" -y'
