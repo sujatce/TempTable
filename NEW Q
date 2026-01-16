@@ -1,8 +1,1 @@
-'powershell.exe -noexit "& ' +
-'$dir=''' + [source] + '''; ' +
-'$base=''CoCodeAssignment_Utilized_AllStates_Public_''; ' +
-'$dt=(Get-Date -Format yyyyMMdd); ' +
-'$new=$base+$dt+''.txt''; ' +
-'$txt=(Get-ChildItem $dir -Filter ''CoCodeAssignment_Utilized_AllStates_Public*.txt'' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName; ' +
-'Rename-Item -Force $txt $new; exit"' +
-' exit'
+'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& $dir=\"' + [source] + '\"; $base=\"CoCodeAssignment_Utilized_AllStates_Public_\"; $dt=(Get-Date -Format yyyyMMdd); $new=$base+$dt+\".txt\"; $txt=(Get-ChildItem -Path $dir -Filter \"CoCodeAssignment_Utilized_AllStates_Public*.txt\" | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName; Rename-Item -Force -Path $txt -NewName $new; exit"'
