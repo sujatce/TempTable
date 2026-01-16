@@ -10,3 +10,8 @@
 
 
 -Command "$dir='\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources\'; $new='CoCodeAssignment_Utilized_AllStates_Public_' + (Get-Date -Format yyyyMMdd) + '.txt'; $txt=(Get-ChildItem $dir -Filter '*.txt' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName; Rename-Item -Force $txt (Join-Path $dir $new)"
+
+
+'powershell.exe -noexit  "& ' + 
+'Expand-Archive -Path ' + [source] + ' -DestinationPath '+  [destination] + '; exit"' + '
+exit'
