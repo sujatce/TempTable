@@ -27,3 +27,39 @@ exit'
 %temp%\RunCommand.bat
 
 %temp%\RunCommand.bat
+
+
+
+) Text Input fields (same idea)
+
+Create a Text Input with these fields:
+
+Field	Example
+source_dir	\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources\
+destination_dir	\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Datasources\
+base_name	CoCodeAssignment_Utilized_AllStates_Public_
+
+destination_dir can be same as source_dir (rename in place).
+
+✅ 2) Formula tool: create batch for Rename
+
+Create a new field batch (String) and paste this expression:
+
+'powershell.exe -NoExit "& ' +
+'$srcDir=''' + [source_dir] + '''; ' +
+'$dstDir=''' + [destination_dir] + '''; ' +
+'$base=''' + [base_name] + '''; ' +
+'$dt=(Get-Date -Format yyyyMMdd); ' +
+'$newName=($base + $dt + ''.txt''); ' +
+'$txt=(Get-ChildItem -Path $srcDir -Filter ''*.txt'' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName; ' +
+'Rename-Item -Force -Path $txt -NewName (Join-Path $dstDir $newName); exit"'
+
+What it does
+
+Looks in source_dir
+
+Finds the most recently modified .txt
+
+Renames it to:
+
+CoCodeAssignment_Utilized_AllStates_Public_YYYYMMDD.txt
