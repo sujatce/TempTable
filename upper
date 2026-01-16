@@ -1,1 +1,10 @@
-\\nasv0618\WM_CQR\N\NANPA_NPA_NXX\Data Source\CoCodeAssignment_Utilized_AllStates_Public_20260115.txt
+GetFileName([FullPath])
+
+
+
+
+DateTimeParse(
+    REGEX_Replace(GetFileName([FullPath]), ".*_(\\d{8})\\.txt", "$1"),
+    "%Y%m%d"
+)
+
