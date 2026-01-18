@@ -33,3 +33,21 @@ AK   	907-230	6010	"NEW CINGULAR WIRELESS PCS, LLC"                             
 AK   	907-231	588F	"TELALASKA CELLULAR, INC."                                                                          	ANCHORAGE 	             	AS 	01/21/2011   	              	Y           	Yes      
 AK   	907-232	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	WASILLA   	             	AS 	             	              	N           	Yes      
 AK   	907-233	3030	"ACS OF THE NORTHLAND, INC."                                                                        	EGEGIK    	             	AS 	             	              	N           	Yes      
+
+
+
+
+ASSIGN_DATE =
+IIF(Trim([AssignDate]) = "" OR IsNull([AssignDate]),
+    NULL(),
+    DateTimeParse(Trim([AssignDate]), "%m/%d/%Y")
+)
+
+
+
+
+EFFECTIVE_DATE =
+IIF(Trim([EffectiveDate]) = "" OR IsNull([EffectiveDate]),
+    NULL(),
+    DateTimeParse(Trim([EffectiveDate]), "%m/%d/%Y")
+)
