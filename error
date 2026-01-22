@@ -1,0 +1,123 @@
+[External Content] This message is from an external source. Please exercise caution when opening attachments or links.
+
+Errors: 2
+ConversionErrors: 0
+Warnings: 8
+
+Started running E:\Software\Alteryx\Service\Staging\14452_fc1c9055b34a44b7b80a9a8cd3a79ccd\New_To_Therapy_Alteryx_Server US9786790.yxmd at Tue Jan 20 19:07:53 2026
+00:00:00.001 - Alteryx: Running at a Low Priority.
+00:00:00.543 - Alteryx: This is AMP Engine; running 16 worker threads; memory limit 9200.0 MB.
+00:00:00.543 - Alteryx: Memory Limit is overridden by run parameters to 9200.0 MB.
+00:00:00.543 - WorkflowId - Alteryx: 0f94c1f5-5a98-4f7a-8f43-1fbb239a3bb7
+00:00:00.543 - RunId - Alteryx: 01679763-76b8-474d-8abb-4da66a649625
+00:00:01.086 - ToolId 61: Control Container Activated.
+00:00:01.086 - ToolId 63: Alias translated to snowbl:DRIVER={SnowflakeDSIIDriver};SERVER= UHG-UHG_OPTUMCARE.snowflakecomputing.com;AUTHENTICATOR=SNOWFLAKE_JWT;UID=WCQALTERYXID@UHC.COM;PRIV_KEY_FILE_PWD=__EncPwd1__;PRIV_KEY_FILE=\\nasv0618\WM_CQR\C\Compliance and Security\Snowflake RSA Token\wcq_alteryx_id_prod\rsa_key_2.p8; WAREHOUSE=ASQN_PRD_WCQ_WH; ROLE=AZU_SDRP_ASQN_PRD_DEVELOPER_ROLE;Staging=local;Method=user|||ASQN_PRD_ORCHESTRATION_DB.DBO.NEW_TO_THERAPY
+00:00:01.086 - ToolId 35: Control Container Activated.
+00:00:01.086 - ToolId 33: Alias translated to ssvb:DRIVER={SQL Server Native Client 11.0};DATABASE=ORCHESTRATION;SERVER=TX750WVPSQL95.pmmr.com\SQL95;UID=wm_tableau_hce;pwd=__EncPwd1__|||NEW_TO_THERAPY
+00:00:01.086 - ToolId 56: Alias translated to odbc:DRIVER={SnowflakeDSIIDriver};SERVER=UHG-UHGDWAAS.snowflakecomputing.com;AUTHENTICATOR=SNOWFLAKE_JWT;UID=WCQALTERYXID@UHC.COM;PRIV_KEY_FILE_PWD=__EncPwd1__;PRIV_KEY_FILE=\\nasv0618\WM_CQR\C\Compliance and Security\Snowflake RSA Token\wcq_alteryx_id\rsa_key.p8;WAREHOUSE=OSKUW_PRD_CMPT_WH;ROLE= HCDP_WELLMED_CENTRAL_QUALITY_REPORTING_DATA_VIEWER_PRD_DAG_ROLE;CLIENT_SESSION_KEEP_ALIVE=true
+|||SELECT * FROM 
+|||MNREY_PRD_BEAKER_DB.BEAKER_ACCESS.VW_WELLMED_NEW_TO_THERAPY;
+00:00:01.086 - ToolId 26: Alias translated to odb:Provider=SQLOLEDB.1;Persist Security Info=False;User ID=wm_tableau_hce;Pwd=__EncPwd1__;Initial Catalog=BI_Analysis;Data Source=TX750WPPSQL06A.pmmr.com\SQL06;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=NB-5CD9431228;Use Encryption for Data=False;Tag with column collation when possible=False|||select distinct [m].[GMPI_ID],
+        [m].[MEMBER_MBI]
+from
+        (
+        select *,
+                Row_Number()
+        over
+                (
+                partition by [DIM_MEMBER].[MEMBER_MBI]
+                order by [DIM_MEMBER].[DW_INSERT_DATE] Desc, [DIM_MEMBER].[DW_UPDATE_DATE] Desc
+                ) as [rn]
+        from [DIM_MEMBER]
+        where [member_mbi] is not NULL
+                and [active_flag] = 1
+                and [DIM_MEMBER].[DATA_ENTITY] = 'Wellmed'
+        ) as [m]
+where [m].[rn] = 1
+00:00:01.086 - ToolId 45: Alias translated to odb:Provider=SQLOLEDB.1;Persist Security Info=False;User ID=wm_tableau_hce;Pwd=__EncPwd1__;Initial Catalog=BI_Analysis;Data Source=TX750WPPSQL06A.pmmr.com\SQL06;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=NB-5CD9431228;Use Encryption for Data=False;Tag with column collation when possible=False|||select distinct [mrm].[GMPI_ID] from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [mrm] where [mrm].[DATA_ENTITY] = 'WellMed'
+        and [mrm].[REPORT_MONTH] =
+        (
+        select distinct Max([rm].[REPORT_MONTH])
+        from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [rm]
+        where [rm].[DATA_ENTITY] = 'WellMed'
+        )
+        and [mrm].[ACTIVE_FLAG] = 1
+00:00:01.086 - ToolId 57: Alias translated to odb:Provider=SQLOLEDB.1;Persist Security Info=False;User ID=wm_tableau_hce;Pwd=__EncPwd1__;Initial Catalog=BI_Analysis;Data Source=TX750WPPSQL06A.pmmr.com\SQL06;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=NB-5CD9431228;Use Encryption for Data=False;Tag with column collation when possible=False|||select distinct [m].[GMPI_ID],
+        [m].[MEMBER_MBI]
+from
+        (
+        select *,
+                Row_Number()
+        over
+                (
+                partition by [DIM_MEMBER].[MEMBER_MBI]
+                order by [DIM_MEMBER].[DW_INSERT_DATE] Desc, [DIM_MEMBER].[DW_UPDATE_DATE] Desc
+                ) as [rn]
+        from [DIM_MEMBER]
+        where [member_mbi] is not NULL
+                and [active_flag] = 1
+                and [DIM_MEMBER].[DATA_ENTITY] = 'Wellmed'
+        ) as [m]
+where [m].[rn] = 1
+00:00:01.086 - ToolId 50: Alias translated to odb:Provider=SQLOLEDB.1;Persist Security Info=False;User ID=wm_tableau_hce;Pwd=__EncPwd1__;Initial Catalog=BI_Analysis;Data Source=TX750WPPSQL06A.pmmr.com\SQL06;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=NB-5CD9431228;Use Encryption for Data=False;Tag with column collation when possible=False|||select distinct [mrm].[GMPI_ID] from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [mrm] where [mrm].[DATA_ENTITY] = 'WellMed'
+        and [mrm].[REPORT_MONTH] =
+        (
+        select distinct Max([rm].[REPORT_MONTH])
+        from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [rm]
+        where [rm].[DATA_ENTITY] = 'WellMed'
+        )
+        and [mrm].[ACTIVE_FLAG] = 1
+00:00:02.612 - ToolId 36: Alias translated to odbc:DRIVER={SnowflakeDSIIDriver};SERVER=UHG-UHGDWAAS.snowflakecomputing.com;AUTHENTICATOR=SNOWFLAKE_JWT;UID=WCQALTERYXID@UHC.COM;PRIV_KEY_FILE_PWD=__EncPwd1__;PRIV_KEY_FILE=\\nasv0618\WM_CQR\C\Compliance and Security\Snowflake RSA Token\wcq_alteryx_id\rsa_key.p8;WAREHOUSE=OSKUW_PRD_CMPT_WH;ROLE= HCDP_WELLMED_CENTRAL_QUALITY_REPORTING_DATA_VIEWER_PRD_DAG_ROLE;CLIENT_SESSION_KEEP_ALIVE=true
+|||SELECT * FROM 
+|||MNREY_PRD_BEAKER_DB.BEAKER_ACCESS.VW_WELLMED_NEW_TO_THERAPY;
+00:00:47.472 - ToolId 56: ODBC Driver version: 03.80
+00:00:47.472 - ToolId 56: Lua Script Loaded: snowflakedsii.lua
+00:00:47.779 - ToolId 56: Executing PreSQL: "Use warehouse OSKUW_PRD_CMPT_WH;"
+00:01:48.465 - ToolId 56: 1072338 records were read from WCQ_NTT_SNOWFLAKE
+00:02:01.920 - ToolId 57: Opening file using OleDB provider SQLOLEDB.1.
+00:02:02.383 - Warning - ToolId 53: The field "GMPI_ID" is not present in all inputs.
+00:02:02.383 - Warning - ToolId 53: The field "MEMBER_MBI" is not present in all inputs.
+00:02:02.383 - Warning - ToolId 53: The field "PATIENT_MISMATCH" is not present in all inputs.
+00:02:09.153 - ToolId 57: 2468723 records were read from WCQ_SQL61_BI_Analysis
+00:02:09.153 - ToolId 50: Opening file using OleDB provider SQLOLEDB.1.
+00:02:09.575 - Warning - ToolId 48: The field "Right_GMPI_ID" is not present in all inputs.
+00:02:11.026 - ToolId 50: 1046896 records were read from WCQ_SQL61_BI_Analysis
+00:02:11.026 - ToolId 52: 1072328 records were joined with 10 un-joined left records and 1396395 un-joined right records
+00:02:11.286 - ToolId 45: Opening file using OleDB provider SQLOLEDB.1.
+00:02:12.274 - ToolId 45: 1046896 records were read from WCQ_SQL61_BI_Analysis
+00:02:13.570 - ToolId 36: ODBC Driver version: 03.80
+00:02:13.570 - ToolId 36: Lua Script Loaded: snowflakedsii.lua
+00:02:13.771 - ToolId 36: Executing PreSQL: "Use warehouse OSKUW_PRD_CMPT_WH;"
+00:02:17.767 - ToolId 47: 808809 records were joined with 263529 un-joined left records and 238088 un-joined right records
+00:02:32.872 - ToolId 63: ODBC Driver version: 03.80
+00:02:32.872 - ToolId 63: Lua Script Loaded: snowflakedsii.lua
+00:03:01.758 - ToolId 36: 1072338 records were read from WCQ_NTT_SNOWFLAKE
+00:03:02.709 - ToolId 26: Opening file using OleDB provider SQLOLEDB.1.
+00:03:03.162 - Warning - ToolId 27: The field "GMPI_ID" is not present in all inputs.
+00:03:03.162 - Warning - ToolId 27: The field "MEMBER_MBI" is not present in all inputs.
+00:03:03.162 - Warning - ToolId 27: The field "PATIENT_MISMATCH" is not present in all inputs.
+00:03:03.162 - Warning - ToolId 20: The field "Right_GMPI_ID" is not present in all inputs.
+00:03:06.201 - ToolId 26: 2468723 records were read from WCQ_SQL61_BI_Analysis
+00:03:08.622 - ToolId 25: 1072328 records were joined with 10 un-joined left records and 1396395 un-joined right records
+00:03:14.062 - ToolId 17: 808809 records were joined with 263529 un-joined left records and 238088 un-joined right records
+00:03:19.723 - ToolId 33: ODBC Driver version: 03.80
+00:03:19.723 - ToolId 33: Lua Script Loaded: sqlserver.lua
+00:03:25.137 - ToolId 33: Executing PreSQL: "DROP TABLE IF EXISTS Athena.dbo.NEW_TO_THERAPY_BAK
+
+SELECT *
+INTO Athena.dbo.NEW_TO_THERAPY_BAK
+FROM [ORCHESTRATION].[dbo].[N..."
+00:03:34.428 - Error - ToolId 63: Error message from ODBC connection: String 'METFORMIN, PIOGLITAZONE, METFORMIN, PIOGLITAZONE, EMPAGLIFLOZIN, EMPAGLIFLOZIN' is too long and would be truncated
+  File '@~/cc7d2d02-de7f-41d1-a98d-5713094d6b83.csv.gz', line 26994, character 373
+  Row 26994, column "NEW_TO_THERAPY"["MAC_NTT_GENERIC":54]
+  If you would like to continue loading when an error is encountered, use other values such as 'SKIP_FILE' or 'CONTINUE' for the ON_ERROR option. For more information on loading options, please run 'info loading_data' in a SQL client.
+00:03:34.428 - ToolId 61: Control Container Completed.
+00:03:52.482 - Error - ToolId 33: bcp_sendrow failed: [Microsoft][SQL Server Native Client 11.0]String data, right truncation
+00:03:52.859 - ToolId 33: 339849 records were written to WCQ_SQL95_ORCHESTRATION_Bulk_Import (NEW_TO_THERAPY)
+00:03:52.859 - ToolId 35: Control Container Completed.
+Finished in 00:03:54.324 with 2 errors and 8 warnings
+
+
+
+
+This e-mail, including attachments, may include confidential and/or proprietary information, and may be used only by the person or entity to which it is addressed. If the reader of this e-mail is not the intended recipient or intended recipient’s authorized agent, the reader is hereby notified that any dissemination, distribution or copying of this e-mail is prohibited. If you have received this e-mail in error, please notify the sender by replying to this message and delete this e-mail immediately.
