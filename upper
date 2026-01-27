@@ -1,29 +1,18 @@
-GetFileName([FullPath])
-
-
-
-
-DateTimeParse(
-    REGEX_Replace(GetFileName([FullPath]), ".*_(\\d{8})\\.txt", "$1"),
-    "%Y%m%d"
-)
-
-
-
-REGEX_Replace([FileName], ".*[\\\\/]", "")
-
-DateTimeParse(
-  REGEX_Replace([ONLY_FILE_NAME], ".*_([0-9]{8})\\.[Tt][Xx][Tt]$", "$1"),
-  "%Y%m%d"
-)
-
-
-
-DateTimeParse(
-  REGEX_Replace([FileName], ".*_([0-9]{8})\\.[Tt][Xx][Tt]$", "$1"),
-  "%Y%m%d"
-)
-
-
-
-REGEX_Replace([FILE_NAME], ".*_([0-9]{8})\\.[Tt][Xx][Tt]$", "$1")
+select DISTINCT 
+    dm.MEMBER_MBI,
+    mrm.CONTRACT_ID,
+    mrm.CONTRACT_PBP
+from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH mrm 
+    left join FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_CLINIC dc on mrm.CLINIC_ID = dc.CLINIC_ID and dc.ACTIVE_FLAG = 1 
+    left join FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER dm on mrm.GMPI_ID = dm.GMPI_ID and mrm.MEMBER_ID = dm.MEMBER_ID and dm.ACTIVE_FLAG = 1 
+where mrm.DATA_ENTITY = 'Wellmed' 
+and ([dc].[CLINIC_RELATION] = 'Affiliated' or [mrm].[OWNED_FLAG] = 0) 
+    and mrm.ACTIVE_FLAG = 1 
+    and mrm.IS_HOSPICE_FLAG = 0 
+    and mrm.LTI_FLAG = 0 
+    and mrm.ESRD_FLAG = 0 
+    and dm.MEMBER_MBI is not NULL 
+    and mrm.REPORT_MONTH = '2025-04-01'
+    and mrm.CLINIC_GROUP_NAME not in ('SWHR') 
+    and mrm.MBR_ELIG_INSURANCE_COMPANY_FULL_NAME like 'United%'
+order by dm.MEMBER_MBI
