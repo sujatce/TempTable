@@ -1,18 +1,1 @@
-Service Response Status	API Response Status
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-FAILED	failed
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
-FAILED	failed
-DELIVERED	received
-DELIVERED	received
-DELIVERED	received
+GMPI_ID	Phone_id	Phone_Number	First_Name	Last_Name	Service Response Status	API Response Status	Deliver_on	expire_at	created_at	updated_at	program_id	template_id
