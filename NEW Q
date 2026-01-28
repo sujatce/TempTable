@@ -1,1 +1,23 @@
-GMPI_ID	Phone_id	Phone_Number	First_Name	Last_Name	Service Response Status	API Response Status	Deliver_on	expire_at	created_at	updated_at	program_id	template_id
+Columns
+COLUMN_NAME	DESCRIPTION	EXAMPLE	DATA_TYPE	MAX_LENGTH	PRECISION	NULLABLE	IS_IDENTITY
+SMS_DELIVERED_ID	Surrogate primary key (auto-generated)	10001	NUMBER	38	0	N	Y
+GMPI_ID	Member enterprise identifier	123456789	NUMBER	38	0	Y	N
+PHONE_ID	Phone record identifier from SMS system/report	32699111	VARCHAR	50		Y	N
+PHONE_NUMBER	Phone number (E.164 or raw)	+14245551234	VARCHAR	25		Y	N
+FIRST_NAME	Member first name	Ganesh	VARCHAR	100		Y	N
+LAST_NAME	Member last name	Kandan	VARCHAR	100		Y	N
+API_RESPONSE_STATUS	SMS Manager internal processing status (received/queued/error)	received	VARCHAR	50		Y	N
+SERVICE_RESPONSE_STATUS	Provider/carrier delivery outcome (DELIVERED/FAILED/EXPIRED)	DELIVERED	VARCHAR	50		Y	N
+DELIVER_ON	Delivery/scheduled timestamp (from report)	2025-12-18 19:50:07	TIMESTAMP_NTZ			Y	N
+EXPIRE_AT	Expiration timestamp (from report)	2025-12-21 19:50:07	TIMESTAMP_NTZ			Y	N
+CREATED_AT	Record created timestamp (from report/API)	2025-12-18 19:50:06	TIMESTAMP_NTZ			Y	N
+UPDATED_AT	Last updated timestamp (from report/API)	2025-12-18 19:50:15	TIMESTAMP_NTZ			Y	N
+PROGRAM_ID	SMS campaign/program identifier	798355	VARCHAR	100		Y	N
+TEMPLATE_ID	SMS template identifier	1788555	VARCHAR	100		Y	N
+SMS_MANAGER_MESSAGE_ID	Message id from SMS Manager API (id) for traceability	143805222	NUMBER	38	0	Y	N
+PROVIDER_MESSAGE_ID	Provider message id from service-response.message_id	01KCSG6G...	VARCHAR	100		Y	N
+RAW_SERVICE_RESPONSE	Raw JSON/string from service-response for audit/debug	{"message_id":...}	VARCHAR	4000		Y	N
+GENERATED_BODY	Final message text sent (optional; useful for audit)	From WellMed:...	VARCHAR	2000		Y	N
+NUMBER_OF_SEGMENTS	SMS segments used (billing analytics)	2	NUMBER	38	0	Y	N
+LOAD_FILE_NAME	Delivery report file name loaded	sms_delivery_20251221.csv	VARCHAR	500		Y	N
+LOAD_TS	Load timestamp	2026-01-28 16:10:00	TIMESTAMP_NTZ			N	N
