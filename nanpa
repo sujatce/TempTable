@@ -1,36 +1,8 @@
-Column Name	Description	Example	Snowflake Data Type	Nullable	Identity
-NPA_NXX	Area Code and Prefix	907-200	VARCHAR(50)	NO	NO
-STATE	Standard Two Character Abbrevation for the State	AK	VARCHAR(75)	YES	NO
-OCN	Operating Company Number	6872	NUMBER(38,0)	YES	NO
-COMPANY	Full Company Name; Company Names are enclosed with quotes if they contain special characters.	CELLCO PARTNERSHIP DBA VERIZON WIRELESS	VARCHAR(255)	YES	NO
-RATE_CENTER	10 character abbreviation for the Rate Center in which the code is assigned.	VALDEZ	VARCHAR(50)	YES	NO
-EFFECTIVE_DATE	The future date when a new code will be in service (for new codes only). Once the effective date is reached, this date will no longer appear.		DATE	YES	NO
-USE	What is the Use of this code ? VC - vacant, AS - assigned to service provder, PR - codes are protected for a split, RV- code  have been reserved by a service provider, UA - unavailable for assignment	AS, UA	VARCHAR(5)	YES	NO
-ASSIGN_DATE	Date the code was assigned to the service provider by NANPA. This field is populated only for those codes assigned from January 2001 on.	2/21/2006	DATE	YES	NO
-INITIAL_GROWTH	Initial is the first geographic NXX code assigned at a unique switching entity or point of interconnection for a service provider. Growth is a code assigned to a switching entity or point of interconnection subsequent to the assignment of the first code, for the same purpose as a code that was previously assigned for a service provider to the same switching entity or point of interconnection.	I	VARCHAR(10)	YES	NO
-POOLED_CODE	Flag indicating whether the NPA-NXX code participates in number pooling (Y- Pooled the 10,000 telephone numbers within this central office code are seperated into ten sequential blocks of 1,000 numbers each, and these smaller blocks are allocated to multile service providers , N- Full block assigned to one provider)	Y,N	VARCHAR(10)	YES	NO
-IN_SERVICE	Is this NPA in service (Yes/No)	Yes	VARCHAR(10)	YES	NO
-FILE_UPDATED	Date on which file was updated	1/8/2026	DATE	NO	NO
-FILE_NAME	Name of the file downloaded	CoCodeAssignment_Utilized_AllStates_Public_20260113.txt	VARCHAR(255)	NO	NO
-FILE_CREATION_DATE	Creation date of the source file - SYSDATE	1/13/2026	DATE	NO	NO
-USER_STORY	User story or work item associated with data ingestion or enhancement	US12345	VARCHAR(25)	NO	NO
-INSERT_DATE	Timestamp when the row was first inserted into the table	12/31/2025 7:26	TIMESTAMP_NTZ(7)	NO	NO
-INSERT_USER	User or system that inserted the record	WM_Tableau_HCE	VARCHAR(75)	NO	NO
-UPDATE_DATE	Timestamp when the row was last updated	12/31/2025 7:26	TIMESTAMP_NTZ(7)	NO	NO
-UPDATE_USER	User or system that last updated the record	WM_Tableau_HCE	VARCHAR(75)	NO	NO
+SERVICE_RESPONSE_STATUS
+Delivery status returned by the SMS provider/carrier. Indicates the state of the message at the carrier level. Common values include:
 
+DELIVERED – Message successfully received by the recipient.
 
+FAILED – Delivery attempt was unsuccessful.
 
-TABLE DESCRIPTION
-The Wellmed Central Quality Reporting team regularly produces member campaign data for stakeholders.  
- To prevent members from being contacted using invalid or inappropriate phone numbers, reference data is required to validate telephone number prefixes.
-
-The NANPA NPA-NXX (Central Office Code Assignment) dataset is sourced from the North American Numbering Plan Administrator (NANPA), the regulatory authority that manages telephone numbering resources across North America. It provides the authoritative mapping of area code and prefix combinations (NPA-NXX) to service providers, geographic rate centers, and usage classifications.
-
-This data enables identification of prefixes that are assigned, pooled, reserved, vacant, or otherwise unavailable, including those designated for business, government, toll-free, or non-service use. Downstream processes use this reference to filter out invalid or non-consumer phone number ranges and ensure outreach is limited to appropriate member numbers.
-This dataset is stored in the NANPA_NPA_NXX table. 					
-					
-					
-					
-
-
+QUEUED_ON_CHANNEL – Message accepted by the carrier and placed in the delivery queue; in some cases, no further status is returned and the final outcome remains unknown.
