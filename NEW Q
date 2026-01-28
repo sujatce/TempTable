@@ -1,53 +1,18 @@
-State	NPA-NXX	OCN 	Company                                                                                             	RateCenter	EffectiveDate	Use	AssignDate   	Initial/Growth	Pooled Code 	In Service  	File Updated 01/17/2026
-AK   	907-200	6872	"GCI COMMUNICATION CORP. DBA GENERAL COMMUNICATION"                                                 	VALDEZ    	             	AS 	02/21/2006   	I             	N           	Yes      
-AK   	907-201	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	ELMEDRFAFB	             	AS 	09/18/2014   	I             	Y           	Yes      
-AK   	907-202	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	ANCHORAGE 	             	AS 	07/25/2014   	G             	Y           	Yes      
-AK   	907-203	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	BIG LAKE  	             	AS 	09/18/2014   	I             	Y           	Yes      
-AK   	907-204	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	KETCHIKAN 	             	AS 	03/23/2016   	I             	Y           	Yes      
-AK   	907-205	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	ANCHORAGE 	             	AS 	10/09/2014   	G             	Y           	Yes      
-AK   	907-206	9413	"LEVEL 3 COMMUNICATIONS, LLC - AK"                                                                  	ANCHORAGE 	             	AS 	01/17/2020   	G             	Y           	Yes      
-AK   	907-207	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	BETHEL    	             	AS 	06/08/2020   	I             	Y           	Yes      
-AK   	907-208	7785	"GCI COMMUNICATION CORP. DBA GENERAL COMMUNICATION"                                                 	NORTH POLE	             	AS 	04/13/2021   	G             	Y           	Yes      
-AK   	907-209	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	JUNEAU    	             	AS 	03/20/2001   	G             	N           	Yes      
-AK   	907-210	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	BIG LAKE  	             	AS 	04/07/2023   	              	Y           	Yes      
-AK   	907-211	MULT	"MULTIPLE OCN LISTING"                                                                              	XXXXXXXXXX	             	UA 	             	              	            	No       
-AK   	907-212	7785	"GCI COMMUNICATION CORP. DBA GENERAL COMMUNICATION"                                                 	ANCHORAGE 	             	AS 	08/15/2006   	G             	N           	Yes      
-AK   	907-213	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	ELMEDRFAFB	             	AS 	04/07/2023   	              	Y           	Yes      
-AK   	907-214	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	WASILLA   	             	AS 	04/03/2020   	G             	Y           	Yes      
-AK   	907-215	321J	"HD CARRIER LLC"                                                                                    	ANCHORAGE 	             	AS 	09/03/2021   	I             	Y           	Yes      
-AK   	907-216	7785	"GCI COMMUNICATION CORP. DBA GENERAL COMMUNICATION"                                                 	VALDEZ    	             	AS 	03/18/2021   	G             	Y           	Yes      
-AK   	907-217	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	ANCHORAGE 	             	AS 	08/09/2023   	              	Y           	Yes      
-AK   	907-218	158J	"OPTIMERA INC."                                                                                     	AKUTAN    	             	AS 	10/31/2023   	I             	Y           	Yes      
-AK   	907-219	6563	"CELLCO PARTNERSHIP DBA VERIZON WIRELESS"                                                           	SITKA     	             	AS 	10/21/2022   	I             	Y           	Yes      
-AK   	907-220	7785	"GCI COMMUNICATION CORP. DBA GENERAL COMMUNICATION"                                                 	KETCHIKAN 	             	AS 	01/03/2007   	I             	Y           	Yes      
-AK   	907-221	3023	"UNITED UTILITIES, INC."                                                                            	BIRCHCREEK	             	AS 	             	              	N           	Yes      
-AK   	907-222	7785	"GCI COMMUNICATION CORP. DBA GENERAL COMMUNICATION"                                                 	ANCHORAGE 	             	AS 	             	              	N           	Yes      
-AK   	907-223	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	ANCHORAGE 	             	AS 	             	              	N           	Yes      
-AK   	907-224	3011	"INTERIOR TEL. CO., INC."                                                                           	SEWARD    	             	AS 	             	              	N           	Yes      
-AK   	907-225	3013	"KETCHIKAN PUBLIC UTILITIES"                                                                        	KETCHIKAN 	             	AS 	             	              	N           	Yes      
-AK   	907-226	3030	"ACS OF THE NORTHLAND, INC."                                                                        	HOMER     	             	AS 	             	G             	N           	Yes      
-AK   	907-227	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	ANCHORAGE 	             	AS 	             	              	N           	Yes      
-AK   	907-228	3013	"KETCHIKAN PUBLIC UTILITIES"                                                                        	KETCHIKAN 	             	AS 	             	              	N           	Yes      
-AK   	907-229	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	ANCHORAGE 	             	AS 	             	              	N           	Yes      
-AK   	907-230	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	ANCHORAGE 	             	AS 	             	              	N           	Yes      
-AK   	907-231	588F	"TELALASKA CELLULAR, INC."                                                                          	ANCHORAGE 	             	AS 	01/21/2011   	              	Y           	Yes      
-AK   	907-232	6010	"NEW CINGULAR WIRELESS PCS, LLC"                                                                    	WASILLA   	             	AS 	             	              	N           	Yes      
-AK   	907-233	3030	"ACS OF THE NORTHLAND, INC."                                                                        	EGEGIK    	             	AS 	             	              	N           	Yes      
-
-
-
-
-ASSIGN_DATE =
-IIF(Trim([AssignDate]) = "" OR IsNull([AssignDate]),
-    NULL(),
-    DateTimeParse(Trim([AssignDate]), "%m/%d/%Y")
-)
-
-
-
-
-EFFECTIVE_DATE =
-IIF(Trim([EffectiveDate]) = "" OR IsNull([EffectiveDate]),
-    NULL(),
-    DateTimeParse(Trim([EffectiveDate]), "%m/%d/%Y")
-)
+Service Response Status	API Response Status
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+FAILED	failed
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
+FAILED	failed
+DELIVERED	received
+DELIVERED	received
+DELIVERED	received
