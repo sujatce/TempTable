@@ -21,3 +21,10 @@ JOIN sys.schemas s
     ON p.schema_id = s.schema_id
 WHERE s.name LIKE '%EPMP%'
 ORDER BY p.name;
+
+
+
+sp_LOAD_EPMP_ADDRESS
+sp_LOAD_EPMP_EMAIL
+sp_LOAD_EPMP_PHONE
+sp_LOAD_EPMP_PREFERENCES
