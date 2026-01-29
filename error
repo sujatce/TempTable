@@ -1,1 +1,23 @@
-MAC_NTT_GENERIC, MAD_NTT_GENERIC, MAH_NTT_GENERIC TO 250
+SELECT  
+    s.name  AS schema_name,
+    p.name  AS procedure_name,
+    p.create_date,
+    p.modify_date
+FROM sys.procedures p
+JOIN sys.schemas s
+    ON p.schema_id = s.schema_id
+WHERE p.name LIKE '%EPMP%'
+ORDER BY p.name;
+
+
+
+SELECT  
+    s.name  AS schema_name,
+    p.name  AS procedure_name,
+    p.create_date,
+    p.modify_date
+FROM sys.procedures p
+JOIN sys.schemas s
+    ON p.schema_id = s.schema_id
+WHERE s.name LIKE '%EPMP%'
+ORDER BY p.name;
