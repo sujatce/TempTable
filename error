@@ -1,7 +1,20 @@
-SELECT DISTINCT
-       e.MBI,
-       CASE WHEN p.DO_NOT_EMAIL = 'N' THEN e.MEMBER_EMAIL ELSE NULL END AS MEMBER_EMAIL,
-       p.DO_NOT_EMAIL
-FROM ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_EMAIL e
-LEFT JOIN ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PREFERENCES p
-       ON e.MBI = p.MBI;
+Is the field CAMPAIGN_MONTH coming from Optum in that format? "SEP-2025" That will make it very hard to query.  This field is very similar to REPORT_MONTH or SURVEY_MONTH which we store in the format "2025-09-01".  If it is possible to convert to that format before loading it would be preferable.
+ 
+Please be sure to store all dates as YYYY-MM-DD followed by the timestamp, if required.  It could be just Excel is showing me the example this way but I want to be certain we don't store it that way in Snowflake.
+ 
+ 
+For the descriptions, I think we can align on a standard for these few (there will soon be cards to add these across the whole server):
+ 
+Column Name	Description
+GMPI_ID	WellMed unique member identifier
+MBI	Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries
+MEMBER_LAST_NAME	Last name of the member enrolled in the health plan
+MEMBER_FIRST_NAME	First name of the member enrolled in the health plan
+MEMBER_BIRTH_DATE	Date of birth of the member enrolled in the health plan
+FILE_NAME	Name of the file tied to the record
+FILE_CREATION_DATE	Date the file was created
+USER_STORY	User Story ID associated with data ingestion or update
+INSERT_DATE	Timestamp recording when the row was first inserted into the table
+INSERT_USER	User or system that inserted the row
+UPDATE_DATE	Timestamp recording when the row was last updated
+UPDATE_USER	User or system that last updated the row
