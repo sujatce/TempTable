@@ -1,5 +1,6 @@
 Column Name	Description	Example	Snowflake Data Type	Precision 	Nullable	Identity
 SMS_DELIVERED_ID	System-generated unique identifier for each SMS delivery record, populated using a Snowflake Sequence 	101	NUMBER(38,0)	0	NO	YES
+CAMPAIGN_TARGET_ID	Foreign_Key used to link SMS Delivered records to CAMPAIGN_TARGET	123456	NUMBER(38,0)	0	YES	NO
 GMPI_ID	WellMed unique member identifier	123456789	NUMBER(38,0)	0	NO	NO
 MBI	Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries	123456789	VARCHAR(20)		YES	NO
 PHONE_ID	Unique identifier assigned by the SMS Manager system to represent a specific phone number associated with a member	32698711	NUMBER(38,0)	0	NO	
