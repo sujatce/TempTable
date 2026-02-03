@@ -1,120 +1,247 @@
--- 1. Create sequence for surrogate key
-CREATE OR REPLACE SEQUENCE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED_ID_SEQ
-    START WITH 1
-    INCREMENT BY 1 order
-    COMMENT = 'Sequence used to generate unique identifiers for SMS_DELIVERED.SMS_DELIVERED_ID';
+import os
+import csv
+import sys
+import time
+import json
+import logging
+import pandas as pd
+import requests
+from datetime import datetime, timedelta, timezone
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
--- 2. Create table with inline column comments
-CREATE OR REPLACE TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED (
+# ====================================================
+# 🔹 SETUP LOGGING
+# ====================================================
 
-    SMS_DELIVERED_ID NUMBER(38,0) NOT NULL
-        DEFAULT ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED_ID_SEQ.NEXTVAL
-        COMMENT 'System-generated unique identifier for each SMS delivery record, populated using a Snowflake Sequence',
+logs_dir = "logs"
+os.makedirs(logs_dir, exist_ok=True)
+log_filename = f"BulkUnsubscribed_Run_{datetime.now().strftime('%m%d%Y_%H%M%S')}.log"
+log_path = os.path.join(logs_dir, log_filename)
 
-    CAMPAIGN_TARGET_ID NUMBER(38,0)
-        COMMENT 'Foreign key used to link SMS Delivered records to CAMPAIGN_TARGET (reserved for future use)',
-
-    GMPI_ID NUMBER(38,0)
-        NOT NULL
-        COMMENT 'WellMed unique member identifier',
-
-    MBI VARCHAR(20)
-        COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
-
-    PHONE_ID NUMBER(38,0)
-        NOT NULL
-        COMMENT 'Unique identifier assigned by the SMS Manager system to represent a specific phone number associated with a member',
-
-    TEMPLATE_ID NUMBER(38,0)
-        NOT NULL
-        COMMENT 'Business-defined identifier representing the SMS message template approved for campaign communications',
-
-    PROGRAM_ID NUMBER(38,0)
-        NOT NULL
-        COMMENT 'Business-defined identifier representing an SMS program under which the message was sent',
-
-    PROGRAM_NAME VARCHAR(255)
-        NOT NULL
-        COMMENT 'Name of the campaign program',
-
-    MEMBER_LAST_NAME VARCHAR(60)
-        NOT NULL
-        COMMENT 'Last name of the member enrolled in the health plan',
-
-    MEMBER_FIRST_NAME VARCHAR(50)
-        NOT NULL
-        COMMENT 'First name of the member enrolled in the health plan',
-
-    MEMBER_BIRTH_DATE DATE
-        COMMENT 'Date of birth of the member enrolled in the health plan',
-
-    MEMBER_PHONE VARCHAR(15)
-        NOT NULL
-        COMMENT 'Mobile phone number of the member',
-
-    OPTUM_SMS_MANAGER_STATUS VARCHAR(50)  NOT NULL
-        COMMENT 'SMS Manager internal processing status indicating whether the outbound message request was accepted or failed at the API layer',
-
-    CARRIER_RESPONSE_STATUS VARCHAR(50)  NOT NULL
-        COMMENT 'Delivery status returned by the SMS provider/carrier (DELIVERED, FAILED, QUEUED_ON_CHANNEL)',
-
-    SOURCE VARCHAR(75)
-        COMMENT 'Source through which the message was triggered; represents an outbound SMS sent from the system to a recipient',
-
-    CAMPAIGN_START_DATE DATE
-        COMMENT 'Start date of the campaign, if known',
-
-    CAMPAIGN_MONTH DATE
-        COMMENT 'Business month in which the SMS campaign was executed',
-
-    SMS_CREATED_DATE TIMESTAMP_NTZ(7) NOT NULL
-        COMMENT 'Timestamp when the outbound message record was created in the SMS Manager system',
-
-    SMS_DELIVER_DATE TIMESTAMP_NTZ(7) NOT NULL
-        COMMENT 'Timestamp when the message was scheduled or released for delivery',
-
-    SMS_EXPIRE_DATE TIMESTAMP_NTZ(7) NOT NULL
-        COMMENT 'Timestamp after which the message should no longer be delivered',
-
-    SMS_UPDATED_DATE TIMESTAMP_NTZ(7) NOT NULL
-        COMMENT 'Timestamp when the SMS message record was last updated in the SMS Manager system',
-
-    CONTRACT_ID VARCHAR(50)
-        COMMENT 'Unique identifier assigned to a specific contract',
-
-    CONTRACT_PBP VARCHAR(50)
-        COMMENT 'Benefit Plan or Plan code specifying benefits included under the contract',
-
-    MBR_ELIG_INSURANCE_COMPANY VARCHAR(50)
-        COMMENT 'Member insurance company',
-
-    FILE_NAME VARCHAR(250)
-        NOT NULL
-        COMMENT 'Name of the source file associated with the record',
-
-    FILE_CREATION_DATE DATE
-        NOT NULL
-        COMMENT 'Date the source file was created',
-
-    USER_STORY VARCHAR(25)
-        COMMENT 'User story ID associated with data ingestion or update',
-
-    INSERT_DATE TIMESTAMP_NTZ(7)
-        NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS              TIMESTAMP_NTZ(7))
-        COMMENT 'Timestamp when the row was first inserted into the table',
-
-    INSERT_USER VARCHAR(75)
-        NOT NULL
-        COMMENT 'User or system that inserted the row',
-
-    UPDATE_DATE TIMESTAMP_NTZ(7)
-        NOT NULL   DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS            TIMESTAMP_NTZ(7))
-        COMMENT 'Timestamp when the row was last updated',
-
-    UPDATE_USER VARCHAR(75)
-        NOT NULL
-        COMMENT 'User or system that last updated the row'
-    CONSTRAINT PK_SMS_DELIVERED_PRIMARYKEY PRIMARY KEY (SMS_DELIVERED_ID)
-
+logging.basicConfig(
+    filename=log_path,
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
 )
-COMMENT = 'The Wellmed Central Quality Reporting team tracks outbound SMS message delivery for UHC membership campaign SMS outreach program. SMS messages are sent to eligible members based on consent preferences and campaign criteria. Delivery and processing details for each outbound SMS message are captured and stored in the SMS_DELIVERED table.';
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+console.setFormatter(formatter)
+logging.getLogger().addHandler(console)
+
+# ====================================================
+# 🔹 REQUEST SESSION WITH RETRY
+# ====================================================
+
+session = requests.Session()
+retry_strategy = Retry(
+    total=5,
+    connect=5,
+    read=5,
+    backoff_factor=2,
+    status_forcelist=[500, 502, 503, 504],
+    allowed_methods=["GET", "POST"]
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+session.mount("https://", adapter)
+session.mount("http://", adapter)
+
+# ====================================================
+# 🔹 TOKEN SERVICE CLASS
+# ====================================================
+
+class SMSTokenService:
+    def __init__(self, auth_url, client_id, client_secret, expire_in_seconds=1770):
+        self.auth_url = auth_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.expire_in = timedelta(seconds=expire_in_seconds)
+        self.token = None
+        self.expire_at = datetime.now(timezone.utc)
+
+    def token_valid(self):
+        return self.token and datetime.now(timezone.utc) < self.expire_at
+
+    def renew_token(self):
+        if not self.token_valid():
+            logging.info("[AUTH] Requesting new access token...")
+            payload = {
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret
+            }
+            try:
+                response = session.post(self.auth_url, data=payload, timeout=20)
+                logging.info(f"[AUTH] Response Status: {response.status_code}")
+                if response.status_code == 200:
+                    data = response.json()
+                    self.token = data["access_token"]
+                    self.expire_at = datetime.now(timezone.utc) + self.expire_in
+                    logging.info("[AUTH] ✅ Access token received.")
+                else:
+                    raise Exception(f"[AUTH ERROR] {response.status_code}: {response.text}")
+            except requests.exceptions.RequestException as e:
+                raise Exception(f"[AUTH ERROR] Request failed: {e}")
+
+    def get_headers(self):
+        self.renew_token()
+        return {
+            "Authorization": f"Bearer {self.token}",
+            "Accept": "application/json"
+        }
+
+# ====================================================
+# 🔹 BULK UNSUBSCRIBE FETCHER CLASS
+# ====================================================
+
+class BulkUnsubscribeFetcher:
+    def __init__(self, api_base_url, program_id, token_service):
+        self.api_base_url = api_base_url
+        self.program_id = program_id
+        self.token_service = token_service
+
+    def fetch_all_unsubscribed(self):
+        """Fetch all unsubscribed phone records for the given program ID."""
+        unsubscribed = []
+        page = 1
+        per_page = 1000
+
+        # ✅ Generate report timestamp in UTC (ISO format, same as other date columns)
+        report_generated_date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        while True:
+            url = (
+                f"{self.api_base_url}/subscriptions?"
+                f"program-id={self.program_id}&status=unsubscribed&page={page}&per-page={per_page}"
+            )
+            logging.info(f"[FETCH] 📄 Fetching page {page}...")
+            try:
+                response = session.get(url, headers=self.token_service.get_headers(), timeout=30)
+                logging.info(f"[FETCH] Status Code: {response.status_code}")
+
+                if response.status_code == 401:
+                    logging.info("[AUTH] Token expired — retrying...")
+                    self.token_service.renew_token()
+                    continue
+
+                if response.status_code != 200:
+                    logging.warning(f"[FETCH] ⚠️ Unexpected response: {response.status_code}")
+                    break
+
+                data = response.json()
+                subs = data.get("subscription") or []
+
+                if page == 1 and subs:
+                    logging.info(f"[DEBUG] Sample unsubscribed entry:\n{json.dumps(subs[0], indent=2)}")
+
+                if not subs:
+                    logging.info("[FETCH] ✅ No more records found.")
+                    break
+
+                for s in subs:
+                    metadata = s.get("metadata", {})
+                    gmpi_id = metadata.get("gmpi_id")
+                    phone_id = s.get("phone-id")
+                    status = s.get("status")
+                    source = s.get("source")
+                    performed_at = s.get("performed-at")
+                    created_at = s.get("created-at")
+                    updated_at = s.get("updated-at")
+                    program_id = s.get("program-id")
+
+                    if status == "unsubscribed":
+                        unsubscribed.append({
+                            "GMPI_ID": gmpi_id,
+                            "PHONE_ID": phone_id,
+                            "STATUS": status,
+                            "SOURCE": source,
+                            "UNSUBSCRIBE_PERFORMED_DATE": performed_at,
+                            "PHONE_CREATED_DATE": created_at,
+                            "PHONE_UPDATED_DATE": updated_at,
+                            "PROGRAM_ID": program_id,
+                            "REPORT_GENERATED_DATE": report_generated_date
+                        })
+
+                metadata_info = data.get("metadata", {}).get("pagination", {})
+                total_pages = int(metadata_info.get("total-pages", page))
+                if page >= total_pages:
+                    break
+
+                page += 1
+                time.sleep(0.5)
+
+            except requests.exceptions.RequestException as e:
+                logging.error(f"[FETCH ERROR] {str(e)}")
+                break
+
+        logging.info(f"[FETCH] ✅ Total unsubscribed records retrieved: {len(unsubscribed)}")
+        return unsubscribed
+
+# ====================================================
+# 🔹 MAIN
+# ====================================================
+
+if __name__ == "__main__":
+
+    AUTH_URL = "https://ocp.optum.com/oauth2/token"  # Replace with actual auth endpoint
+    CLIENT_ID = "e3588578-4c78-4266-95a9-c9c87db197fd"
+    CLIENT_SECRET = "70ee81df-c4c6-42b4-b7c4-4f46b5ff5821"
+    API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"  # Base API URL
+    PROGRAM_ID = "798365"
+    INPUT_CSV = "MEMBER_PHONE_LIST_12182025.csv"
+    OUTPUT_CSV = f"Unsubscribed_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+
+    logging.info("🚀 Starting Bulk Unsubscribe Report Generator...\n")
+
+    token_service = SMSTokenService(AUTH_URL, CLIENT_ID, CLIENT_SECRET)
+    fetcher = BulkUnsubscribeFetcher(API_BASE_URL, PROGRAM_ID, token_service)
+
+    unsubscribed_data = fetcher.fetch_all_unsubscribed()
+
+    if not unsubscribed_data:
+        logging.info("No unsubscribed records found.")
+        sys.exit(0)
+
+    # === Read input file ===
+    df_input = pd.read_csv(INPUT_CSV, encoding="utf-8-sig", dtype=str)
+    total_records = len(df_input)
+
+    required_cols = ["GMPI_ID", "MEMBER_PHONE", "MEMBER_FIRST_NAME", "MEMBER_LAST_NAME"]
+    for col in required_cols:
+        if col not in df_input.columns:
+            raise ValueError(f"Input CSV must contain a column named '{col}'")
+
+    # === Merge unsubscribed list with input ===
+    df_unsub_all = pd.DataFrame(unsubscribed_data)
+    df_final = pd.merge(df_input, df_unsub_all, how="inner", on="GMPI_ID")
+
+    # === Select columns for report ===
+    df_final = df_final[
+        [
+            "GMPI_ID",
+            "MEMBER_FIRST_NAME",
+            "MEMBER_LAST_NAME",
+            "MEMBER_PHONE",
+            "STATUS",
+            "SOURCE",
+            "PHONE_ID",
+            "PROGRAM_ID",
+            "UNSUBSCRIBE_PERFORMED_DATE",
+            "PHONE_CREATED_DATE",
+            "PHONE_UPDATED_DATE",
+            "REPORT_GENERATED_DATE"
+        ]
+    ]
+    df_final.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
+
+    matched_count = len(df_final)
+    logging.info(f"✅ Unsubscribe report generated with {matched_count} records.")
+    logging.info(f"📄 Output saved to: {OUTPUT_CSV}")
+    logging.info(f"📊 {matched_count} out of {total_records} total records matched (unsubscribed).")
+
+    print(f"\n✅ Unsubscribe report generated with {matched_count} records.")
+    print(f"📄 Output saved to: {OUTPUT_CSV}")
+    print(f"📊 {matched_count} out of {total_records} total records matched (unsubscribed).")
