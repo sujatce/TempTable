@@ -1,13 +1,13 @@
 -- 1. Create sequence for surrogate key
 CREATE OR REPLACE SEQUENCE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED_ID_SEQ
     START WITH 1
-    INCREMENT BY 1;
+    INCREMENT BY 1 order
+    COMMENT = 'Sequence used to generate unique identifiers for SMS_DELIVERED.SMS_DELIVERED_ID';
 
 -- 2. Create table with inline column comments
 CREATE OR REPLACE TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED (
 
-    SMS_DELIVERED_ID NUMBER(38,0)
-        NOT NULL
+    SMS_DELIVERED_ID NUMBER(38,0) NOT NULL
         DEFAULT ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED_ID_SEQ.NEXTVAL
         COMMENT 'System-generated unique identifier for each SMS delivery record, populated using a Snowflake Sequence',
 
@@ -52,10 +52,10 @@ CREATE OR REPLACE TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED (
         NOT NULL
         COMMENT 'Mobile phone number of the member',
 
-    OPTUM_SMS_MANAGER_STATUS VARCHAR(50)
+    OPTUM_SMS_MANAGER_STATUS VARCHAR(50)  NOT NULL
         COMMENT 'SMS Manager internal processing status indicating whether the outbound message request was accepted or failed at the API layer',
 
-    CARRIER_RESPONSE_STATUS VARCHAR(50)
+    CARRIER_RESPONSE_STATUS VARCHAR(50)  NOT NULL
         COMMENT 'Delivery status returned by the SMS provider/carrier (DELIVERED, FAILED, QUEUED_ON_CHANNEL)',
 
     SOURCE VARCHAR(75)
@@ -67,16 +67,16 @@ CREATE OR REPLACE TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED (
     CAMPAIGN_MONTH DATE
         COMMENT 'Business month in which the SMS campaign was executed',
 
-    SMS_CREATED_DATE TIMESTAMP_NTZ(7)
+    SMS_CREATED_DATE TIMESTAMP_NTZ(7) NOT NULL
         COMMENT 'Timestamp when the outbound message record was created in the SMS Manager system',
 
-    SMS_DELIVER_DATE TIMESTAMP_NTZ(7)
+    SMS_DELIVER_DATE TIMESTAMP_NTZ(7) NOT NULL
         COMMENT 'Timestamp when the message was scheduled or released for delivery',
 
-    SMS_EXPIRE_DATE TIMESTAMP_NTZ(7)
+    SMS_EXPIRE_DATE TIMESTAMP_NTZ(7) NOT NULL
         COMMENT 'Timestamp after which the message should no longer be delivered',
 
-    SMS_UPDATED_DATE TIMESTAMP_NTZ(7)
+    SMS_UPDATED_DATE TIMESTAMP_NTZ(7) NOT NULL
         COMMENT 'Timestamp when the SMS message record was last updated in the SMS Manager system',
 
     CONTRACT_ID VARCHAR(50)
@@ -100,20 +100,21 @@ CREATE OR REPLACE TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_DELIVERED (
         COMMENT 'User story ID associated with data ingestion or update',
 
     INSERT_DATE TIMESTAMP_NTZ(7)
-        NOT NULL
-        COMMENT 'Timestamp recording when the row was first inserted into the table',
+        NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS              TIMESTAMP_NTZ(7))
+        COMMENT 'Timestamp when the row was first inserted into the table',
 
     INSERT_USER VARCHAR(75)
         NOT NULL
         COMMENT 'User or system that inserted the row',
 
     UPDATE_DATE TIMESTAMP_NTZ(7)
-        NOT NULL
-        COMMENT 'Timestamp recording when the row was last updated',
+        NOT NULL   DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS            TIMESTAMP_NTZ(7))
+        COMMENT 'Timestamp when the row was last updated',
 
     UPDATE_USER VARCHAR(75)
         NOT NULL
         COMMENT 'User or system that last updated the row'
+    CONSTRAINT PK_SMS_DELIVERED_PRIMARYKEY PRIMARY KEY (SMS_DELIVERED_ID)
 
 )
-COMMENT = 'Stores outbound SMS message delivery and processing details for UHC membership campaign outreach. Data is sourced from SMS Manager delivery reports and used for reporting, auditing, and compliance analysis.';
+COMMENT = 'The Wellmed Central Quality Reporting team tracks outbound SMS message delivery for UHC membership campaign SMS outreach program. SMS messages are sent to eligible members based on consent preferences and campaign criteria. Delivery and processing details for each outbound SMS message are captured and stored in the SMS_DELIVERED table.';
