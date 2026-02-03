@@ -1,34 +1,15 @@
-Column Name	Description	Example	Snowflake Data Type	Precision 	Nullable	Identity
-SMS_DELIVERED_ID	System-generated unique identifier for each SMS delivery record, populated using a Snowflake Sequence 	101	NUMBER(38,0)	0	NO	YES
-CAMPAIGN_TARGET_ID	Foreign_Key used to link SMS Delivered records to CAMPAIGN_TARGET	123456	NUMBER(38,0)	0	YES	NO
-GMPI_ID	WellMed unique member identifier	123456789	NUMBER(38,0)	0	NO	NO
-MBI	Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries	123456789	VARCHAR(20)		YES	NO
-PHONE_ID	Unique identifier assigned by the SMS Manager system to represent a specific phone number associated with a member	32698711	NUMBER(38,0)	0	NO	
-TEMPLATE_ID	Business-defined Identifier represent the SMS Message Template approved and provided by the business team for campaign communications 	1788409	NUMBER(38,0)	0	NO	NO
-PROGRAM_ID	Business-defined Identifier represent an SMS program for which the phone is subscribed, which may include one or more associated SMS message templates.	798366	NUMBER(38,0)	0	NO	NO
-PROGRAM_NAME	Name of the campaign program	SMS OUTREACH	VARCHAR(255)		NO	NO
-MEMBER_LAST_NAME	Last name of the member enrolled in the health plan	Schwoyer	VARCHAR(60)		NO	NO
-MEMBER_FIRST_NAME	First name of the member enrolled in the health plan	Gaspara	VARCHAR(50)		NO	NO
-MEMBER_BIRTH_DATE	Date of birth of the member enrolled in the health plan	5/22/1980	DATE		YES	NO
-MEMBER_PHONE	Mobile phone number of the member	1234567890	VARCHAR(15)		NO	NO
-OPTUM_SMS_MANAGER_STATUS	SMS Manager internal processing status (received/failed) - Indicates the outcome of the SMS submission at the SMS Manager (API) layer. Reflects whether the platform successfully accepted and processed the outbound message requeast. Values can be 'recieved' (API accepted the message) or 'failed'(API rejected or couldnot process the request)	received/failed	VARCHAR(50)		YES	NO
-CARRIER_RESPONSE_STATUS	"Delivery status returned by the SMS provider/carrier. Indicates the state of the message at the carrier level. Common values include: DELIVERED – Message successfully received by the recipient. 
-FAILED – Delivery attempt was unsuccessful.
-QUEUED_ON_CHANNEL – Message accepted by the carrier and placed in the delivery queue; in some cases, no further status is returned and the final outcome remains unknown."	DELIVERED/FAILED/QUEUED_ON_CHANNEL	VARCHAR(50)		YES	NO
-SOURCE	Source through which the message was triggered - here it represents a message was sent from the system to a recipient (an outgoing SMS)	Outbound Message	VARCHAR(75)		YES	NO
-CAMPAIGN_START_DATE	Start date of the campaign, if known	2023-03-27	DATE		YES	NO
-CAMPAIGN_MONTH	Represents the month in which the SMS Campaign was excecuted.	2025-09-01	DATE		YES	NO
-SMS_CREATED_DATE	When the outbound message record was created in the SMS Manager System (from report/API)	12/18/2025 19:50	TIMESTAMP_NTZ(7)		YES	NO
-SMS_DELIVER_DATE	When the message is scheduled to be delivered(or was delivered if sent immediately)(from report)	12/18/2025 19:50	TIMESTAMP_NTZ(7)		YES	NO
-SMS_EXPIRE_DATE	The time after which the message should no longer be delivered (from report)	12/21/2025 19:50	TIMESTAMP_NTZ(7)		YES	NO
-SMS_UPDATED_DATE	The last time the message record was updated in the SMS Manager system(from report/API)	12/18/2025 19:50	TIMESTAMP_NTZ(7)		YES	NO
-CONTRACT_ID	Unique identifier assigned to specific contract 	C123456	VARCHAR(50)		YES	NO
-CONTRACT_PBP	Benefit Plan or Plan code specifies what benefits are included under the contract 	PBP001	VARCHAR(50)		YES	NO
-MBR_ELIG_INSURANCE_COMPANY	Member Insurance company	UHC	VARCHAR(50)		YES	NO
-FILE_NAME	Name of the file tied to the record	SMSDelivery_Report_12082025.CSV	VARCHAR(250)		NO	NO
-FILE_CREATION_DATE	Date the file was created	3/15/2023	DATE		NO	NO
-USER_STORY	"	User Story ID associated with data ingestion or update"	US12345	VARCHAR(25)		YES	NO
-INSERT_DATE	Timestamp recording when the row was first inserted into the table	12/31/2025 7:26	TIMESTAMP_NTZ(7)		NO	NO
-INSERT_USER	User or system that inserted the row	WM_Tableau_HCE	VARCHAR(75)		NO	NO
-UPDATE_DATE	Timestamp recording when the row was last updated	12/31/2025 7:26	TIMESTAMP_NTZ(7)		NO	NO
-UPDATE_USER	User or system that last updated the row	WM_Tableau_HCE	VARCHAR(75)		NO	NO
+
+select x.GMPI_ID,
+	'Y' as NEW_MEMBER_FLAG 
+from 
+	(
+	select FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH.GMPI_ID 
+	from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH 
+	where FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH.REPORT_MONTH ='2026-01-01' 
+
+except
+
+	select FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH.GMPI_ID 
+	from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
+	where FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH.REPORT_MONTH = dateadd(month,-6,'2026-01-01'
+)) x
