@@ -1,12 +1,76 @@
-Message you can post:
-
-I’m seeing an issue when loading data from an Alteryx workflow into Snowflake.
-
-When I manually run the Alteryx workflow and load datetime columns into a Snowflake table (stored as TIMESTAMP_NTZ), the values end up +2 hours ahead of what I see in Alteryx.
-
-My understanding is that this is likely due to the Alteryx Snowflake connector performing an implicit timezone conversion during insert. It seems to assume the incoming datetime is in a local/session timezone and converts it before writing to Snowflake — possibly treating the value as Pacific time and converting it to Central time.
-
-I’ve already verified that my Snowflake user timezone is set to America/Chicago, but the shift still occurs at load time.
-
-Has anyone else encountered this behavior with the Alteryx Snowflake connector?
-If so, what is the recommended approach to prevent this implicit timezone conversion (without hard-coding offsets)?
+select [mrm].[GMPI_ID],
+	[mrm].[MEMBER_LAST_NAME],
+	[mrm].[MEMBER_FIRST_NAME],
+	[mrm].[MBR_DATE_OF_BIRTH],
+	[mrm].[MBR_GENDER],
+	[mrm].[MEMBER_ID],
+	[dm].[MEMBER_MBI],
+	[dma].[MEMBER_PHONE] as [MEMBER_PHONE],
+	[hmo].[ELIGIBLE_FLAG] as [ELIGIBILITY_FLAG],
+	[mrm].[RISK_POOL_CODE],
+	[mrm].[SRF_STATUS],
+	[mrm].[PROVIDER_ID],
+	Concat([dp].[PROVIDER_FIRST_NAME], ' ', [dp].[PROVIDER_LAST_NAME]) as [PROVIDER_FULL_NAME],
+	[dpa].[CONTACT_PHONE] as [PROVIDER_PHONE],
+	[dp].[NPI_ID],
+	case 
+			when [dc].[CLINIC_RELATION] = 'Affiliated' then 'Affiliated' 
+			when [mrm].[OWNED_FLAG] = 0 then 'Contracted' 
+			when [mrm].[OWNED_FLAG] = 1 then 'Owned' 
+			else '' 
+		end as [PROVIDER_RELATION],
+	[mrm].[CLINIC_ID],
+	[mrm].[CLINIC_NAME],
+	[mrm].[CLINIC_GROUP_ID],
+	[mrm].[CLINIC_GROUP_NAME],
+	[mrm].[REGION_ID],
+	[mrm].[REGION],
+	[mrm].[MARKET_ID],
+	[mrm].[MARKET],
+	case [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] 
+			when 'United Community & State Texas' then 'UnitedHealthcare' 
+			when 'United Facets Lite' then 'UnitedHealthcare' 
+			when 'United of Florida' then 'UnitedHealthcare' 
+			when 'United of Greater Texas' then 'UnitedHealthcare' 
+			when 'United of Texas' then 'UnitedHealthcare' 
+			when 'Cosmos United Lite' then 'UnitedHealthcare' 
+			else [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] 
+		end as [MBR_ELIG_INSURANCE_COMPANY_FULL_NAME],
+	[mrm].[MBR_ELIG_INSURANCE_COMPANY],
+	[mrm].[MBR_ELIG_INSURANCE_COMPANY_ID],
+	[mrm].[CONTRACT_ID],
+	[mrm].[CONTRACT_PBP],
+	[mrm].[BENEFIT_PLAN_DESCRIPTION],
+	[mrm].[DATA_ENTITY],
+	[dm].[MEMBER_LANGUAGE],
+	'WELLMED' as [CDO],
+	'WELLMED' as [BUSINESS_SEGMENT],
+	[mrm].[REPORT_MONTH] as [MRM_REPORT_MONTH] 
+from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [mrm] 
+	left join [DIM_PROVIDER] [dp] on [mrm].[PROVIDER_ID] = [dp].[PROVIDER_ID] 
+	left join [DIM_PROVIDER_ADDRESS] [dpa] on [dp].[PROVIDER_ID] = [dpa].[PROVIDER_ID] and [dpa].[ACTIVE_FLAG] = 1 and [dpa].[PROVIDER_ADDRESS_PRIMARY_FLAG] = 1 
+	left join [DIM_CLINIC] [dc] on [mrm].[CLINIC_ID] = [dc].[CLINIC_ID] and [dc].[ACTIVE_FLAG] = 1 
+	left join [HIER_MEMBER_OPER] [hmo] on [mrm].[REPORT_MONTH] = [hmo].[HIER_MONTH] and [mrm].[MEMBER_ID] = [hmo].[MEMBER_ID] and [mrm].[GMPI_ID] = [hmo].[GMPI_ID] and [hmo].[ACTIVE_FLAG] = 1 
+	left join [DIM_MEMBER] [dm] on [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
+	left join [DIM_MEMBER_ADDRESS] [dma] on [dma].[MEMBER_ID] = [mrm].[MEMBER_ID] and [dma].[ACTIVE_FLAG] = 1 
+where [mrm].[MEMBER_LAST_NAME] is not NULL 
+	and [mrm].[MEMBER_FIRST_NAME] is not NULL 
+	and [mrm].[MBR_DATE_OF_BIRTH] is not NULL 
+	and [mrm].[MBR_GENDER] is not NULL 
+	and [dm].[MEMBER_MBI] is not NULL 
+	and [mrm].[REGION] in ('Florida', 'Greater Texas', 'Houston', 'North Texas') 
+	and [mrm].[DATA_ENTITY] = 'WellMed' 
+	and [dm].[MEMBER_LANGUAGE] in ('English', 'Spanish') 
+	and [mrm].[REPORT_MONTH] = 
+	(
+	select Max([rm].[REPORT_MONTH]) 
+	from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [rm] 
+	where [rm].[DATA_ENTITY] = 'WellMed'
+	) 
+	and [dp].[PROVIDER_FIRST_NAME] is not NULL 
+	and [mrm].[ACTIVE_FLAG] = 1 
+	and [mrm].[IS_HOSPICE_FLAG] = 0 
+	and [mrm].[LTI_FLAG] = 0 
+	and [mrm].[ESRD_FLAG] = 0 
+	and [dm].[ACTIVE_FLAG] = 1 
+order by [mrm].[GMPI_ID]
