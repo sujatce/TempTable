@@ -1,24 +1,31 @@
-SELECT
-    SMS_OPT_IN_ID,
-    SMS_OPT_IN_RAW_ID,
-    GMPI_ID,
-    MBI,
-    MEMBER_LAST_NAME,
-    MEMBER_FIRST_NAME,
-    MEMBER_ADDRESS_1,
-    MEMBER_CITY,
-    MEMBER_STATE,
-    MEMBER_ZIP,
-    MEMBER_PHONE,
-    MEMBER_EMAIL,
-    SMS_CONSENT,
-    SMS_CONSENT_DATE,
-    CONSENT_TERMS,
-    FILE_NAME,
-    FILE_CREATION_DATE,
-    USER_STORY,
-    INSERT_DATE,
-    INSERT_USER,
-    UPDATE_DATE,
-    UPDATE_USER
-FROM ASQN_PRD_ORCHESTRATION_DB.DBO.SMS_OPT_IN;
+select distinct [dm].[MEMBER_MBI] as [MBI] 
+from [dbo].[MEMBER_REPORT_MONTH] as [mrm], [dbo].[DIM_MEMBER] as [dm] 
+where [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
+	and [dm].[MEMBER_MBI] is not NULL 
+	and [dm].[ACTIVE_FLAG] = 1 
+	and [mrm].[ACTIVE_FLAG] = 1 
+	and [mrm].[REPORT_MONTH] = 
+	(
+	select Max([dbo].[MEMBER_REPORT_MONTH].[REPORT_MONTH]) 
+	from [dbo].[MEMBER_REPORT_MONTH]
+	) 
+	and [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] Like '%United%' 
+
+union all
+
+select distinct [dm].[MEMBER_MBI] as [MBI] 
+from [dbo].[MEMBER_REPORT_MONTH] as [mrm], [dbo].[DIM_MEMBER] as [dm] 
+where [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
+	and [dm].[MEMBER_MBI] is not NULL 
+	and [dm].[ACTIVE_FLAG] = 1 
+	and [mrm].[ACTIVE_FLAG] = 1 
+	and [mrm].[REPORT_MONTH] = 
+	(
+	select Max([dbo].[MEMBER_REPORT_MONTH].[REPORT_MONTH]) 
+	from [dbo].[MEMBER_REPORT_MONTH]
+	) 
+	and [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] Like '%OptumCare%'
+
+
+
+FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
