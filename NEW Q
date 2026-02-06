@@ -1,82 +1,89 @@
-FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
-
-
-
-
-
-select [mrm].[GMPI_ID],
-	[mrm].[MEMBER_LAST_NAME],
-	[mrm].[MEMBER_FIRST_NAME],
-	[mrm].[MBR_DATE_OF_BIRTH],
-	[mrm].[MBR_GENDER],
-	[mrm].[MEMBER_ID],
-	[dm].[MEMBER_MBI],
-	[dma].[MEMBER_PHONE] as [MEMBER_PHONE],
-	[hmo].[ELIGIBLE_FLAG] as [ELIGIBILITY_FLAG],
-	[mrm].[RISK_POOL_CODE],
-	[mrm].[SRF_STATUS],
-	[mrm].[PROVIDER_ID],
-	Concat([dp].[PROVIDER_FIRST_NAME], ' ', [dp].[PROVIDER_LAST_NAME]) as [PROVIDER_FULL_NAME],
-	[dpa].[CONTACT_PHONE] as [PROVIDER_PHONE],
-	[dp].[NPI_ID],
-	case 
-			when [dc].[CLINIC_RELATION] = 'Affiliated' then 'Affiliated' 
-			when [mrm].[OWNED_FLAG] = 0 then 'Contracted' 
-			when [mrm].[OWNED_FLAG] = 1 then 'Owned' 
-			else '' 
-		end as [PROVIDER_RELATION],
-	[mrm].[CLINIC_ID],
-	[mrm].[CLINIC_NAME],
-	[mrm].[CLINIC_GROUP_ID],
-	[mrm].[CLINIC_GROUP_NAME],
-	[mrm].[REGION_ID],
-	[mrm].[REGION],
-	[mrm].[MARKET_ID],
-	[mrm].[MARKET],
-	case [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] 
-			when 'United Community & State Texas' then 'UnitedHealthcare' 
-			when 'United Facets Lite' then 'UnitedHealthcare' 
-			when 'United of Florida' then 'UnitedHealthcare' 
-			when 'United of Greater Texas' then 'UnitedHealthcare' 
-			when 'United of Texas' then 'UnitedHealthcare' 
-			when 'Cosmos United Lite' then 'UnitedHealthcare' 
-			else [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] 
-		end as [MBR_ELIG_INSURANCE_COMPANY_FULL_NAME],
-	[mrm].[MBR_ELIG_INSURANCE_COMPANY],
-	[mrm].[MBR_ELIG_INSURANCE_COMPANY_ID],
-	[mrm].[CONTRACT_ID],
-	[mrm].[CONTRACT_PBP],
-	[mrm].[BENEFIT_PLAN_DESCRIPTION],
-	[mrm].[DATA_ENTITY],
-	[dm].[MEMBER_LANGUAGE],
-	'WELLMED' as [CDO],
-	'WELLMED' as [BUSINESS_SEGMENT],
-	[mrm].[REPORT_MONTH] as [MRM_REPORT_MONTH] 
-from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [mrm] 
-	left join [DIM_PROVIDER] [dp] on [mrm].[PROVIDER_ID] = [dp].[PROVIDER_ID] 
-	left join [DIM_PROVIDER_ADDRESS] [dpa] on [dp].[PROVIDER_ID] = [dpa].[PROVIDER_ID] and [dpa].[ACTIVE_FLAG] = 1 and [dpa].[PROVIDER_ADDRESS_PRIMARY_FLAG] = 1 
-	left join [DIM_CLINIC] [dc] on [mrm].[CLINIC_ID] = [dc].[CLINIC_ID] and [dc].[ACTIVE_FLAG] = 1 
-	left join [HIER_MEMBER_OPER] [hmo] on [mrm].[REPORT_MONTH] = [hmo].[HIER_MONTH] and [mrm].[MEMBER_ID] = [hmo].[MEMBER_ID] and [mrm].[GMPI_ID] = [hmo].[GMPI_ID] and [hmo].[ACTIVE_FLAG] = 1 
-	left join [DIM_MEMBER] [dm] on [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
-	left join [DIM_MEMBER_ADDRESS] [dma] on [dma].[MEMBER_ID] = [mrm].[MEMBER_ID] and [dma].[ACTIVE_FLAG] = 1 
-where [mrm].[MEMBER_LAST_NAME] is not NULL 
-	and [mrm].[MEMBER_FIRST_NAME] is not NULL 
-	and [mrm].[MBR_DATE_OF_BIRTH] is not NULL 
-	and [mrm].[MBR_GENDER] is not NULL 
-	and [dm].[MEMBER_MBI] is not NULL 
-	and [mrm].[REGION] in ('Florida', 'Greater Texas', 'Houston', 'North Texas') 
-	and [mrm].[DATA_ENTITY] = 'WellMed' 
-	and [dm].[MEMBER_LANGUAGE] in ('English', 'Spanish') 
-	and [mrm].[REPORT_MONTH] = 
-	(
-	select Max([rm].[REPORT_MONTH]) 
-	from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] as [rm] 
-	where [rm].[DATA_ENTITY] = 'WellMed'
-	) 
-	and [dp].[PROVIDER_FIRST_NAME] is not NULL 
-	and [mrm].[ACTIVE_FLAG] = 1 
-	and [mrm].[IS_HOSPICE_FLAG] = 0 
-	and [mrm].[LTI_FLAG] = 0 
-	and [mrm].[ESRD_FLAG] = 0 
-	and [dm].[ACTIVE_FLAG] = 1 
-order by [mrm].[GMPI_ID]
+SELECT
+    mrm.GMPI_ID,
+    mrm.MEMBER_LAST_NAME,
+    mrm.MEMBER_FIRST_NAME,
+    mrm.MBR_DATE_OF_BIRTH,
+    mrm.MBR_GENDER,
+    mrm.MEMBER_ID,
+    dm.MEMBER_MBI,
+    dma.MEMBER_PHONE AS MEMBER_PHONE,
+    hmo.ELIGIBLE_FLAG AS ELIGIBILITY_FLAG,
+    mrm.RISK_POOL_CODE,
+    mrm.SRF_STATUS,
+    mrm.PROVIDER_ID,
+    CONCAT(dp.PROVIDER_FIRST_NAME, ' ', dp.PROVIDER_LAST_NAME) AS PROVIDER_FULL_NAME,
+    dpa.CONTACT_PHONE AS PROVIDER_PHONE,
+    dp.NPI_ID,
+    CASE
+        WHEN dc.CLINIC_RELATION = 'Affiliated' THEN 'Affiliated'
+        WHEN mrm.OWNED_FLAG = 0 THEN 'Contracted'
+        WHEN mrm.OWNED_FLAG = 1 THEN 'Owned'
+        ELSE ''
+    END AS PROVIDER_RELATION,
+    mrm.CLINIC_ID,
+    mrm.CLINIC_NAME,
+    mrm.CLINIC_GROUP_ID,
+    mrm.CLINIC_GROUP_NAME,
+    mrm.REGION_ID,
+    mrm.REGION,
+    mrm.MARKET_ID,
+    mrm.MARKET,
+    CASE mrm.MBR_ELIG_INSURANCE_COMPANY_FULL_NAME
+        WHEN 'United Community & State Texas' THEN 'UnitedHealthcare'
+        WHEN 'United Facets Lite' THEN 'UnitedHealthcare'
+        WHEN 'United of Florida' THEN 'UnitedHealthcare'
+        WHEN 'United of Greater Texas' THEN 'UnitedHealthcare'
+        WHEN 'United of Texas' THEN 'UnitedHealthcare'
+        WHEN 'Cosmos United Lite' THEN 'UnitedHealthcare'
+        ELSE mrm.MBR_ELIG_INSURANCE_COMPANY_FULL_NAME
+    END AS MBR_ELIG_INSURANCE_COMPANY_FULL_NAME,
+    mrm.MBR_ELIG_INSURANCE_COMPANY,
+    mrm.MBR_ELIG_INSURANCE_COMPANY_ID,
+    mrm.CONTRACT_ID,
+    mrm.CONTRACT_PBP,
+    mrm.BENEFIT_PLAN_DESCRIPTION,
+    mrm.DATA_ENTITY,
+    dm.MEMBER_LANGUAGE,
+    'WELLMED' AS CDO,
+    'WELLMED' AS BUSINESS_SEGMENT,
+    mrm.REPORT_MONTH AS MRM_REPORT_MONTH
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH AS mrm
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER AS dp
+    ON mrm.PROVIDER_ID = dp.PROVIDER_ID
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_ADDRESS AS dpa
+    ON dp.PROVIDER_ID = dpa.PROVIDER_ID
+   AND dpa.ACTIVE_FLAG = 1
+   AND dpa.PROVIDER_ADDRESS_PRIMARY_FLAG = 1
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_CLINIC AS dc
+    ON mrm.CLINIC_ID = dc.CLINIC_ID
+   AND dc.ACTIVE_FLAG = 1
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.HIER_MEMBER_OPER AS hmo
+    ON mrm.REPORT_MONTH = hmo.HIER_MONTH
+   AND mrm.MEMBER_ID = hmo.MEMBER_ID
+   AND mrm.GMPI_ID = hmo.GMPI_ID
+   AND hmo.ACTIVE_FLAG = 1
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER AS dm
+    ON mrm.GMPI_ID = dm.GMPI_ID
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER_ADDRESS AS dma
+    ON dma.MEMBER_ID = mrm.MEMBER_ID
+   AND dma.ACTIVE_FLAG = 1
+WHERE mrm.MEMBER_LAST_NAME IS NOT NULL
+  AND mrm.MEMBER_FIRST_NAME IS NOT NULL
+  AND mrm.MBR_DATE_OF_BIRTH IS NOT NULL
+  AND mrm.MBR_GENDER IS NOT NULL
+  AND dm.MEMBER_MBI IS NOT NULL
+  AND mrm.REGION IN ('Florida', 'Greater Texas', 'Houston', 'North Texas')
+  AND mrm.DATA_ENTITY = 'WellMed'
+  AND dm.MEMBER_LANGUAGE IN ('English', 'Spanish')
+  AND mrm.REPORT_MONTH = (
+        SELECT MAX(rm.REPORT_MONTH)
+        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH AS rm
+        WHERE rm.DATA_ENTITY = 'WellMed'
+  )
+  AND dp.PROVIDER_FIRST_NAME IS NOT NULL
+  AND mrm.ACTIVE_FLAG = 1
+  AND mrm.IS_HOSPICE_FLAG = 0
+  AND mrm.LTI_FLAG = 0
+  AND mrm.ESRD_FLAG = 0
+  AND dm.ACTIVE_FLAG = 1
+ORDER BY mrm.GMPI_ID;
