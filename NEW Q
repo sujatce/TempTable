@@ -8,3 +8,31 @@ where ([ORCHESTRATION].[dbo].[NANPA_AREA_CODE].[SERVICE] is not Null)
 	or ([ORCHESTRATION].[dbo].[NANPA_AREA_CODE].[IN_SERVICE] = 'N') 
 	or ([ORCHESTRATION].[dbo].[NANPA_AREA_CODE].[TYPE_OF_CODE] = 'Easily Recognizable Code') 
 	or (([ORCHESTRATION].[dbo].[NANPA_AREA_CODE].[USE] = 'N' or [ORCHESTRATION].[dbo].[NANPA_AREA_CODE].[COUNTRY] <> 'US'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+    NPA_ID,
+    TYPE_OF_CODE,
+    "USE",
+    IN_SERVICE,
+    SERVICE
+FROM ASQN_PRD_ORCHESTRATION_DB.DBO.NANPA_AREA_CODE
+WHERE SERVICE IS NOT NULL
+   OR IN_SERVICE = 'N'
+   OR TYPE_OF_CODE = 'Easily Recognizable Code'
+   OR (
+        "USE" = 'N'
+        OR COUNTRY <> 'US'
+   );
