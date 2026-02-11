@@ -1,1 +1,35 @@
-ASQN_PRD_ORCHESTRATION_DB.DBO.NANPA_AREA_CODE
+select distinct [dm].[MEMBER_MBI] as [MBI],
+	[mrm].[GMPI_ID],
+	[mrm].[is_hospice_flag],
+	[mrm].[is_snp_flag],
+	[mrm].[lti_flag] 
+from [dbo].[MEMBER_REPORT_MONTH] as [mrm], [dbo].[DIM_MEMBER] as [dm] 
+where [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
+	and [dm].[MEMBER_MBI] is not NULL 
+	and [dm].[ACTIVE_FLAG] = 1 
+	and [mrm].[ACTIVE_FLAG] = 1 
+	and [mrm].[REPORT_MONTH] = 
+	(
+	select Max([dbo].[MEMBER_REPORT_MONTH].[REPORT_MONTH]) 
+	from [dbo].[MEMBER_REPORT_MONTH]
+	) 
+	and [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] Like '%United%' 
+
+union all
+
+select distinct [dm].[MEMBER_MBI] as [MBI],
+	[mrm].[GMPI_ID],
+	[mrm].[is_hospice_flag],
+	[mrm].[is_snp_flag],
+	[mrm].[lti_flag] 
+from [dbo].[MEMBER_REPORT_MONTH] as [mrm], [dbo].[DIM_MEMBER] as [dm] 
+where [mrm].[GMPI_ID] = [dm].[GMPI_ID] 
+	and [dm].[MEMBER_MBI] is not NULL 
+	and [dm].[ACTIVE_FLAG] = 1 
+	and [mrm].[ACTIVE_FLAG] = 1 
+	and [mrm].[REPORT_MONTH] = 
+	(
+	select Max([dbo].[MEMBER_REPORT_MONTH].[REPORT_MONTH]) 
+	from [dbo].[MEMBER_REPORT_MONTH]
+	) 
+	and [mrm].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] Like '%OptumCare%'
