@@ -1,1 +1,44 @@
-While deploying the code, I had a merge conflict with Robert's commit on the same file. The prior file which robert created is not visible in my latest pull  as I found later that since he has some issue in the code the change was not visible in my latest pull.  I sent a message to him on my Friday afternoon  and I didnot hear back and so I was trying to resolve the conflict by keeping his change and trying to move my changes to a new file. So I deleted my branch and was trying to create a new branch and new file and few minutes later I found that my table is created. I am confirming with Robert that his changes are still there in the file.
+with [RANKEDPHONES] as 
+	(
+	select [orchestration].[dbo].[epmp_phone].[gmpi_id],
+		[orchestration].[dbo].[epmp_phone].[member_phone],
+		[orchestration].[dbo].[epmp_phone].[phone_update_date],
+		Row_Number() 
+	over 
+		(
+		partition by [orchestration].[dbo].[epmp_phone].[gmpi_id], [orchestration].[dbo].[epmp_phone].[member_phone] 
+		order by [orchestration].[dbo].[epmp_phone].[phone_update_date] Desc
+		) as [rn] 
+	from [orchestration].[dbo].[epmp_phone] 
+	where [orchestration].[dbo].[epmp_phone].[gmpi_id] is not NULL 
+		and [orchestration].[dbo].[epmp_phone].[member_phone] is not NULL 
+		and [orchestration].[dbo].[epmp_phone].[member_phone] not in ('0000000000', '1111111111', '2222222222', '3333333333', '4444444444', '5555555555', '6666666666', '7777777777', '8888888888', '9999999999') 
+		and Len([orchestration].[dbo].[epmp_phone].[member_phone]) = 10
+	) 
+select [rankedphones].[gmpi_id],
+	[rankedphones].[member_phone],
+	[rankedphones].[phone_update_date] 
+from [rankedphones] 
+where [rankedphones].[rn] = 1 
+order by [rankedphones].[gmpi_id]
+
+
+
+
+select Replace(Substring([BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[MEMBER_DOB_MEMBER_PHONE], 14, 12), '-', '') 'Telephone Number List',
+	'2021-1-1' [Date],
+	'C821692987' [LicenseID],
+	[BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[GMPI_ID] [RecordID],
+	[BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] 
+from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] 
+where Replace(Substring([BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[MEMBER_DOB_MEMBER_PHONE], 14, 12), '-', '') is not NULL 
+	and Replace(Substring([BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[MEMBER_DOB_MEMBER_PHONE], 14, 12), '-', '') not in ('0000000000', '1111111111', '2222222222', '3333333333', '4444444444', '5555555555', '6666666666', '7777777777', '8888888888', '9999999999') 
+	and [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[REPORT_MONTH] = 
+	(
+	select Max([BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[REPORT_MONTH]) 
+	from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH]
+	) 
+	and [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[ACTIVE_FLAG] = 1 
+	and [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[MEMBER_DOB_MEMBER_PHONE] is not NULL 
+	and Len(Replace(Substring([BI_Analysis].[dbo].[MEMBER_REPORT_MONTH].[MEMBER_DOB_MEMBER_PHONE], 14, 12), '-', '')) = 10 
+order by [RecordID]
