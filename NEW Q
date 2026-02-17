@@ -1,6 +1,6 @@
 create or replace secure view
-ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_GRYPHON_RND_SUPPRESS
-    (GRYPHON_RND_ID COMMENT 'Table Primary Key'
+ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_GRYPHON_LIT_SUPPRESS
+    (GRYPHON_LIT_ID COMMENT 'Table Primary Key'
     ,MEMBER_PHONE COMMENT 'Member Phone Number'
     ,MBI COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries'
     ,GMPI_ID COMMENT 'WellMed unique member identifier'
@@ -10,10 +10,10 @@ ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_GRYPHON_RND_SUPPRESS
     ,FILE_CREATION_DATE COMMENT 'Date file was sent to vendor Gryphon for evaluation'
     ,UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated'
     ) 
-    COMMENT = 'This view provides a list of South Region members to suppress for either a reassigned phone number or no safe harbor due to missing data from the Federal Reassigned Number Database. \n\nWellMed Central Quality Performance Analytics connects to external data provider Gryphon to pull South Region members with a reassigned phone number. This data set is the SOURCE OF TRUTH for South Region Gryphon RND suppressions. \n\nApproximately 37 million phone numbers in the U.S. are reassigned each year - around 100,000 are reassigned every day. The FCC Reassigned Number Database is designed to prevent a consumer from receiving unwanted calls intended for individuals who previously held the same phone number. Callers and campaign orchestrators can use the database to determine whether a telephone number may have been reassigned so they can avoid outreaching consumers who do not want to receive the calls.  The RND database refreshes monthly on the 15th and is then sent to Gryphon.  WellMed contracts with Gryphon to access this data, and refreshes the South Region data set on the 18th of each month.\n\n***NOTE:*** IT IS CRITICAL WHEN USING RND DATA TO JOIN ON BOTH A MEMBER IDENTIFIER (GMPI or MBI) *AND* TELEPHONE NUMBER.  SUPPRESSING ON ONLY ONE OR THE OTHER IS OVER-SUPPRESSING.'
+    COMMENT = 'This view provides a list of South Region members to suppress for being known legal litigators. \n\nWellMed Central Quality Performance Analytics connects to external data provider Gryphon to pull South Region members with a known history of litigation. This data set is the SOURCE OF TRUTH for South Region Gryphon Legal Litigator suppressions. \n\nThe Litigator List is a database of telephone numbers and other related data parameters associated with professional plaintiffs that have been pulled from court filings and associated with legal action surrounding alleged TCPA, FDCPA, FCRA, CFPB, Do Not Contact and other telemarketing-type violations. This is not a government created/mandated list. It is a dataset supported by WebRecon. Gryphon refreshes the Litigator List data twice a month, on the 1st and 15th.  WellMed contracts with Gryphon to access this data, and refreshes the South Region data set on the 18th of each month.\n\n***NOTE:*** WHEN USING LEGAL LITIGATOR DATA IT IS APPROPRIATE TO JOIN ON *EITHER* A MEMBER IDENTIFIER (GMPI or MBI) *OR* TELEPHONE NUMBER TO REDUCE RISK OF CALLING A KNOWN LITIGATOR.'
 AS
 SELECT DISTINCT
-    GRYPHON_RND_ID
+     GRYPHON_LIT_ID
     ,MEMBER_PHONE
     ,MBI
     ,GMPI_ID
@@ -22,39 +22,11 @@ SELECT DISTINCT
     ,MEMBER_DATE_OF_BIRTH
     ,FILE_CREATION_DATE
     ,UPDATE_DATE
-FROM ASQN_DEV_ORCHESTRATION_DB.DBO.GRYPHON_RND_CLEANSED
-WHERE RND_STATUS IN ('NO_DATA','YES')
+FROM ASQN_DEV_ORCHESTRATION_DB.DBO.GRYPHON_LIT_CLEANSED
+WHERE LITIGATOR_LIST IN ('TRUE','1')
 AND UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
                     FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-                    WHERE VIEW_NAME = 'VW_WM_GRYPHON_RND_SUPPRESS')
+                    WHERE VIEW_NAME = 'VW_WM_GRYPHON_LIT_SUPPRESS')
 AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE 
                     FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-                    WHERE VIEW_NAME = 'VW_WM_GRYPHON_RND_SUPPRESS');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-INSERT INTO ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-    (PROGRAM_NAME, VIEW_NAME, MAX_DISPLAY_DATE, MIN_DISPLAY_DATE,USER_STORY)
-VALUES
-    ('ORCHESTRATION','VW_WM_GRYPHON_RND_SUPPRESS','9999-12-31','1900-01-01','US9976040');
-
-INSERT INTO ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-    (PROGRAM_NAME, VIEW_NAME, MAX_DISPLAY_DATE, MIN_DISPLAY_DATE,USER_STORY)
-VALUES
-    ('ORCHESTRATION','VW_WM_GRYPHON_LIT_SUPPRESS','9999-12-31','1900-01-01','US9976051');
-
+                    WHERE VIEW_NAME = 'VW_WM_GRYPHON_LIT_SUPPRESS');
