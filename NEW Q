@@ -1,12 +1,33 @@
+create or replace secure view
+ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_GRYPHON_RND_SUPPRESS
+    (GRYPHON_RND_ID COMMENT 'Table Primary Key'
+    ,MEMBER_PHONE COMMENT 'Member Phone Number'
+    ,MBI COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries'
+    ,GMPI_ID COMMENT 'WellMed unique member identifier'
+    ,MEMBER_LAST_NAME COMMENT 'Last name of the member enrolled in the health plan'
+    ,MEMBER_FIRST_NAME COMMENT 'First name of the member enrolled in the health plan'
+    ,MEMBER_DATE_OF_BIRTH COMMENT 'Date of birth of the member enrolled in the health plan'
+    ,FILE_CREATION_DATE COMMENT 'Date file was sent to vendor Gryphon for evaluation'
+    ,UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated'
+    ) 
+    COMMENT = 'This view provides a list of South Region members to suppress for either a reassigned phone number or no safe harbor due to missing data from the Federal Reassigned Number Database. \n\nWellMed Central Quality Performance Analytics connects to external data provider Gryphon to pull South Region members with a reassigned phone number. This data set is the SOURCE OF TRUTH for South Region Gryphon RND suppressions. \n\nApproximately 37 million phone numbers in the U.S. are reassigned each year - around 100,000 are reassigned every day. The FCC Reassigned Number Database is designed to prevent a consumer from receiving unwanted calls intended for individuals who previously held the same phone number. Callers and campaign orchestrators can use the database to determine whether a telephone number may have been reassigned so they can avoid outreaching consumers who do not want to receive the calls.  The RND database refreshes monthly on the 15th and is then sent to Gryphon.  WellMed contracts with Gryphon to access this data, and refreshes the South Region data set on the 18th of each month.\n\n***NOTE:*** IT IS CRITICAL WHEN USING RND DATA TO JOIN ON BOTH A MEMBER IDENTIFIER (GMPI or MBI) *AND* TELEPHONE NUMBER.  SUPPRESSING ON ONLY ONE OR THE OTHER IS OVER-SUPPRESSING.'
+AS
 SELECT DISTINCT
-    ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE.GMPI_ID,
-    ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE.MEMBER_PHONE
-FROM ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE
-WHERE ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE.GMPI_ID IS NOT NULL
-  AND ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE.MEMBER_PHONE IS NOT NULL
-  AND ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE.MEMBER_PHONE NOT IN (
-        '0000000000', '1111111111', '2222222222', '3333333333', '4444444444',
-        '5555555555', '6666666666', '7777777777', '8888888888', '9999999999'
-  )
-  AND LENGTH(ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE.MEMBER_PHONE) = 10
-ORDER BY ASQN_PRD_ORCHESTRATION_DB.DBO.EPMP_PHONE.GMPI_ID;
+    GRYPHON_RND_ID
+    ,MEMBER_PHONE
+    ,MBI
+    ,GMPI_ID
+    ,MEMBER_LAST_NAME
+    ,MEMBER_FIRST_NAME
+    ,MEMBER_DATE_OF_BIRTH
+    ,FILE_CREATION_DATE
+    ,UPDATE_DATE
+FROM ASQN_DEV_ORCHESTRATION_DB.DBO.GRYPHON_RND_CLEANSED
+WHERE RND_STATUS IN ('NO_DATA','YES')
+AND UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
+                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+                    WHERE VIEW_NAME = 'VW_WM_GRYPHON_RND_SUPPRESS')
+AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE 
+                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+                    WHERE VIEW_NAME = 'VW_WM_GRYPHON_RND_SUPPRESS');
+
