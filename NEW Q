@@ -1,6 +1,123 @@
-delete from dbo.sms_response --4431
+Adding rows to CFG_VW_CONTROL for gryphon views (#142) · uhg-internal/wcq-reporting-solution@47697b5
+GitHub
+GitHub is where people build software. More than 150 million people use GitHub to discover, fork, and contribute to over 420 million projects.
  
-create or replace sequence ASQN_PRD_ORCHESTRATION_DB.DBO.SMS_RESPONSE_SEQ start with 1 increment by 1 order;
+source_code/change_request/ASQN_PRD_CFG_DB/W_US9976147_CFG.sql
  
-ALTER TABLE dbo.sms_response ALTER COLUMN SMS_RESPONSE_ID 
-SET DEFAULT dbo.SMS_RESPONSE_SEQ.NEXTVAL;
+https://github.com/...
+ 
+1. Create Secure view - VW_NANPA_AREA_CODE
+
+   Select * from nanpa_area_Code
+
+2. Get comments from NANPA NPA NXX
+
+3. Remove audit columns, just add the update date
+
+4. Add a filter on ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL table to filter data between max_display_Date and min_display_Date
+
+   where clause addition -
+ 
+AND UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
+
+                    FROM ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL
+
+                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE')
+
+AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE 
+
+                    FROM ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL
+
+                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE');
+ 
+5. Step #4 to work, you need to have a record in the
+
+  cfg_vw_Control - insert a record into the table
+
+6. Script - 
+
+    INSERT INTO ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+
+    (PROGRAM_NAME, VIEW_NAME, MAX_DISPLAY_DATE, MIN_DISPLAY_DATE,USER_STORY)
+
+VALUES
+
+    ('ORCHESTRATION','VW_NANPA_AREA_CODE','9999-12-31','1900-01-01','USXYZ');                                                                                                                                                                                                                                                                               7. Deploy the insert script to prod - cfg db into dbo schema - deploy to ‎source_code/change_request/ASQN_PRD_CFG_DB/ folder
+
+8. Deploy the view to prod - orchestration into Access schema - deploy to ‎source_code/change_request/ASQN_PRD_ORCHESTRATION_DB/ folder
+ 
+https://github.com/..
+
+what she is trying to say is she asked me to insert a record into cfg_vw_control and then create the nanpa view 
+
+I will give you the NANPA_AREA_CODE table script 
+
+create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.NANPA_AREA_CODE (
+	NPA_ID NUMBER(38,0) NOT NULL,
+	TYPE_OF_CODE VARCHAR(50),
+	ASSIGNABLE VARCHAR(10),
+	EXPLANATION VARCHAR(75),
+	RESERVED VARCHAR(10),
+	ASSIGNED VARCHAR(10),
+	ASSIGNMENT_DT DATE,
+	USE VARCHAR(5),
+	LOCATION VARCHAR(75),
+	COUNTRY VARCHAR(50),
+	IN_SERVICE VARCHAR(5),
+	IN_SERVICE_DT DATE,
+	SERVICE VARCHAR(75),
+	STATUS VARCHAR(25),
+	FILE_NAME VARCHAR(255) NOT NULL,
+	FILE_CREATION_DATE DATE NOT NULL,
+	USER_STORY VARCHAR(25) NOT NULL,
+	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	constraint PK_NAN_AC_PRIMARYKEY primary key (NPA_ID)
+);
+
+can you give me the view code for the same based on the instructions above please 
+
+
+i can give a sample code for a view NANPA_NPA_NXX
+YOU CAN USE THIS FOR A REFERENCE HOW THEIR CREATING OTHER VIEWS IN MY PLACE 
+
+create or replace secure view ASQN_PRD_ORCHESTRATION_DB.ACCESS.VW_NANPA_NPA_NXX(
+	NPA_NXX COMMENT 'Area Code and Prefix (e.g., 907-200)',
+	STATE COMMENT 'Standard two-character abbreviation for the State (e.g., AK)',
+	OCN COMMENT 'Operating Company Number',
+	COMPANY COMMENT 'Full company name; company names are enclosed with quotes if they contain special characters',
+	RATE_CENTER COMMENT '10-character abbreviation for the Rate Center in which the code is assigned',
+	EFFECTIVE_DATE COMMENT 'Future date when a new code will be in service (for new codes only). Once effective, this date no longer appears',
+	USE COMMENT 'Use of this code: VC = Vacant, AS = Assigned to Service Provider, PR = Protected for Split, RV = Reserved by Service Provider, UA = Unavailable for Assignment',
+	ASSIGN_DATE COMMENT 'Date the code was assigned to the service provider by NANPA (populated for assignments from Jan 2001 onward)',
+	INITIAL_GROWTH COMMENT 'Indicates whether the code is Initial (first code at a switching entity) or Growth (subsequent code for the same purpose)',
+	POOLED_CODE COMMENT 'Flag indicating whether the NPA-NXX participates in number pooling (Y = pooled into 1,000-number blocks shared across providers; N = full 10,000-number block assigned to one provider)',
+	IN_SERVICE COMMENT 'Indicates whether this NPA-NXX is in service (Yes/No)',
+	FILE_UPDATED COMMENT 'Date on which the source file was last updated',
+	FILE_NAME COMMENT 'Name of the source file downloaded from NANPA',
+	FILE_CREATION_DATE COMMENT 'Creation date of the source file (SYSDATE at load time)',
+	UPDATE_DATE COMMENT 'Timestamp when the row was last updated'
+) COMMENT='The WellMed Central Quality Reporting team produces member campaign data for stakeholders. To prevent members from being contacted using invalid or inappropriate phone numbers, reference data is required to validate telephone number prefixes.\n\nThe NANPA NPA-NXX (Central Office Code Assignment) dataset is sourced from the North American Numbering Plan Administrator (NANPA), the regulatory authority that manages telephone numbering resources across North America. It provides the authoritative mapping of area code and prefix combinations (NPA-NXX) to service providers, geographic rate centers, and usage classifications.\n\nThis data enables identification of prefixes that are assigned, pooled, reserved, vacant, or otherwise unavailable, including those designated for business, government, toll-free, or non-service use. Downstream processes use this reference to filter out invalid or non-consumer phone number ranges and ensure outreach is limited to appropriate member numbers. This dataset is stored in the NANPA_NPA_NXX table.'
+as
+SELECT NPA_NXX, 
+       STATE, 
+       OCN, 
+       COMPANY, 
+       RATE_CENTER, 
+       EFFECTIVE_DATE, 
+       USE, 
+       ASSIGN_DATE, 
+       INITIAL_GROWTH, 
+       POOLED_CODE, 
+       IN_SERVICE, 
+       FILE_UPDATED, 
+       FILE_NAME, 
+       FILE_CREATION_DATE, 
+       UPDATE_DATE
+  FROM ASQN_PRD_ORCHESTRATION_DB.DBO.NANPA_NPA_NXX;
+
+
+
+ 
