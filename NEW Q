@@ -1,6 +1,5 @@
-create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_CAMPAIGN_TARGET_2023(
-	CAMPAIGN_TARGET_ID_2023,
-	CAMPAIGN_TARGET_ID,
+create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_CAMPAIGN_TARGET_EXTERNAL(
+	CAMPAIGN_TARGET_EXTERNAL_ID,
 	GMPI_ID COMMENT ' WellMed unique member identifier ',
 	MEMBER_LAST_NAME COMMENT ' Last name of the member enrolled in the health plan ',
 	MEMBER_FIRST_NAME COMMENT ' First name of the member enrolled in the health plan ',
@@ -22,13 +21,12 @@ create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_CAMPAIGN_TA
 	NEW_MEMBER_FLAG COMMENT ' Y/N flag indicating whether the member is new (definition of new may vary by outreach program) ',
 	ELIGIBILITY_FLAG COMMENT ' Flag indicating the member is eligible for the health plan ',
 	IS_CE COMMENT ' Flag indicating member is continuously enrolled ',
-	SRF_STATUS COMMENT ' Social Risk Factor status of the member: MY=current year, MY-1=prior year only, 2Y=both years, No ',
-	RISK_POOL_CODE COMMENT ' Risk Pool Code assigned to the member at the time of outreach ',
+	SRF_FLAG COMMENT ' Social Risk Factor flag of the member ',
+	LEVEL_1_COMMUNITY COMMENT ' Level 1 community is the first level provider pod assignment in Cozeva ',
 	PROVIDER_ID COMMENT ' WellMed BI Analysis DIM_PROVIDER unique PROVIDER_ID ',
 	PROVIDER_FULL_NAME COMMENT ' Full name of the provider, usually the PCP ',
 	NPI_ID COMMENT ' National Provider Identifier of the provider issued by CMS ',
 	PROVIDER_RELATION COMMENT ' Relationship of the provider to Optum, e.g. Affiliated, Contracted or Employed ',
-	OWNED_FLAG COMMENT ' Flag indicating whether the provider is Owned/Employed ',
 	PROVIDER_ADDRESS_1 COMMENT ' Provider Address Line 1 ',
 	PROVIDER_ADDRESS_2 COMMENT ' Provider Address Line 2 ',
 	PROVIDER_CITY COMMENT ' Provider Address City ',
@@ -51,7 +49,6 @@ create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_CAMPAIGN_TA
 	CONTRACT_ID COMMENT ' Contract ID associated with the member enrolled health plan ',
 	CONTRACT_PBP COMMENT ' Contract PBP associated with the member enrolled health plan ',
 	BENEFIT_PLAN_DESCRIPTION COMMENT ' Plan type associated with the member enrolled health plan ',
-	PLAN_TYPE,
 	CONTRACT_TYPE COMMENT ' Other plan type details associated with the member enrolled health plan ',
 	DATA_ENTITY COMMENT ' Data entity associated with the member data, e.g. WellMed, RMG ',
 	CDO COMMENT ' Care Delivery Organization, e.g. WellMed, OCNV ',
@@ -64,21 +61,20 @@ create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_CAMPAIGN_TA
 	MEASURE COMMENT ' Measure(s) addressed by the outreach ',
 	CAMPAIGN_PURPOSE COMMENT ' High level purpose of the outreach ',
 	OUTREACH_MODE COMMENT ' Modality of the outreach, e.g. Manual dial, IVR, push preview, AI, etc. ',
+	VENDOR_DTL COMMENT ' Field to capture additional details sent to the vendor for outreach ',
 	CAMPAIGN_START_DATE COMMENT ' Start date of the outreach ',
 	CAMPAIGN_END_DATE COMMENT ' End date of the outreach, if known, else set to default date ',
 	CAMPAIGN_YEAR COMMENT ' Calendar year of the outreach ',
 	CAMPAIGN_QUARTER COMMENT ' Calendar quarter of the outreach ',
 	SURVEY_MONTH COMMENT ' Calendar month of the outreach in YYYY-MM-DD format ',
-	TRACKING_ID COMMENT ' Tracking ID sent to third party vendors for the outreach ',
+	CHOREOGRAPH_ID,
 	MRM_REPORT_MONTH COMMENT ' Membership month of the outreach data in BI Analysis MRM stored in YYYY-MM-DD format ',
-	OMNI_DTL COMMENT ' Field to capture omni details sent to the vendor for outreach ',
 	FILE_NAME COMMENT ' Name of the file tied to the record ',
 	FILE_CREATION_DATE COMMENT ' Date the file was created ',
 	UPDATE_DATE COMMENT ' Timestamp recording when the row was last updated '
-) as 
-SELECT
-CAMPAIGN_TARGET_ID_2023,
-CAMPAIGN_TARGET_ID,
+) as
+SELECT 
+CAMPAIGN_TARGET_EXTERNAL_ID,
 GMPI_ID,
 MEMBER_LAST_NAME,
 MEMBER_FIRST_NAME,
@@ -100,13 +96,12 @@ DATE_OF_SERVICE,
 NEW_MEMBER_FLAG,
 ELIGIBILITY_FLAG,
 IS_CE,
-SRF_STATUS,
-RISK_POOL_CODE,
+SRF_FLAG,
+LEVEL_1_COMMUNITY,
 PROVIDER_ID,
 PROVIDER_FULL_NAME,
 NPI_ID,
 PROVIDER_RELATION,
-OWNED_FLAG,
 PROVIDER_ADDRESS_1,
 PROVIDER_ADDRESS_2,
 PROVIDER_CITY,
@@ -129,7 +124,6 @@ MBR_ELIG_INSURANCE_COMPANY_ID,
 CONTRACT_ID,
 CONTRACT_PBP,
 BENEFIT_PLAN_DESCRIPTION,
-PLAN_TYPE,
 CONTRACT_TYPE,
 DATA_ENTITY,
 CDO,
@@ -142,41 +136,40 @@ PROGRAM_NAME,
 MEASURE,
 CAMPAIGN_PURPOSE,
 OUTREACH_MODE,
+VENDOR_DTL,
 CAMPAIGN_START_DATE,
 CAMPAIGN_END_DATE,
 CAMPAIGN_YEAR,
 CAMPAIGN_QUARTER,
 SURVEY_MONTH,
-TRACKING_ID,
+CHOREOGRAPH_ID,
 MRM_REPORT_MONTH,
-OMNI_DTL,
 FILE_NAME,
 FILE_CREATION_DATE,
 UPDATE_DATE
 FROM 
-ASQN_DEV_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023
+ASQN_DEV_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_EXTERNAL
 WHERE UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
                     FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-                    WHERE VIEW_NAME = 'VW_WM_CAMPAIGN_TARGET_2023')
+                    WHERE VIEW_NAME = 'VW_WM_CAMPAIGN_TARGET_EXTERNAL')
 AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE 
                     FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-                    WHERE VIEW_NAME = 'VW_WM_CAMPAIGN_TARGET_2023');
+                    WHERE VIEW_NAME = 'VW_WM_CAMPAIGN_TARGET_EXTERNAL');
 
 CAN you tell me 
 I have assigned a code review for this table 
 
 this table is taking data from the following table 
 
-create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023 (
-	CAMPAIGN_TARGET_ID_2023 NUMBER(38,0) NOT NULL DEFAULT ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023_SEQ.NEXTVAL,
-	CAMPAIGN_TARGET_ID NUMBER(38,0),
+create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_EXTERNAL (
+	CAMPAIGN_TARGET_EXTERNAL_ID NUMBER(38,0) NOT NULL DEFAULT ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_EXTERNAL_SEQ.NEXTVAL,
 	GMPI_ID NUMBER(38,0),
 	MEMBER_LAST_NAME VARCHAR(60) COMMENT 'Last name of the member enrolled in the health plan',
 	MEMBER_FIRST_NAME VARCHAR(50) COMMENT 'First name of the member enrolled in the health plan',
 	MEMBER_DATE_OF_BIRTH DATE,
 	MEMBER_GENDER VARCHAR(15),
 	MEMBER_ID NUMBER(15,0),
-	MEMBER_MBI VARCHAR(11),
+	MEMBER_MBI VARCHAR(30),
 	MEMBER_LANGUAGE VARCHAR(75),
 	MEMBER_ADDRESS_TYPE VARCHAR(55),
 	MEMBER_ADDRESS_1 VARCHAR(55),
@@ -191,13 +184,12 @@ create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023 (
 	NEW_MEMBER_FLAG VARCHAR(1),
 	ELIGIBILITY_FLAG BOOLEAN,
 	IS_CE BOOLEAN,
-	SRF_STATUS VARCHAR(25),
-	RISK_POOL_CODE VARCHAR(75),
+	SRF_FLAG VARCHAR(25),
+	LEVEL_1_COMMUNITY VARCHAR(75),
 	PROVIDER_ID NUMBER(15,0),
 	PROVIDER_FULL_NAME VARCHAR(165),
-	NPI_ID NUMBER(15,0),
+	NPI_ID VARCHAR(30),
 	PROVIDER_RELATION VARCHAR(50),
-	OWNED_FLAG BOOLEAN,
 	PROVIDER_ADDRESS_1 VARCHAR(75),
 	PROVIDER_ADDRESS_2 VARCHAR(75),
 	PROVIDER_CITY VARCHAR(30),
@@ -220,27 +212,26 @@ create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023 (
 	CONTRACT_ID VARCHAR(50),
 	CONTRACT_PBP VARCHAR(50),
 	BENEFIT_PLAN_DESCRIPTION VARCHAR(75),
-	PLAN_TYPE VARCHAR(75),
 	CONTRACT_TYPE VARCHAR(75),
 	DATA_ENTITY VARCHAR(50),
 	CDO VARCHAR(75),
 	CDO_SUBGROUP VARCHAR(75),
 	IS_SNP_FLAG BOOLEAN,
 	PATIENT_MISMATCH BOOLEAN,
-	BUSINESS_UNIT VARCHAR(250) NOT NULL,
+	BUSINESS_UNIT VARCHAR(75) NOT NULL,
 	VENDOR VARCHAR(75),
 	PROGRAM_NAME VARCHAR(255) NOT NULL,
 	MEASURE VARCHAR(250),
 	CAMPAIGN_PURPOSE VARCHAR(250) NOT NULL,
 	OUTREACH_MODE VARCHAR(75),
+	VENDOR_DTL VARCHAR(4000),
 	CAMPAIGN_START_DATE DATE,
 	CAMPAIGN_END_DATE DATE,
-	CAMPAIGN_YEAR NUMBER(38,0),
-	CAMPAIGN_QUARTER NUMBER(38,0),
+	CAMPAIGN_YEAR NUMBER(38,0) NOT NULL,
+	CAMPAIGN_QUARTER NUMBER(38,0) NOT NULL,
 	SURVEY_MONTH DATE,
-	TRACKING_ID VARCHAR(25),
+	CHOREOGRAPH_ID VARCHAR(15),
 	MRM_REPORT_MONTH DATE,
-	OMNI_DTL VARCHAR(8000),
 	FILE_NAME VARCHAR(250) NOT NULL,
 	FILE_CREATION_DATE DATE NOT NULL,
 	USER_STORY VARCHAR(25) NOT NULL,
@@ -248,7 +239,7 @@ create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023 (
 	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
 	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
 	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
-	constraint "PK_CAM_T_2023 PrimaryKey" primary key (CAMPAIGN_TARGET_ID_2023)
+	constraint PK_CAM_TE_PRIMARYKEY primary key (CAMPAIGN_TARGET_EXTERNAL_ID)
 );
 
 please let me know if the view for the code is correct  ?
