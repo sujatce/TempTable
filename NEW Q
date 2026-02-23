@@ -1,123 +1,254 @@
-Adding rows to CFG_VW_CONTROL for gryphon views (#142) · uhg-internal/wcq-reporting-solution@47697b5
-GitHub
-GitHub is where people build software. More than 150 million people use GitHub to discover, fork, and contribute to over 420 million projects.
- 
-source_code/change_request/ASQN_PRD_CFG_DB/W_US9976147_CFG.sql
- 
-https://github.com/...
- 
-1. Create Secure view - VW_NANPA_AREA_CODE
-
-   Select * from nanpa_area_Code
-
-2. Get comments from NANPA NPA NXX
-
-3. Remove audit columns, just add the update date
-
-4. Add a filter on ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL table to filter data between max_display_Date and min_display_Date
-
-   where clause addition -
- 
-AND UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
-
-                    FROM ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL
-
-                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE')
-
+create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_CAMPAIGN_TARGET_2023(
+	CAMPAIGN_TARGET_ID_2023,
+	CAMPAIGN_TARGET_ID,
+	GMPI_ID COMMENT ' WellMed unique member identifier ',
+	MEMBER_LAST_NAME COMMENT ' Last name of the member enrolled in the health plan ',
+	MEMBER_FIRST_NAME COMMENT ' First name of the member enrolled in the health plan ',
+	MEMBER_DATE_OF_BIRTH COMMENT ' Date of birth of the member enrolled in the health plan ',
+	MEMBER_GENDER COMMENT ' Gender of the member recorded by the health plan ',
+	MEMBER_ID COMMENT ' WellMed BI Analysis DIM_MEMBER unique MEMBER_ID ',
+	MEMBER_MBI COMMENT ' Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries ',
+	MEMBER_LANGUAGE COMMENT ' Primary language spoken by the member ',
+	MEMBER_ADDRESS_TYPE COMMENT ' Address type code for the Member address e.g. HOME, MAILING ',
+	MEMBER_ADDRESS_1 COMMENT ' Member Address Line 1 ',
+	MEMBER_ADDRESS_2 COMMENT ' Member Address Line 2 ',
+	MEMBER_CITY COMMENT ' Member Address City ',
+	MEMBER_STATE COMMENT ' Member Address State ',
+	MEMBER_ZIP COMMENT ' Member Address Zip Code ',
+	MEMBER_COUNTY COMMENT ' Member Address County ',
+	MEMBER_PHONE COMMENT ' Member Phone Number associated with the outreach ',
+	MEMBER_EMAIL COMMENT ' Member Email associated with the outreach ',
+	DATE_OF_SERVICE COMMENT ' Date of the provider office visit associated with the Focus Survey ',
+	NEW_MEMBER_FLAG COMMENT ' Y/N flag indicating whether the member is new (definition of new may vary by outreach program) ',
+	ELIGIBILITY_FLAG COMMENT ' Flag indicating the member is eligible for the health plan ',
+	IS_CE COMMENT ' Flag indicating member is continuously enrolled ',
+	SRF_STATUS COMMENT ' Social Risk Factor status of the member: MY=current year, MY-1=prior year only, 2Y=both years, No ',
+	RISK_POOL_CODE COMMENT ' Risk Pool Code assigned to the member at the time of outreach ',
+	PROVIDER_ID COMMENT ' WellMed BI Analysis DIM_PROVIDER unique PROVIDER_ID ',
+	PROVIDER_FULL_NAME COMMENT ' Full name of the provider, usually the PCP ',
+	NPI_ID COMMENT ' National Provider Identifier of the provider issued by CMS ',
+	PROVIDER_RELATION COMMENT ' Relationship of the provider to Optum, e.g. Affiliated, Contracted or Employed ',
+	OWNED_FLAG COMMENT ' Flag indicating whether the provider is Owned/Employed ',
+	PROVIDER_ADDRESS_1 COMMENT ' Provider Address Line 1 ',
+	PROVIDER_ADDRESS_2 COMMENT ' Provider Address Line 2 ',
+	PROVIDER_CITY COMMENT ' Provider Address City ',
+	PROVIDER_STATE COMMENT ' Provider Address State ',
+	PROVIDER_ZIP COMMENT ' Provider Address Zip Code ',
+	PROVIDER_PHONE COMMENT ' Provider Phone Number ',
+	TAX_ID COMMENT ' Tax ID of the provider tied to the member record in BI Analysis MRM ',
+	CLINIC_ID COMMENT ' WellMed BI Analysis DIM_CLINIC unique CLINIC_ID tied to the Clinic ',
+	CLINIC_NAME COMMENT ' Name of the primary clinic associated with the member and their PCP ',
+	CLINIC_GROUP_ID COMMENT ' WellMed BI Analysis DIM_CLINIC_GROUP unique CLINIC_GROUP_ID tied to the Clinic Group ',
+	CLINIC_GROUP_NAME COMMENT ' Name of the primary clinic group associated with the member and their PCP ',
+	PROVIDER_GROUP_NAME COMMENT ' Name of the provider group ',
+	REGION_ID COMMENT ' WellMed BI Analysis DIM_REGION unique REGION_ID tied to the Region ',
+	REGION COMMENT ' Name of the primary geographic region associated with the member and their PCP ',
+	MARKET_ID COMMENT ' WellMed BI Analysis DIM_MARKET unique MARKET_ID tied to the Market ',
+	MARKET COMMENT ' Name of the primary geographic market associated with the member and their PCP ',
+	MBR_ELIG_INSURANCE_COMPANY_FULL_NAME COMMENT ' Full name of the insurance company associated with the member enrolled health plan ',
+	MBR_ELIG_INSURANCE_COMPANY COMMENT ' Short code of the insurance company associated with the member enrolled health plan ',
+	MBR_ELIG_INSURANCE_COMPANY_ID COMMENT ' Member insurance card number ',
+	CONTRACT_ID COMMENT ' Contract ID associated with the member enrolled health plan ',
+	CONTRACT_PBP COMMENT ' Contract PBP associated with the member enrolled health plan ',
+	BENEFIT_PLAN_DESCRIPTION COMMENT ' Plan type associated with the member enrolled health plan ',
+	PLAN_TYPE,
+	CONTRACT_TYPE COMMENT ' Other plan type details associated with the member enrolled health plan ',
+	DATA_ENTITY COMMENT ' Data entity associated with the member data, e.g. WellMed, RMG ',
+	CDO COMMENT ' Care Delivery Organization, e.g. WellMed, OCNV ',
+	CDO_SUBGROUP COMMENT ' Care Delivery Organization Subgroup, e.g. AZ-IPA, CO-IPA ',
+	IS_SNP_FLAG COMMENT ' Flag indicating the member is in a Special Needs Plan ',
+	PATIENT_MISMATCH COMMENT ' Flag indicating the member was not found on lookup to BI Analysis MRM ',
+	BUSINESS_UNIT COMMENT ' Business Stakeholder team in charge of the outreach program ',
+	VENDOR COMMENT ' Internal or third-party vendor conducting the outreach ',
+	PROGRAM_NAME COMMENT ' Name of the Program ',
+	MEASURE COMMENT ' Measure(s) addressed by the outreach ',
+	CAMPAIGN_PURPOSE COMMENT ' High level purpose of the outreach ',
+	OUTREACH_MODE COMMENT ' Modality of the outreach, e.g. Manual dial, IVR, push preview, AI, etc. ',
+	CAMPAIGN_START_DATE COMMENT ' Start date of the outreach ',
+	CAMPAIGN_END_DATE COMMENT ' End date of the outreach, if known, else set to default date ',
+	CAMPAIGN_YEAR COMMENT ' Calendar year of the outreach ',
+	CAMPAIGN_QUARTER COMMENT ' Calendar quarter of the outreach ',
+	SURVEY_MONTH COMMENT ' Calendar month of the outreach in YYYY-MM-DD format ',
+	TRACKING_ID COMMENT ' Tracking ID sent to third party vendors for the outreach ',
+	MRM_REPORT_MONTH COMMENT ' Membership month of the outreach data in BI Analysis MRM stored in YYYY-MM-DD format ',
+	OMNI_DTL COMMENT ' Field to capture omni details sent to the vendor for outreach ',
+	FILE_NAME COMMENT ' Name of the file tied to the record ',
+	FILE_CREATION_DATE COMMENT ' Date the file was created ',
+	UPDATE_DATE COMMENT ' Timestamp recording when the row was last updated '
+) as 
+SELECT
+CAMPAIGN_TARGET_ID_2023,
+CAMPAIGN_TARGET_ID,
+GMPI_ID,
+MEMBER_LAST_NAME,
+MEMBER_FIRST_NAME,
+MEMBER_DATE_OF_BIRTH,
+MEMBER_GENDER,
+MEMBER_ID,
+MEMBER_MBI,
+MEMBER_LANGUAGE,
+MEMBER_ADDRESS_TYPE,
+MEMBER_ADDRESS_1,
+MEMBER_ADDRESS_2,
+MEMBER_CITY,
+MEMBER_STATE,
+MEMBER_ZIP,
+MEMBER_COUNTY,
+MEMBER_PHONE,
+MEMBER_EMAIL,
+DATE_OF_SERVICE,
+NEW_MEMBER_FLAG,
+ELIGIBILITY_FLAG,
+IS_CE,
+SRF_STATUS,
+RISK_POOL_CODE,
+PROVIDER_ID,
+PROVIDER_FULL_NAME,
+NPI_ID,
+PROVIDER_RELATION,
+OWNED_FLAG,
+PROVIDER_ADDRESS_1,
+PROVIDER_ADDRESS_2,
+PROVIDER_CITY,
+PROVIDER_STATE,
+PROVIDER_ZIP,
+PROVIDER_PHONE,
+MRM_TAX_ID AS TAX_ID,
+CLINIC_ID,
+CLINIC_NAME,
+CLINIC_GROUP_ID,
+CLINIC_GROUP_NAME,
+PROVIDER_GROUP_NAME,
+REGION_ID,
+REGION,
+MARKET_ID,
+MARKET,
+MBR_ELIG_INSURANCE_COMPANY_FULL_NAME,
+MBR_ELIG_INSURANCE_COMPANY,
+MBR_ELIG_INSURANCE_COMPANY_ID,
+CONTRACT_ID,
+CONTRACT_PBP,
+BENEFIT_PLAN_DESCRIPTION,
+PLAN_TYPE,
+CONTRACT_TYPE,
+DATA_ENTITY,
+CDO,
+CDO_SUBGROUP,
+IS_SNP_FLAG,
+PATIENT_MISMATCH,
+UPPER(BUSINESS_UNIT),
+VENDOR,
+PROGRAM_NAME,
+MEASURE,
+CAMPAIGN_PURPOSE,
+OUTREACH_MODE,
+CAMPAIGN_START_DATE,
+CAMPAIGN_END_DATE,
+CAMPAIGN_YEAR,
+CAMPAIGN_QUARTER,
+SURVEY_MONTH,
+TRACKING_ID,
+MRM_REPORT_MONTH,
+OMNI_DTL,
+FILE_NAME,
+FILE_CREATION_DATE,
+UPDATE_DATE
+FROM 
+ASQN_DEV_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023
+WHERE UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
+                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+                    WHERE VIEW_NAME = 'VW_WM_CAMPAIGN_TARGET_2023')
 AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE 
+                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+                    WHERE VIEW_NAME = 'VW_WM_CAMPAIGN_TARGET_2023');
 
-                    FROM ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL
+CAN you tell me 
+I have assigned a code review for this table 
 
-                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE');
- 
-5. Step #4 to work, you need to have a record in the
+this table is taking data from the following table 
 
-  cfg_vw_Control - insert a record into the table
-
-6. Script - 
-
-    INSERT INTO ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-
-    (PROGRAM_NAME, VIEW_NAME, MAX_DISPLAY_DATE, MIN_DISPLAY_DATE,USER_STORY)
-
-VALUES
-
-    ('ORCHESTRATION','VW_NANPA_AREA_CODE','9999-12-31','1900-01-01','USXYZ');                                                                                                                                                                                                                                                                               7. Deploy the insert script to prod - cfg db into dbo schema - deploy to ‎source_code/change_request/ASQN_PRD_CFG_DB/ folder
-
-8. Deploy the view to prod - orchestration into Access schema - deploy to ‎source_code/change_request/ASQN_PRD_ORCHESTRATION_DB/ folder
- 
-https://github.com/..
-
-what she is trying to say is she asked me to insert a record into cfg_vw_control and then create the nanpa view 
-
-I will give you the NANPA_AREA_CODE table script 
-
-create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.NANPA_AREA_CODE (
-	NPA_ID NUMBER(38,0) NOT NULL,
-	TYPE_OF_CODE VARCHAR(50),
-	ASSIGNABLE VARCHAR(10),
-	EXPLANATION VARCHAR(75),
-	RESERVED VARCHAR(10),
-	ASSIGNED VARCHAR(10),
-	ASSIGNMENT_DT DATE,
-	USE VARCHAR(5),
-	LOCATION VARCHAR(75),
-	COUNTRY VARCHAR(50),
-	IN_SERVICE VARCHAR(5),
-	IN_SERVICE_DT DATE,
-	SERVICE VARCHAR(75),
-	STATUS VARCHAR(25),
-	FILE_NAME VARCHAR(255) NOT NULL,
+create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023 (
+	CAMPAIGN_TARGET_ID_2023 NUMBER(38,0) NOT NULL DEFAULT ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_TARGET_2023_SEQ.NEXTVAL,
+	CAMPAIGN_TARGET_ID NUMBER(38,0),
+	GMPI_ID NUMBER(38,0),
+	MEMBER_LAST_NAME VARCHAR(60) COMMENT 'Last name of the member enrolled in the health plan',
+	MEMBER_FIRST_NAME VARCHAR(50) COMMENT 'First name of the member enrolled in the health plan',
+	MEMBER_DATE_OF_BIRTH DATE,
+	MEMBER_GENDER VARCHAR(15),
+	MEMBER_ID NUMBER(15,0),
+	MEMBER_MBI VARCHAR(11),
+	MEMBER_LANGUAGE VARCHAR(75),
+	MEMBER_ADDRESS_TYPE VARCHAR(55),
+	MEMBER_ADDRESS_1 VARCHAR(55),
+	MEMBER_ADDRESS_2 VARCHAR(55),
+	MEMBER_CITY VARCHAR(30),
+	MEMBER_STATE VARCHAR(2),
+	MEMBER_ZIP VARCHAR(15),
+	MEMBER_COUNTY VARCHAR(30),
+	MEMBER_PHONE VARCHAR(15),
+	MEMBER_EMAIL VARCHAR(250),
+	DATE_OF_SERVICE DATE,
+	NEW_MEMBER_FLAG VARCHAR(1),
+	ELIGIBILITY_FLAG BOOLEAN,
+	IS_CE BOOLEAN,
+	SRF_STATUS VARCHAR(25),
+	RISK_POOL_CODE VARCHAR(75),
+	PROVIDER_ID NUMBER(15,0),
+	PROVIDER_FULL_NAME VARCHAR(165),
+	NPI_ID NUMBER(15,0),
+	PROVIDER_RELATION VARCHAR(50),
+	OWNED_FLAG BOOLEAN,
+	PROVIDER_ADDRESS_1 VARCHAR(75),
+	PROVIDER_ADDRESS_2 VARCHAR(75),
+	PROVIDER_CITY VARCHAR(30),
+	PROVIDER_STATE VARCHAR(2),
+	PROVIDER_ZIP VARCHAR(15),
+	PROVIDER_PHONE VARCHAR(15),
+	MRM_TAX_ID VARCHAR(30),
+	CLINIC_ID NUMBER(15,0),
+	CLINIC_NAME VARCHAR(250),
+	CLINIC_GROUP_ID NUMBER(15,0),
+	CLINIC_GROUP_NAME VARCHAR(150),
+	PROVIDER_GROUP_NAME VARCHAR(255),
+	REGION_ID NUMBER(38,0),
+	REGION VARCHAR(150),
+	MARKET_ID NUMBER(38,0),
+	MARKET VARCHAR(100),
+	MBR_ELIG_INSURANCE_COMPANY_FULL_NAME VARCHAR(250),
+	MBR_ELIG_INSURANCE_COMPANY VARCHAR(75),
+	MBR_ELIG_INSURANCE_COMPANY_ID VARCHAR(75),
+	CONTRACT_ID VARCHAR(50),
+	CONTRACT_PBP VARCHAR(50),
+	BENEFIT_PLAN_DESCRIPTION VARCHAR(75),
+	PLAN_TYPE VARCHAR(75),
+	CONTRACT_TYPE VARCHAR(75),
+	DATA_ENTITY VARCHAR(50),
+	CDO VARCHAR(75),
+	CDO_SUBGROUP VARCHAR(75),
+	IS_SNP_FLAG BOOLEAN,
+	PATIENT_MISMATCH BOOLEAN,
+	BUSINESS_UNIT VARCHAR(250) NOT NULL,
+	VENDOR VARCHAR(75),
+	PROGRAM_NAME VARCHAR(255) NOT NULL,
+	MEASURE VARCHAR(250),
+	CAMPAIGN_PURPOSE VARCHAR(250) NOT NULL,
+	OUTREACH_MODE VARCHAR(75),
+	CAMPAIGN_START_DATE DATE,
+	CAMPAIGN_END_DATE DATE,
+	CAMPAIGN_YEAR NUMBER(38,0),
+	CAMPAIGN_QUARTER NUMBER(38,0),
+	SURVEY_MONTH DATE,
+	TRACKING_ID VARCHAR(25),
+	MRM_REPORT_MONTH DATE,
+	OMNI_DTL VARCHAR(8000),
+	FILE_NAME VARCHAR(250) NOT NULL,
 	FILE_CREATION_DATE DATE NOT NULL,
 	USER_STORY VARCHAR(25) NOT NULL,
 	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
 	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
 	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
 	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
-	constraint PK_NAN_AC_PRIMARYKEY primary key (NPA_ID)
+	constraint "PK_CAM_T_2023 PrimaryKey" primary key (CAMPAIGN_TARGET_ID_2023)
 );
 
-can you give me the view code for the same based on the instructions above please 
-
-
-i can give a sample code for a view NANPA_NPA_NXX
-YOU CAN USE THIS FOR A REFERENCE HOW THEIR CREATING OTHER VIEWS IN MY PLACE 
-
-create or replace secure view ASQN_PRD_ORCHESTRATION_DB.ACCESS.VW_NANPA_NPA_NXX(
-	NPA_NXX COMMENT 'Area Code and Prefix (e.g., 907-200)',
-	STATE COMMENT 'Standard two-character abbreviation for the State (e.g., AK)',
-	OCN COMMENT 'Operating Company Number',
-	COMPANY COMMENT 'Full company name; company names are enclosed with quotes if they contain special characters',
-	RATE_CENTER COMMENT '10-character abbreviation for the Rate Center in which the code is assigned',
-	EFFECTIVE_DATE COMMENT 'Future date when a new code will be in service (for new codes only). Once effective, this date no longer appears',
-	USE COMMENT 'Use of this code: VC = Vacant, AS = Assigned to Service Provider, PR = Protected for Split, RV = Reserved by Service Provider, UA = Unavailable for Assignment',
-	ASSIGN_DATE COMMENT 'Date the code was assigned to the service provider by NANPA (populated for assignments from Jan 2001 onward)',
-	INITIAL_GROWTH COMMENT 'Indicates whether the code is Initial (first code at a switching entity) or Growth (subsequent code for the same purpose)',
-	POOLED_CODE COMMENT 'Flag indicating whether the NPA-NXX participates in number pooling (Y = pooled into 1,000-number blocks shared across providers; N = full 10,000-number block assigned to one provider)',
-	IN_SERVICE COMMENT 'Indicates whether this NPA-NXX is in service (Yes/No)',
-	FILE_UPDATED COMMENT 'Date on which the source file was last updated',
-	FILE_NAME COMMENT 'Name of the source file downloaded from NANPA',
-	FILE_CREATION_DATE COMMENT 'Creation date of the source file (SYSDATE at load time)',
-	UPDATE_DATE COMMENT 'Timestamp when the row was last updated'
-) COMMENT='The WellMed Central Quality Reporting team produces member campaign data for stakeholders. To prevent members from being contacted using invalid or inappropriate phone numbers, reference data is required to validate telephone number prefixes.\n\nThe NANPA NPA-NXX (Central Office Code Assignment) dataset is sourced from the North American Numbering Plan Administrator (NANPA), the regulatory authority that manages telephone numbering resources across North America. It provides the authoritative mapping of area code and prefix combinations (NPA-NXX) to service providers, geographic rate centers, and usage classifications.\n\nThis data enables identification of prefixes that are assigned, pooled, reserved, vacant, or otherwise unavailable, including those designated for business, government, toll-free, or non-service use. Downstream processes use this reference to filter out invalid or non-consumer phone number ranges and ensure outreach is limited to appropriate member numbers. This dataset is stored in the NANPA_NPA_NXX table.'
-as
-SELECT NPA_NXX, 
-       STATE, 
-       OCN, 
-       COMPANY, 
-       RATE_CENTER, 
-       EFFECTIVE_DATE, 
-       USE, 
-       ASSIGN_DATE, 
-       INITIAL_GROWTH, 
-       POOLED_CODE, 
-       IN_SERVICE, 
-       FILE_UPDATED, 
-       FILE_NAME, 
-       FILE_CREATION_DATE, 
-       UPDATE_DATE
-  FROM ASQN_PRD_ORCHESTRATION_DB.DBO.NANPA_NPA_NXX;
-
-
-
- 
+please let me know if the view for the code is correct  ?
