@@ -13,4 +13,8 @@ Look for a member who has visited in the last 30 days using the Code list, disch
 Are there any situations where we WOULDN’T contact the member
 
 
-
+select *
+from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DEFINITION_RESULT_ACTIVE
+where report_month = '2025-12-01'
+AND RESULT_DATE >='2025-12-01'
+AND UPPER(claim_specialty_value) like '%EMERGENCY%';
