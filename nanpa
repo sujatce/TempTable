@@ -1,1 +1,1 @@
-"Member_Phone_List_"+Date
+"Member_Phone_List_" + DateTimeFormat([Date], "%Y%m%d")
