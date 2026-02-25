@@ -1,71 +1,16 @@
-Use this query in SSMS (New Query) — it will list every SQL Server Agent Job + Step that calls any of those 4 procedures.
+Make sure control table has only 1 active row
+SELECT VIEW_NAME, COUNT(*) cnt
+FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+WHERE VIEW_NAME = 'VW_WM_ONE_TEAM_CORE'
+GROUP BY VIEW_NAME;
+B) Compare row counts (view should be <= table)
+SELECT COUNT(*) AS table_cnt
+FROM ASQN_DEV_ORCHESTRATION_DB.DBO.ONE_TEAM_CORE;
 
-USE msdb;
-GO
-
+SELECT COUNT(*) AS view_cnt
+FROM ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_ONE_TEAM_CORE;
+C) Confirm min/max UPDATE_DATE in view is within control window
 SELECT
-    j.name           AS job_name,
-    js.step_id,
-    js.step_name,
-    js.subsystem,
-    js.database_name,
-    js.command
-FROM dbo.sysjobs j
-JOIN dbo.sysjobsteps js
-    ON j.job_id = js.job_id
-WHERE
-    js.command LIKE '%sp_LOAD_EPMP_ADDRESS%'
- OR js.command LIKE '%sp_LOAD_EPMP_EMAIL%'
- OR js.command LIKE '%sp_LOAD_EPMP_PHONE%'
- OR js.command LIKE '%sp_LOAD_EPMP_PREFERENCES%'
-ORDER BY j.name, js.step_id;
-
-If you also want the schedule / next run time
-USE msdb;
-GO
-
-SELECT
-    j.name AS job_name,
-    js.step_id,
-    js.step_name,
-    js.database_name,
-    js.command,
-    sch.name AS schedule_name,
-    sjs.next_run_date,
-    sjs.next_run_time
-FROM dbo.sysjobs j
-JOIN dbo.sysjobsteps js
-    ON j.job_id = js.job_id
-LEFT JOIN dbo.sysjobschedules sjs
-    ON j.job_id = sjs.job_id
-LEFT JOIN dbo.sysschedules sch
-    ON sjs.schedule_id = sch.schedule_id
-WHERE
-    js.command LIKE '%sp_LOAD_EPMP_ADDRESS%'
- OR js.command LIKE '%sp_LOAD_EPMP_EMAIL%'
- OR js.command LIKE '%sp_LOAD_EPMP_PHONE%'
- OR js.command LIKE '%sp_LOAD_EPMP_PREFERENCES%'
-ORDER BY j.name, js.step_id;
-
-If this returns 0 rows
-
-That usually means the job step doesn’t call the proc directly (it may run an SSIS package, a script, or a wrapper proc). Then run this broader search:
-
-USE msdb;
-GO
-
-SELECT
-    j.name AS job_name,
-    js.step_id,
-    js.step_name,
-    js.subsystem,
-    js.database_name,
-    js.command
-FROM dbo.sysjobs j
-JOIN dbo.sysjobsteps js
-    ON j.job_id = js.job_id
-WHERE js.command LIKE '%EPMP%'
-ORDER BY j.name, js.step_id;
-
-
-Run the first query. If you paste back the results (job_name + step_name + subsystem), I can tell you exactly which job is running which procedure and whether any are called indirectly.
+  MIN(UPDATE_DATE) AS min_update_date,
+  MAX(UPDATE_DATE) AS max_update_date
+FROM ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_ONE_TEAM_CORE;
