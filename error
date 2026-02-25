@@ -1,16 +1,17 @@
-Make sure control table has only 1 active row
-SELECT VIEW_NAME, COUNT(*) cnt
-FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-WHERE VIEW_NAME = 'VW_WM_ONE_TEAM_CORE'
-GROUP BY VIEW_NAME;
-B) Compare row counts (view should be <= table)
-SELECT COUNT(*) AS table_cnt
-FROM ASQN_DEV_ORCHESTRATION_DB.DBO.ONE_TEAM_CORE;
+Utilize the API to pull the OPT OUT data table the data
 
-SELECT COUNT(*) AS view_cnt
-FROM ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_ONE_TEAM_CORE;
-C) Confirm min/max UPDATE_DATE in view is within control window
-SELECT
-  MIN(UPDATE_DATE) AS min_update_date,
-  MAX(UPDATE_DATE) AS max_update_date
-FROM ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_WM_ONE_TEAM_CORE;
+
+
+Workflow location: to be moved to SOP
+
+QA Workflow location: to be moved to SOP
+
+
+
+SOP Location:
+
+
+
+If we start this process weekly can this step be removed from future SOPs?
+
+How/does this need to be QA'd
