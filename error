@@ -1,17 +1,3 @@
-Utilize the API to pull the OPT OUT data table the data
+SELECT * FROM ASQN_PRD_ORCHESTRATION_DB.DBO.SMS_OPT_OUT
 
-
-
-Workflow location: to be moved to SOP
-
-QA Workflow location: to be moved to SOP
-
-
-
-SOP Location:
-
-
-
-If we start this process weekly can this step be removed from future SOPs?
-
-How/does this need to be QA'd
+WHERE FILE_NAME =  'SMS_OPT_OUT_REPORT_20260225.CSV';
