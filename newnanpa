@@ -1,15 +1,32 @@
-SELECT
-  code,
-  code_name,
-  COUNT(*) AS cnt
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_CLAIM_PROCEDURE
-WHERE service_from_date >= DATEADD(day, -365, CURRENT_DATE)
-  AND code_name IS NOT NULL
-  AND (
-        UPPER(code_name) LIKE '%EMERGENCY%'
-     OR UPPER(code_name) LIKE '%EMERG%'
-     OR UPPER(code_name) LIKE '%ED%'
-     OR UPPER(code_name) LIKE '%DEPARTMENT%'
-  )
-GROUP BY code, code_name
-ORDER BY cnt DESC;
+Ouput columns - Member demographics - GMPI ID, MBI, FNAME, LNAME, DOB, Last ER Visit date, procedure code
+
+there are also revenue codes 450  and few other codes  Look for POS 23
+
+how to search for these codes in fact_claim_procedure
+
+i found one more table called fact_er_visits
+
+sp_help FACT_ER_VISITS
+GMPI_ID
+ER_DATE
+FIRST_OF_MONTH
+PRIMARY_DIAG
+DIAGNOSIS_DESCRIPTION
+HOSPITAL_PROVIDER
+CLAIM_ID_ER
+CLAIM_ID_ADMIT
+CLAIM_ID_OBS
+ER_STATUS
+ER_CATEGORY
+MEMBER_FULL_NAME
+IS_SOCIAL_RISK
+MBR_AGE
+PROVIDER_FULL_NAME
+PROVIDER_MASTER_SYSTEM_ID
+CLINIC_NAME
+CLINIC_RELATION
+CLINIC_GROUP_NAME
+MARKET
+REGION
+STATE
+NPI_ID
