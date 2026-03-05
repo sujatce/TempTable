@@ -23,6 +23,8 @@ ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE;
 
 ✅ This shows every procedure line tied to the ER claim.
 
+IT SHOWS 8 ROWS FOR THE SAMEE GMPI ID
+
 ✅ Step 2B: Return ALL procedure codes in ONE column (comma-separated)
 
 This keeps it one row (best for a segment file).
@@ -55,5 +57,6 @@ GROUP BY
     ev.HOSPITAL_PROVIDER,
     ev.ER_STATUS,
     ev.ER_CATEGORY;
+I AM SEEING ONLY ONE ROW ALL PROCEDURE CODES CONTAINS ALL THE CODES I SAW IN 2A IN ONE COLUMN FOR THAT GMPIID
 
 ✅ Output = one row, with all codes in one big field.
