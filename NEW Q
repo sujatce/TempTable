@@ -1,132 +1,127 @@
-Fast Fix #1: Get TOP ER rows first, then apply procedures
+✅ One query that’s usually fast even without indexes
+(Uses a temp table inside the script — still “one thing to paste/run”)
+/* 1) Pull the ER claims you care about into a small temp table */
+IF OBJECT_ID('tempdb..#er') IS NOT NULL DROP TABLE #er;
 
-This is the biggest win. We force SQL Server to grab the top N ER rows before doing the expensive APPLY.
+SELECT TOP (5000)
+    ev.GMPI_ID,
+    CAST(ev.ER_DATE AS date) AS ER_DATE,
+    ev.CLAIM_ID_ER,
+    ev.HOSPITAL_PROVIDER,
+    ev.ER_STATUS,
+    ev.ER_CATEGORY
+INTO #er
+FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
+WHERE ev.ER_STATUS = 'TRUE ER'
+  AND ev.ER_DATE >= DATEADD(day, -10, CAST(GETDATE() AS date))
+ORDER BY ev.ER_DATE DESC;
 
+/* 2) Pull ONLY procedure rows for those ER claims, rank them, pick best one */
+WITH proc_ranked AS (
+    SELECT
+        fcp.CLAIM_ID,
+        fcp.CODE      AS PROCEDURE_CODE,
+        fcp.CODE_NAME,
+        ROW_NUMBER() OVER (
+            PARTITION BY fcp.CLAIM_ID
+            ORDER BY
+                CASE
+                    WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
+                                     'G0380','G0381','G0382','G0383','G0384') THEN 1
+                    WHEN fcp.CODE >= '0450' AND fcp.CODE <= '0459' THEN 2
+                    ELSE 3
+                END,
+                fcp.SERVICE_FROM_DATE DESC,
+                fcp.SERVICE_LINE DESC
+        ) AS rn
+    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    JOIN #er e
+        ON e.CLAIM_ID_ER = fcp.CLAIM_ID
+)
 SELECT
     dm.GMPI_ID,
     dm.MEMBER_MBI,
     dm.MEMBER_FIRST_NAME,
     dm.MEMBER_LAST_NAME,
     dm.MEMBER_DATE_OF_BIRTH,
-    CAST(ev.ER_DATE AS date) AS ER_DATE,
-    ev.HOSPITAL_PROVIDER,
-    ev.ER_STATUS,
-    ev.ER_CATEGORY,
-    ev.CLAIM_ID_ER,
-    pc.PROCEDURE_CODE,
-    pc.CODE_NAME
-FROM
-(
-    SELECT TOP (5000) *
-    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
-    WHERE ER_STATUS = 'TRUE ER'
-      AND ER_DATE >= DATEADD(day, -10, CAST(GETDATE() AS date))
-    ORDER BY ER_DATE DESC
-) ev
-LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = ev.GMPI_ID
-OUTER APPLY (
-    SELECT TOP (1)
-        fcp.CODE AS PROCEDURE_CODE,
-        fcp.CODE_NAME
-    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    WHERE fcp.CLAIM_ID = ev.CLAIM_ID_ER
-    ORDER BY
-        CASE
-            WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
-                             'G0380','G0381','G0382','G0383','G0384') THEN 1
-            WHEN fcp.CODE >= '0450' AND fcp.CODE <= '0459' THEN 2
-            ELSE 3
-        END,
-        fcp.SERVICE_FROM_DATE DESC,
-        fcp.SERVICE_LINE DESC
-) pc
-ORDER BY ev.ER_DATE DESC;
 
-IT IS NOT FAST 
+    e.ER_DATE,
+    e.HOSPITAL_PROVIDER,
+    e.ER_STATUS,
+    e.ER_CATEGORY,
+    e.CLAIM_ID_ER,
 
-I IS AGIAN SLOW 
-✅ Fast Fix #2: Remove the final ORDER BY (for testing)
-
-If you don’t need sorting while testing, sorting can slow things down:
-
--- remove this while testing
-ORDER BY ev.ER_DATE DESC;
-✅ Fast Fix #3: Use a tighter window (last 1–3 days) for validation
-
-Even 10 days might have a lot of ER visits.
-
-AND ER_DATE >= DATEADD(day, -3, CAST(GETDATE() AS date))
-✅ Fast Fix #4 (Best for performance): replace OUTER APPLY with one grouped join
-
-This avoids doing a lookup per row. (Often much faster.)
-
-SELECT TOP (5000)
-    dm.GMPI_ID,
-    dm.MEMBER_MBI,
-    dm.MEMBER_FIRST_NAME,
-    dm.MEMBER_LAST_NAME,
-    dm.MEMBER_DATE_OF_BIRTH,
-    CAST(ev.ER_DATE AS date) AS ER_DATE,
-    ev.HOSPITAL_PROVIDER,
-    ev.ER_STATUS,
-    ev.ER_CATEGORY,
-    ev.CLAIM_ID_ER,
     p.PROCEDURE_CODE,
     p.CODE_NAME
-FROM
-(
-    SELECT TOP (5000) *
-    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
-    WHERE ER_STATUS = 'TRUE ER'
-      AND ER_DATE >= DATEADD(day, -10, CAST(GETDATE() AS date))
-    ORDER BY ER_DATE DESC
-) ev
+FROM #er e
 LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = ev.GMPI_ID
-LEFT JOIN
-(
-    SELECT
-        fcp.CLAIM_ID,
-        MAX(CASE WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
-                                   'G0380','G0381','G0382','G0383','G0384')
-                 THEN fcp.CODE END) AS PROCEDURE_CODE,
-        MAX(CASE WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
-                                   'G0380','G0381','G0382','G0383','G0384')
-                 THEN fcp.CODE_NAME END) AS CODE_NAME
-    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    GROUP BY fcp.CLAIM_ID
-) p
-    ON p.CLAIM_ID = ev.CLAIM_ID_ER
-ORDER BY ev.ER_DATE DESC;
+    ON dm.GMPI_ID = e.GMPI_ID
+LEFT JOIN proc_ranked p
+    ON p.CLAIM_ID = e.CLAIM_ID_ER
+   AND p.rn = 1
+ORDER BY e.ER_DATE DESC;
+Why this is faster
 
+It first creates #er with only 5000 ER claims
 
-AGAIN IT IS SLOW 
+Then it joins FACT_CLAIM_PROCEDURE to only those 5000 claim IDs
 
-This version isn’t “perfect priority” anymore (it prioritizes ED codes only), but it is very fast for a validation run.
+That prevents a full scan of the entire procedure table
 
-The real root cause (why it’s slow)
+If this is still slow, then FACT_CLAIM_PROCEDURE is almost certainly:
 
-To be blunt: you probably don’t have an index on:
+a view, or
 
-FACT_CLAIM_PROCEDURE(CLAIM_ID) or
+extremely large with no usable indexes, or
 
-FACT_ER_VISITS(ER_STATUS, ER_DATE)
+blocked by resource limits
 
-If indexes exist, APPLY is much faster.
+✅ If you need it even faster for testing
 
-Quick question you can ask your DBA (sounds smart)
+Change these two numbers:
 
-Can we confirm there’s an index on FACT_CLAIM_PROCEDURE(CLAIM_ID) and FACT_ER_VISITS(ER_STATUS, ER_DATE)? The OUTER APPLY is slow without it.
+TOP (5000) → TOP (200)
 
-What I recommend you do now
+-10 days → -3 days
 
-Run Fast Fix #1 with TOP (50) first:
+That should return almost instantly.
 
-If it returns fast → logic is good.
+2 quick checks that explain “why everything is slow”
 
-Then increase to 500 / 5000.
+Run these (they’re fast):
 
-If it’s still slow even at TOP 50, then indexing is likely the issue.
+Check 1: Is it a table or a view?
+SELECT
+    o.type_desc,
+    s.name AS schema_name,
+    o.name AS object_name
+FROM sys.objects o
+JOIN sys.schemas s ON s.schema_id = o.schema_id
+WHERE s.name = 'dbo'
+  AND o.name = 'FACT_CLAIM_PROCEDURE';
 
-If you tell me your SQL Server version or whether these are views vs tables, I can give you the most optimized pattern for that environment.
+If type_desc = VIEW, that’s a huge clue.
+
+Check 2: Does it have an index on CLAIM_ID?
+SELECT
+    i.name AS index_name,
+    c.name AS column_name
+FROM sys.indexes i
+JOIN sys.index_columns ic
+  ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+JOIN sys.columns c
+  ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+WHERE i.object_id = OBJECT_ID('BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE')
+  AND c.name IN ('CLAIM_ID');
+
+If this returns nothing → there’s no index on CLAIM_ID.
+
+What you can do right now (practical)
+
+Run the temp table script above with TOP (200) and -3 days
+
+If still slow, run the “table vs view” query — that will explain it immediately
+
+If it’s a view / no index, you can tell your team:
+
+Joining FACT_CLAIM_PROCEDURE is slow because the object appears to be (a VIEW / not indexed on CLAIM_ID). For now I can deliver the SMS output reliably from FACT_ER_VISITS + dim_member, and we can add procedure code later if we materialize/index a smaller procedure subset.
