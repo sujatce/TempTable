@@ -1,9 +1,10 @@
 SELECT
-    ml.GMPI_ID,
-    ml.MBI,
-    ml.FNAME,
-    ml.LNAME,
-    ml.DOB,
+    dm.GMPI_ID,
+    dm.MEMBER_MBI,
+    dm.MEMBER_FIRST_NAME,
+    dm.MEMBER_LAST_NAME,
+    dm.MEMBER_DATE_OF_BIRTH,
+
     lep.LAST_ER_VISIT_DATE,
     lep.PROCEDURE_CODE,
 
@@ -15,6 +16,7 @@ SELECT
 
 FROM
 (
+    -- One row per GMPI_ID: most recent TRUE ER visit + one ED procedure code (if exists)
     SELECT *
     FROM
     (
@@ -26,80 +28,47 @@ FROM
             le.ER_STATUS,
             le.ER_CATEGORY,
             fcp.CODE AS PROCEDURE_CODE,
-
             ROW_NUMBER() OVER (
                 PARTITION BY le.GMPI_ID
-                ORDER BY fcp.SERVICE_FROM_DATE DESC
+                ORDER BY fcp.SERVICE_FROM_DATE DESC, fcp.SERVICE_LINE DESC
             ) AS rn
 
         FROM
         (
+            -- Latest TRUE ER visit per GMPI_ID
             SELECT *
             FROM
             (
                 SELECT
                     ev.GMPI_ID,
-                    CAST(ev.ER_DATE AS DATE) AS LAST_ER_VISIT_DATE,
+                    CAST(ev.ER_DATE AS date) AS LAST_ER_VISIT_DATE,
                     ev.CLAIM_ID_ER,
                     ev.HOSPITAL_PROVIDER,
                     ev.ER_STATUS,
                     ev.ER_CATEGORY,
-
                     ROW_NUMBER() OVER (
                         PARTITION BY ev.GMPI_ID
                         ORDER BY ev.ER_DATE DESC
                     ) AS rn
-
                 FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
                 WHERE ev.ER_STATUS = 'TRUE ER'
-
             ) x
-            WHERE rn = 1
+            WHERE x.rn = 1
         ) le
 
         LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
             ON fcp.CLAIM_ID = le.CLAIM_ID_ER
-           AND CAST(fcp.SERVICE_FROM_DATE AS DATE)
-               BETWEEN le.LAST_ER_VISIT_DATE
-               AND DATEADD(day,1,le.LAST_ER_VISIT_DATE)
-
+           AND CAST(fcp.SERVICE_FROM_DATE AS date)
+               BETWEEN le.LAST_ER_VISIT_DATE AND DATEADD(day, 1, le.LAST_ER_VISIT_DATE)
            AND fcp.CODE IN (
                 '99281','99282','99283','99284','99285',
                 'G0380','G0381','G0382','G0383','G0384'
            )
-
     ) y
-    WHERE rn = 1
+    WHERE y.rn = 1
 ) lep
 
-LEFT JOIN
-(
-    SELECT *
-    FROM
-    (
-        SELECT
-            mr.GMPI_ID,
-            mr.MBI,
-            mr.FNAME,
-            mr.LNAME,
-            mr.DOB,
-
-            ROW_NUMBER() OVER (
-                PARTITION BY mr.GMPI_ID
-                ORDER BY mr.REPORT_MONTH DESC
-            ) AS rn
-
-        FROM BI_ANALYSIS.dbo.MEMBER_REPORT_MONTH mr
-    ) m
-    WHERE rn = 1
-) ml
-
-
-ON ml.GMPI_ID = lep.GMPI_ID
-
-
+LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
+    ON dm.GMPI_ID = lep.GMPI_ID
 
 ORDER BY lep.LAST_ER_VISIT_DATE DESC;
-
-PLEASE JOIN MEMBER REPORT MONTH WITH DIM.MEMBER TO GET THE MEMBER_FIRST_NAME, MEMBER_LAST_NAME, MEMBER_MBI,MEMBER_DATE_OF_BIRTH 
-JOINING ON GMPI_ID
