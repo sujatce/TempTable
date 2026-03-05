@@ -1,62 +1,54 @@
-Step 2A: Return ALL procedure codes as multiple rows (full detail)
-DECLARE @GMPI_ID BIGINT = 123456789;
+IF OBJECT_ID('tempdb..#er30') IS NOT NULL DROP TABLE #er30;
 
-SELECT
-    ev.GMPI_ID,
-    CAST(ev.ER_DATE AS date) AS LAST_ER_DATE,
-    ev.CLAIM_ID_ER,
-    fcp.SERVICE_FROM_DATE,
-    fcp.SERVICE_LINE,
-    fcp.CODE,
-    fcp.CODE_NAME
-FROM (
-    SELECT TOP (1) *
-    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
-    WHERE ER_STATUS = 'TRUE ER'
-      AND GMPI_ID = @GMPI_ID
-      AND ER_DATE >= DATEADD(day, -90, CAST(GETDATE() AS date))
-    ORDER BY ER_DATE DESC
-) ev
-JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
-ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE;
-
-✅ This shows every procedure line tied to the ER claim.
-
-IT SHOWS 8 ROWS FOR THE SAMEE GMPI ID
-
-✅ Step 2B: Return ALL procedure codes in ONE column (comma-separated)
-
-This keeps it one row (best for a segment file).
-
-DECLARE @GMPI_ID BIGINT = 123456789;
-
+-- 1) Collect ER visits in last 30 days (one row per member: latest ER)
 SELECT
     ev.GMPI_ID,
     CAST(ev.ER_DATE AS date) AS LAST_ER_DATE,
     ev.CLAIM_ID_ER,
     ev.HOSPITAL_PROVIDER,
     ev.ER_STATUS,
-    ev.ER_CATEGORY,
-    STRING_AGG(CONCAT(fcp.CODE, ' - ', COALESCE(fcp.CODE_NAME,'')), ' | ') 
-        WITHIN GROUP (ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE) AS ALL_PROCEDURE_CODES
+    ev.ER_CATEGORY
+INTO #er30
 FROM (
-    SELECT TOP (1) *
-    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
-    WHERE ER_STATUS = 'TRUE ER'
-      AND GMPI_ID = @GMPI_ID
-      AND ER_DATE >= DATEADD(day, -90, CAST(GETDATE() AS date))
-    ORDER BY ER_DATE DESC
+    SELECT
+        ev.*,
+        ROW_NUMBER() OVER (PARTITION BY ev.GMPI_ID ORDER BY ev.ER_DATE DESC) AS rn
+    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
+    WHERE ev.ER_STATUS = 'TRUE ER'
+      AND ev.ER_DATE >= DATEADD(day, -30, CAST(GETDATE() AS date))
 ) ev
-JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
-GROUP BY
-    ev.GMPI_ID,
-    CAST(ev.ER_DATE AS date),
-    ev.CLAIM_ID_ER,
-    ev.HOSPITAL_PROVIDER,
-    ev.ER_STATUS,
-    ev.ER_CATEGORY;
-I AM SEEING ONLY ONE ROW ALL PROCEDURE CODES CONTAINS ALL THE CODES I SAW IN 2A IN ONE COLUMN FOR THAT GMPIID
+WHERE ev.rn = 1;
 
-✅ Output = one row, with all codes in one big field.
+-- 2) Aggregate procedures ONLY for those ER claims
+SELECT
+    dm.GMPI_ID,
+    dm.MEMBER_MBI,
+    dm.MEMBER_FIRST_NAME,
+    dm.MEMBER_LAST_NAME,
+    dm.MEMBER_DATE_OF_BIRTH,
+
+    e.LAST_ER_DATE,
+    e.CLAIM_ID_ER,
+    e.HOSPITAL_PROVIDER,
+    e.ER_STATUS,
+    e.ER_CATEGORY,
+
+    p.ALL_PROCEDURE_CODES
+
+FROM #er30 e
+LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
+    ON dm.GMPI_ID = e.GMPI_ID
+
+LEFT JOIN (
+    SELECT
+        fcp.CLAIM_ID,
+        STRING_AGG(CONCAT(fcp.CODE, ' - ', COALESCE(fcp.CODE_NAME,'')), ' | ')
+            WITHIN GROUP (ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE) AS ALL_PROCEDURE_CODES
+    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    JOIN #er30 e
+        ON e.CLAIM_ID_ER = fcp.CLAIM_ID
+    GROUP BY fcp.CLAIM_ID
+) p
+    ON p.CLAIM_ID = e.CLAIM_ID_ER
+
+ORDER BY e.LAST_ER_DATE DESC;
