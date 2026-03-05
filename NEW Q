@@ -43,16 +43,9 @@ OUTER APPLY (
 ) pc
 ORDER BY ev.ER_DATE DESC;
 
-Why this is faster
+IT IS NOT FAST 
 
-The inner query returns 5000 ER rows first.
-
-Only those 5000 rows get the APPLY lookup.
-
-Huge reduction in work.
-
-If you want just a quick test, change TOP (5000) to TOP (50).
-
+I IS AGIAN SLOW 
 ✅ Fast Fix #2: Remove the final ORDER BY (for testing)
 
 If you don’t need sorting while testing, sorting can slow things down:
@@ -106,6 +99,9 @@ LEFT JOIN
 ) p
     ON p.CLAIM_ID = ev.CLAIM_ID_ER
 ORDER BY ev.ER_DATE DESC;
+
+
+AGAIN IT IS SLOW 
 
 This version isn’t “perfect priority” anymore (it prioritizes ED codes only), but it is very fast for a validation run.
 
