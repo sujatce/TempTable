@@ -1,22 +1,80 @@
+Query A (direct match check — best proof)
+
+This checks whether ER claim ids exist in procedure table.
+
 SELECT
+    COUNT(*) AS ER_VISITS,
+    SUM(CASE WHEN fcp.CLAIM_ID IS NOT NULL THEN 1 ELSE 0 END) AS ER_VISITS_WITH_PROC_MATCH,
+    SUM(CASE WHEN fcp.CLAIM_ID IS NULL THEN 1 ELSE 0 END) AS ER_VISITS_WITHOUT_PROC_MATCH
+FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
+LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
+WHERE ev.ER_STATUS = 'TRUE ER';
+How to read it
+
+If ER_VISITS_WITH_PROC_MATCH ≈ ER_VISITS → ✅ join key is correct and present.
+
+If lots are “without match” → then claim id mismatch or missing procedures.
+
+✅ Query B (show sample rows where they match)
+
+This gives you a human-readable sample:
+
+SELECT TOP 50
     ev.CLAIM_ID_ER,
-    COUNT(*) AS procedure_lines
+    fcp.CLAIM_ID,
+    fcp.SERVICE_FROM_DATE,
+    fcp.CODE,
+    fcp.CODE_NAME
 FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
 JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
     ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
 WHERE ev.ER_STATUS = 'TRUE ER'
+ORDER BY ev.ER_DATE DESC;
+
+You will see CLAIM_ID_ER and CLAIM_ID equal in the output.
+
+✅ Query C (find ER claims that do NOT exist in FCP)
+
+This proves if there are any gaps:
+
+SELECT TOP 50
+    ev.CLAIM_ID_ER,
+    ev.GMPI_ID,
+    ev.ER_DATE
+FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
+LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
+WHERE ev.ER_STATUS = 'TRUE ER'
+  AND fcp.CLAIM_ID IS NULL
+ORDER BY ev.ER_DATE DESC;
+
+If this returns 0 rows, it means every ER claim has procedure lines.
+
+Important interpretation of your 273,789 rows
+
+When you run:
+
 GROUP BY ev.CLAIM_ID_ER
-ORDER BY procedure_lines DESC; -- FOR EACH CLAIM ID ER I AM GETTING PROCEDURE LINES STARTING FROM 389 TILL 1 LIKE THAT I HAVE 273,789 ROWS 
-FOR THIS QUERY DO YOU KNOW WHAT CLAIM_ID IS IN FCP ? YOU ARE SAYING CLAIM ID IS EQUAL TO CLAIM ID ER 
-CAN YOU GIVE ME A QUERY SO THAT I CONFIRM IT 
 
+you’re essentially looking at how many procedure lines exist per ER claim.
 
+So 273,789 rows means:
+
+You have 273,789 ER claims (unique CLAIM_ID_ER) that joined to procedure lines.
+
+That’s totally plausible.
+
+One more “sanity” query I recommend
+
+This tells you how many ER visits you have total:
 
 SELECT
-    GMPI_ID,
-    ER_DATE,
-    COUNT(*) AS rows_per_visit
+  COUNT(*) AS ER_VISITS,
+  COUNT(DISTINCT CLAIM_ID_ER) AS DISTINCT_ER_CLAIMS
 FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
-GROUP BY GMPI_ID, ER_DATE
-HAVING COUNT(*) > 1
-ORDER BY rows_per_visit DESC; -- I DIDNT SEE ANY ROW HERE 
+WHERE ER_STATUS = 'TRUE ER';
+
+Usually these will be the same (since each ER visit row has one CLAIM_ID_ER).
+
+If you paste the output of Query A (counts of match/no match), I can tell you confidently whether the join is perfect and whether those huge procedure line counts are expected or a sign of duplicates in FCP.
