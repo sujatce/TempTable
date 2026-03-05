@@ -1,32 +1,31 @@
-/* STEP 1: Collect latest ER visit per member in last 30 days */
-IF OBJECT_ID('tempdb..#er30') IS NOT NULL DROP TABLE #er30;
+Quick proof (run this)
+SELECT
+  COUNT(*) AS rows_in_er30,
+  COUNT(DISTINCT GMPI_ID) AS distinct_gmpi
+FROM #er30;
 
 SELECT
-    ev.GMPI_ID,
-    CAST(ev.ER_DATE AS date) AS LAST_ER_DATE,
-    ev.CLAIM_ID_ER,
-    ev.HOSPITAL_PROVIDER,
-    ev.ER_STATUS,
-    ev.ER_CATEGORY
-INTO #er30
-FROM (
-    SELECT
-        ev.*,
-        ROW_NUMBER() OVER (PARTITION BY ev.GMPI_ID ORDER BY ev.ER_DATE DESC) AS rn
-    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-    WHERE ev.ER_STATUS = 'TRUE ER'
-      AND ev.ER_DATE >= DATEADD(day, -30, CAST(GETDATE() AS date))
-) ev
-WHERE ev.rn = 1;
+  COUNT(*) AS rows_in_dim_member_for_er30,
+  COUNT(DISTINCT dm.GMPI_ID) AS distinct_gmpi_in_dim
+FROM BI_ANALYSIS.dbo.dim_member dm
+JOIN #er30 e ON e.GMPI_ID = dm.GMPI_ID;
 
+If rows_in_dim_member_for_er30 > distinct_gmpi_in_dim, then dim_member has duplicates per GMPI.
 
-/* STEP 2 + 3: Final Output (aggregate procedures inline) */
+✅ Fix: Join to only ONE row per GMPI_ID from dim_member
+
+Pick the “best” member row using ROW_NUMBER() (prefer ACTIVE_FLAG=1, else latest DW_UPDATE_DATE).
+
+Replace your final SELECT with this version (copy/paste whole Step 2+3):
+
+/* STEP 2 + 3: Final Output (dedupe dim_member + aggregate procedures) */
+
 SELECT
-    dm.GMPI_ID,
-    dm.MEMBER_MBI,
-    dm.MEMBER_FIRST_NAME,
-    dm.MEMBER_LAST_NAME,
-    dm.MEMBER_DATE_OF_BIRTH,
+    dm1.GMPI_ID,
+    dm1.MEMBER_MBI,
+    dm1.MEMBER_FIRST_NAME,
+    dm1.MEMBER_LAST_NAME,
+    dm1.MEMBER_DATE_OF_BIRTH,
 
     e.LAST_ER_DATE,
     e.CLAIM_ID_ER,
@@ -38,15 +37,29 @@ SELECT
     p.ALL_PROCEDURE_CODES
 
 FROM #er30 e
-LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = e.GMPI_ID
+
+LEFT JOIN (
+    SELECT *
+    FROM (
+        SELECT
+            dm.*,
+            ROW_NUMBER() OVER (
+                PARTITION BY dm.GMPI_ID
+                ORDER BY
+                    CASE WHEN dm.ACTIVE_FLAG = 1 THEN 1 ELSE 2 END,
+                    dm.DW_UPDATE_DATE DESC
+            ) AS rn
+        FROM BI_ANALYSIS.dbo.dim_member dm
+    ) x
+    WHERE x.rn = 1
+) dm1
+    ON dm1.GMPI_ID = e.GMPI_ID
 
 LEFT JOIN (
     SELECT
         fcp.CLAIM_ID,
         COUNT(*) AS PROC_LINE_COUNT,
-        STRING_AGG(CAST(fcp.CODE AS VARCHAR(MAX)), ',')
-            WITHIN GROUP (ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE) AS ALL_PROCEDURE_CODES
+        STRING_AGG(CAST(fcp.CODE AS VARCHAR(MAX)), ',') AS ALL_PROCEDURE_CODES
     FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
     JOIN #er30 e2
         ON e2.CLAIM_ID_ER = fcp.CLAIM_ID
@@ -55,3 +68,37 @@ LEFT JOIN (
     ON p.CLAIM_ID = e.CLAIM_ID_ER
 
 ORDER BY e.LAST_ER_DATE DESC;
+Why this removes duplicates
+
+The subquery dm1 forces exactly 1 row per GMPI_ID from dim_member.
+
+So each #er30 row can match only one member row → no multiplication.
+
+✅ Quick check after fix
+
+Run:
+
+SELECT COUNT(*) AS final_rows, COUNT(DISTINCT GMPI_ID) AS distinct_members
+FROM (
+    -- paste the final SELECT query here but without ORDER BY
+) q;
+
+You should now see:
+
+final_rows ≈ 24,992
+
+distinct_members ≈ 24,992
+
+One more thing: STRING_AGG ordering
+
+I removed WITHIN GROUP in the fixed query because some SQL Server versions don’t support ordering inside STRING_AGG reliably. If yours supports it and you want ordering, tell me your SQL Server version and I’ll add it back safely.
+
+If you paste the output of:
+
+SELECT TOP 20 GMPI_ID, COUNT(*) cnt
+FROM BI_ANALYSIS.dbo.dim_member
+GROUP BY GMPI_ID
+HAVING COUNT(*) > 1
+ORDER BY cnt DESC;
+
+I can tell you exactly how messy the duplicates are (ACTIVE vs inactive, multiple sources, etc.).
