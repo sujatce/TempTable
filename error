@@ -1,46 +1,59 @@
-SELECT
-    dm.GMPI_ID,
-    dm.MEMBER_MBI,
-    dm.MEMBER_FIRST_NAME,
-    dm.MEMBER_LAST_NAME,
-    dm.MEMBER_DATE_OF_BIRTH,
+Step 2A: Return ALL procedure codes as multiple rows (full detail)
+DECLARE @GMPI_ID BIGINT = 123456789;
 
-    CAST(ev.ER_DATE AS date) AS ER_DATE,
+SELECT
+    ev.GMPI_ID,
+    CAST(ev.ER_DATE AS date) AS LAST_ER_DATE,
+    ev.CLAIM_ID_ER,
+    fcp.SERVICE_FROM_DATE,
+    fcp.SERVICE_LINE,
+    fcp.CODE,
+    fcp.CODE_NAME
+FROM (
+    SELECT TOP (1) *
+    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
+    WHERE ER_STATUS = 'TRUE ER'
+      AND GMPI_ID = @GMPI_ID
+      AND ER_DATE >= DATEADD(day, -90, CAST(GETDATE() AS date))
+    ORDER BY ER_DATE DESC
+) ev
+JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
+ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE;
+
+✅ This shows every procedure line tied to the ER claim.
+
+✅ Step 2B: Return ALL procedure codes in ONE column (comma-separated)
+
+This keeps it one row (best for a segment file).
+
+DECLARE @GMPI_ID BIGINT = 123456789;
+
+SELECT
+    ev.GMPI_ID,
+    CAST(ev.ER_DATE AS date) AS LAST_ER_DATE,
+    ev.CLAIM_ID_ER,
     ev.HOSPITAL_PROVIDER,
     ev.ER_STATUS,
     ev.ER_CATEGORY,
+    STRING_AGG(CONCAT(fcp.CODE, ' - ', COALESCE(fcp.CODE_NAME,'')), ' | ') 
+        WITHIN GROUP (ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE) AS ALL_PROCEDURE_CODES
+FROM (
+    SELECT TOP (1) *
+    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
+    WHERE ER_STATUS = 'TRUE ER'
+      AND GMPI_ID = @GMPI_ID
+      AND ER_DATE >= DATEADD(day, -90, CAST(GETDATE() AS date))
+    ORDER BY ER_DATE DESC
+) ev
+JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
+GROUP BY
+    ev.GMPI_ID,
+    CAST(ev.ER_DATE AS date),
     ev.CLAIM_ID_ER,
+    ev.HOSPITAL_PROVIDER,
+    ev.ER_STATUS,
+    ev.ER_CATEGORY;
 
-    pc.PROCEDURE_CODE,
-    pc.CODE_NAME
-
-FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = ev.GMPI_ID
-
-OUTER APPLY (
-    SELECT TOP (1)
-        fcp.CODE      AS PROCEDURE_CODE,
-        fcp.CODE_NAME AS CODE_NAME
-    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    WHERE fcp.CLAIM_ID = ev.CLAIM_ID_ER
-    ORDER BY
-        CASE
-            -- 1) Prefer true ED E/M codes when present
-            WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
-                             'G0380','G0381','G0382','G0383','G0384') THEN 1
-
-            -- 2) Next prefer ER revenue codes when present
-            WHEN fcp.CODE >= '0450' AND fcp.CODE <= '0459' THEN 2
-
-            -- 3) Otherwise take any code (still proves claim linkage)
-            ELSE 3
-        END,
-        fcp.SERVICE_FROM_DATE DESC,
-        fcp.SERVICE_LINE DESC
-) pc
-
-WHERE ev.ER_STATUS = 'TRUE ER'
-  AND ev.ER_DATE >= DATEADD(day, -90, CAST(GETDATE() AS date))   -- <-- change -90 to -30 if needed
-
-ORDER BY ev.ER_DATE DESC;
+✅ Output = one row, with all codes in one big field.
