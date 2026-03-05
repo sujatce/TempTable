@@ -4,42 +4,43 @@ SELECT
     dm.MEMBER_FIRST_NAME,
     dm.MEMBER_LAST_NAME,
     dm.MEMBER_DATE_OF_BIRTH,
-    e.ER_DATE,
-    e.HOSPITAL_PROVIDER,
-    e.ER_STATUS,
-    e.ER_CATEGORY,
-    e.CLAIM_ID_ER,
+
+    CAST(ev.ER_DATE AS date) AS ER_DATE,
+    ev.HOSPITAL_PROVIDER,
+    ev.ER_STATUS,
+    ev.ER_CATEGORY,
+    ev.CLAIM_ID_ER,
+
     pc.PROCEDURE_CODE,
     pc.CODE_NAME
-FROM
-(
-    SELECT
-        ev.GMPI_ID,
-        CAST(ev.ER_DATE AS date) AS ER_DATE,
-        ev.HOSPITAL_PROVIDER,
-        ev.ER_STATUS,
-        ev.ER_CATEGORY,
-        ev.CLAIM_ID_ER
-    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-    WHERE ev.ER_STATUS = 'TRUE ER'
-      AND ev.ER_DATE >= DATEADD(day, -10, CAST(GETDATE() AS date))
-) e
+
+FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
 LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = e.GMPI_ID
+    ON dm.GMPI_ID = ev.GMPI_ID
+
 OUTER APPLY (
     SELECT TOP (1)
-        fcp.CODE AS PROCEDURE_CODE,
-        fcp.CODE_NAME
+        fcp.CODE      AS PROCEDURE_CODE,
+        fcp.CODE_NAME AS CODE_NAME
     FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    WHERE fcp.CLAIM_ID = e.CLAIM_ID_ER
+    WHERE fcp.CLAIM_ID = ev.CLAIM_ID_ER
     ORDER BY
         CASE
+            -- 1) Prefer true ED E/M codes when present
             WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
                              'G0380','G0381','G0382','G0383','G0384') THEN 1
+
+            -- 2) Next prefer ER revenue codes when present
             WHEN fcp.CODE >= '0450' AND fcp.CODE <= '0459' THEN 2
+
+            -- 3) Otherwise take any code (still proves claim linkage)
             ELSE 3
         END,
         fcp.SERVICE_FROM_DATE DESC,
         fcp.SERVICE_LINE DESC
 ) pc
-ORDER BY e.ER_DATE DESC;
+
+WHERE ev.ER_STATUS = 'TRUE ER'
+  AND ev.ER_DATE >= DATEADD(day, -90, CAST(GETDATE() AS date))   -- <-- change -90 to -30 if needed
+
+ORDER BY ev.ER_DATE DESC;
