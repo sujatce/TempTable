@@ -1,88 +1,38 @@
-Query A (direct match check — best proof)
-
-This checks whether ER claim ids exist in procedure table.
-
-SELECT
-    COUNT(*) AS ER_VISITS,
-    SUM(CASE WHEN fcp.CLAIM_ID IS NOT NULL THEN 1 ELSE 0 END) AS ER_VISITS_WITH_PROC_MATCH,
-    SUM(CASE WHEN fcp.CLAIM_ID IS NULL THEN 1 ELSE 0 END) AS ER_VISITS_WITHOUT_PROC_MATCH
-FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
-WHERE ev.ER_STATUS = 'TRUE ER';
-
-ERVISITS 1365567
-ERVISITSWITHPROCMATCH 1216593
-ERVISITSWITHOUTPROCMATCH 148974
-How to read it
-
-If ER_VISITS_WITH_PROC_MATCH ≈ ER_VISITS → ✅ join key is correct and present.
-
-If lots are “without match” → then claim id mismatch or missing procedures.
-
-✅ Query B (show sample rows where they match)
-
-This gives you a human-readable sample:
-
-SELECT TOP 50
+SELECT TOP (5000)
+    dm.GMPI_ID,
+    dm.MEMBER_MBI,
+    dm.MEMBER_FIRST_NAME,
+    dm.MEMBER_LAST_NAME,
+    dm.MEMBER_DATE_OF_BIRTH,
+    CAST(ev.ER_DATE AS date) AS ER_DATE,
+    ev.HOSPITAL_PROVIDER,
+    ev.ER_STATUS,
+    ev.ER_CATEGORY,
     ev.CLAIM_ID_ER,
-    fcp.CLAIM_ID,
-    fcp.SERVICE_FROM_DATE,
-    fcp.CODE,
-    fcp.CODE_NAME
-FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
-WHERE ev.ER_STATUS = 'TRUE ER'
+    pc.PROCEDURE_CODE,
+    pc.CODE_NAME
+FROM (
+    SELECT *
+    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
+    WHERE ER_STATUS = 'TRUE ER'
+      AND ER_DATE >= DATEADD(day, -10, CAST(GETDATE() AS date))
+) ev
+LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
+    ON dm.GMPI_ID = ev.GMPI_ID
+OUTER APPLY (
+    SELECT TOP (1)
+        fcp.CODE AS PROCEDURE_CODE,
+        fcp.CODE_NAME
+    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    WHERE fcp.CLAIM_ID = ev.CLAIM_ID_ER
+    ORDER BY
+        CASE
+            WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
+                             'G0380','G0381','G0382','G0383','G0384') THEN 1
+            WHEN fcp.CODE >= '0450' AND fcp.CODE <= '0459' THEN 2
+            ELSE 3
+        END,
+        fcp.SERVICE_FROM_DATE DESC,
+        fcp.SERVICE_LINE DESC
+) pc
 ORDER BY ev.ER_DATE DESC;
-
-You will see CLAIM_ID_ER and CLAIM_ID equal in the output.
-
-YES I AM SEEING CLAIM_ID_ER AND CLAIM_ID EQUAL IN THE OUTPUT 
-
-✅ Query C (find ER claims that do NOT exist in FCP)
-
-This proves if there are any gaps:
-
-SELECT TOP 50
-    ev.CLAIM_ID_ER,
-    ev.GMPI_ID,
-    ev.ER_DATE
-FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
-WHERE ev.ER_STATUS = 'TRUE ER'
-  AND fcp.CLAIM_ID IS NULL
-ORDER BY ev.ER_DATE DESC;
-iT RETURNED ME 50 ROWS -EXPLAIN THIS QUERY AND ANSERS
-If this returns 0 rows, it means every ER claim has procedure lines.
-
-Important interpretation of your 273,789 rows
-
-When you run:
-
-GROUP BY ev.CLAIM_ID_ER
-
-you’re essentially looking at how many procedure lines exist per ER claim.
-
-So 273,789 rows means:
-
-You have 273,789 ER claims (unique CLAIM_ID_ER) that joined to procedure lines.
-
-That’s totally plausible.
-
-One more “sanity” query I recommend
-
-This tells you how many ER visits you have total:
-
-SELECT
-  COUNT(*) AS ER_VISITS,
-  COUNT(DISTINCT CLAIM_ID_ER) AS DISTINCT_ER_CLAIMS
-FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
-WHERE ER_STATUS = 'TRUE ER'; -- 422763
-422763 
-BOTH ARE SAME
-
-Usually these will be the same (since each ER visit row has one CLAIM_ID_ER).
-
-If you paste the output of Query A (counts of match/no match), I can tell you confidently whether the join is perfect and whether those huge procedure line counts are expected or a sign of duplicates in FCP.
