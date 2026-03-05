@@ -1,35 +1,20 @@
-SELECT TOP (1000)
-    dm.GMPI_ID,
-    dm.MEMBER_MBI,
-    dm.MEMBER_FIRST_NAME,
-    dm.MEMBER_LAST_NAME,
-    dm.MEMBER_DATE_OF_BIRTH,
-    CAST(ev.ER_DATE AS date) AS ER_DATE,
-    ev.HOSPITAL_PROVIDER,
-    ev.ER_STATUS,
-    ev.ER_CATEGORY,
+SELECT
     ev.CLAIM_ID_ER,
-    pc.PROCEDURE_CODE,
-    pc.CODE_NAME
+    COUNT(*) AS procedure_lines
 FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = ev.GMPI_ID
-OUTER APPLY (
-    SELECT TOP (1)
-        fcp.CODE      AS PROCEDURE_CODE,
-        fcp.CODE_NAME AS CODE_NAME
-    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    WHERE fcp.CLAIM_ID = ev.CLAIM_ID_ER
-    ORDER BY
-        CASE
-            WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
-                             'G0380','G0381','G0382','G0383','G0384') THEN 1
-            WHEN fcp.CODE >= '0450' AND fcp.CODE <= '0459' THEN 2
-            ELSE 3
-        END,
-        fcp.SERVICE_FROM_DATE DESC,
-        fcp.SERVICE_LINE DESC
-) pc
+JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
 WHERE ev.ER_STATUS = 'TRUE ER'
-  AND ev.ER_DATE >= DATEADD(day, -10, CAST(GETDATE() AS date))
-ORDER BY ev.ER_DATE DESC;
+GROUP BY ev.CLAIM_ID_ER
+ORDER BY procedure_lines DESC;
+
+
+
+SELECT
+    GMPI_ID,
+    ER_DATE,
+    COUNT(*) AS rows_per_visit
+FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
+GROUP BY GMPI_ID, ER_DATE
+HAVING COUNT(*) > 1
+ORDER BY rows_per_visit DESC;
