@@ -1,6 +1,7 @@
+/* STEP 1: Collect latest ER visit per member in last 30 days */
+
 IF OBJECT_ID('tempdb..#er30') IS NOT NULL DROP TABLE #er30;
 
--- 1) Collect ER visits in last 30 days (one row per member: latest ER)
 SELECT
     ev.GMPI_ID,
     CAST(ev.ER_DATE AS date) AS LAST_ER_DATE,
@@ -20,32 +21,27 @@ FROM (
 WHERE ev.rn = 1;
 
 
+/* STEP 2: Aggregate procedure codes for those ER claims */
+
+WITH proc AS (
+    SELECT
+        fcp.CLAIM_ID,
+        COUNT(*) AS PROC_LINE_COUNT,
+        STRING_AGG(
+            CAST(fcp.CODE AS VARCHAR(MAX)),
+            ','
+        ) WITHIN GROUP (
+            ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE
+        ) AS ALL_PROCEDURE_CODES
+    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    JOIN #er30 e
+        ON e.CLAIM_ID_ER = fcp.CLAIM_ID
+    GROUP BY fcp.CLAIM_ID
+)
 
 
-SELECT
-    MIN(LAST_ER_DATE) AS MIN_DATE,
-    MAX(LAST_ER_DATE) AS MAX_DATE
-FROM #er30;
+/* STEP 3: Final Output */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- 2) Aggregate procedures ONLY for those ER claims
 SELECT
     dm.GMPI_ID,
     dm.MEMBER_MBI,
@@ -59,22 +55,15 @@ SELECT
     e.ER_STATUS,
     e.ER_CATEGORY,
 
+    p.PROC_LINE_COUNT,
     p.ALL_PROCEDURE_CODES
 
 FROM #er30 e
+
 LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
     ON dm.GMPI_ID = e.GMPI_ID
 
-LEFT JOIN (
-    SELECT
-        fcp.CLAIM_ID,
-        STRING_AGG(CONCAT(fcp.CODE, ' - ', COALESCE(fcp.CODE_NAME,'')), ' | ')
-            WITHIN GROUP (ORDER BY fcp.SERVICE_FROM_DATE, fcp.SERVICE_LINE) AS ALL_PROCEDURE_CODES
-    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-    JOIN #er30 e
-        ON e.CLAIM_ID_ER = fcp.CLAIM_ID
-    GROUP BY fcp.CLAIM_ID
-) p
+LEFT JOIN proc p
     ON p.CLAIM_ID = e.CLAIM_ID_ER
 
 ORDER BY e.LAST_ER_DATE DESC;
