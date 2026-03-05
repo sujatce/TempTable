@@ -19,6 +19,32 @@ FROM (
 ) ev
 WHERE ev.rn = 1;
 
+
+
+
+SELECT
+    MIN(LAST_ER_DATE) AS MIN_DATE,
+    MAX(LAST_ER_DATE) AS MAX_DATE
+FROM #er30;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- 2) Aggregate procedures ONLY for those ER claims
 SELECT
     dm.GMPI_ID,
