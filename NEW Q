@@ -10,6 +10,10 @@ FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
 LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
     ON fcp.CLAIM_ID = ev.CLAIM_ID_ER
 WHERE ev.ER_STATUS = 'TRUE ER';
+
+ERVISITS 1365567
+ERVISITSWITHPROCMATCH 1216593
+ERVISITSWITHOUTPROCMATCH 148974
 How to read it
 
 If ER_VISITS_WITH_PROC_MATCH ≈ ER_VISITS → ✅ join key is correct and present.
@@ -34,6 +38,8 @@ ORDER BY ev.ER_DATE DESC;
 
 You will see CLAIM_ID_ER and CLAIM_ID equal in the output.
 
+YES I AM SEEING CLAIM_ID_ER AND CLAIM_ID EQUAL IN THE OUTPUT 
+
 ✅ Query C (find ER claims that do NOT exist in FCP)
 
 This proves if there are any gaps:
@@ -48,7 +54,7 @@ LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
 WHERE ev.ER_STATUS = 'TRUE ER'
   AND fcp.CLAIM_ID IS NULL
 ORDER BY ev.ER_DATE DESC;
-
+iT RETURNED ME 50 ROWS -EXPLAIN THIS QUERY AND ANSERS
 If this returns 0 rows, it means every ER claim has procedure lines.
 
 Important interpretation of your 273,789 rows
@@ -73,7 +79,9 @@ SELECT
   COUNT(*) AS ER_VISITS,
   COUNT(DISTINCT CLAIM_ID_ER) AS DISTINCT_ER_CLAIMS
 FROM BI_ANALYSIS.dbo.FACT_ER_VISITS
-WHERE ER_STATUS = 'TRUE ER';
+WHERE ER_STATUS = 'TRUE ER'; -- 422763
+422763 
+BOTH ARE SAME
 
 Usually these will be the same (since each ER visit row has one CLAIM_ID_ER).
 
