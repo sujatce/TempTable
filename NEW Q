@@ -1,73 +1,46 @@
-WITH er_candidate AS (
+SELECT
+    dm.GMPI_ID,
+    dm.MEMBER_MBI,
+    dm.MEMBER_FIRST_NAME,
+    dm.MEMBER_LAST_NAME,
+    dm.MEMBER_DATE_OF_BIRTH,
 
-    SELECT
-        dra.GMPI_ID,
-        CAST(dra.RESULT_DATE AS DATE) AS ER_VISIT_DATE,
-        dra.RESULT_CODE,
-        dra.CODE_TYPE,
-        dra.CLAIM_SPECIALTY_VALUE
+    CAST(ev.ER_DATE AS date) AS ER_DATE,
+    ev.HOSPITAL_PROVIDER,
+    ev.ER_STATUS,
+    ev.ER_CATEGORY,
+    ev.CLAIM_ID_ER,
 
-    FROM fwrb_prd_wmidr_db.bi_analysis.definition_result_active dra
+    pc.PROCEDURE_CODE,
+    pc.CODE_NAME
 
-    WHERE
-        -- Lookback window
-        dra.RESULT_DATE >= DATEADD(day, -365, CURRENT_DATE)
+FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
+LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
+    ON dm.GMPI_ID = ev.GMPI_ID
 
-        -- Safer Specialty Filter (include NULLs)
-        AND (
-               UPPER(dra.CLAIM_SPECIALTY_VALUE) LIKE '%EMERGENCY%'
-               OR dra.CLAIM_SPECIALTY_VALUE IS NULL
-            )
+OUTER APPLY (
+    SELECT TOP (1)
+        fcp.CODE      AS PROCEDURE_CODE,
+        fcp.CODE_NAME AS CODE_NAME
+    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    WHERE fcp.CLAIM_ID = ev.CLAIM_ID_ER
+    ORDER BY
+        CASE
+            -- 1) Prefer true ED E/M codes when present
+            WHEN fcp.CODE IN ('99281','99282','99283','99284','99285',
+                             'G0380','G0381','G0382','G0383','G0384') THEN 1
 
-        AND
-        (
-              -- CPT Emergency Department E/M
-              (dra.CODE_TYPE = 'CPT'
-               AND dra.RESULT_CODE IN ('99281','99282','99283','99284','99285'))
+            -- 2) Next prefer ER revenue codes when present
+            WHEN fcp.CODE >= '0450' AND fcp.CODE <= '0459' THEN 2
 
-           OR -- HCPCS ED visit codes
-              (dra.CODE_TYPE = 'HCPCS'
-               AND dra.RESULT_CODE IN ('G0380','G0381','G0382','G0383','G0384'))
+            -- 3) Otherwise take any code (still proves claim linkage)
+            ELSE 3
+        END,
+        fcp.SERVICE_FROM_DATE DESC,
+        fcp.SERVICE_LINE DESC
+) pc
 
-           OR -- Optional Observation codes (remove if business decides to exclude)
-              (dra.CODE_TYPE = 'CPT'
-               AND dra.RESULT_CODE IN ('99217','99218','99219','99220'))
-        )
+WHERE ev.ER_STATUS = 'TRUE ER'
+  AND ev.ER_DATE >= DATEADD(day, -90, CAST(GETDATE() AS date))   -- <-- change -90 to -30 if needed
 
-),
-
--- Deduplicate multiple claim lines on same day per member
-er_visits AS (
-
-    SELECT
-        GMPI_ID,
-        ER_VISIT_DATE,
-        COUNT(*) AS LINE_COUNT
-    FROM er_candidate
-    GROUP BY GMPI_ID, ER_VISIT_DATE
-
-),
-
--- Member level aggregation
-member_er_summary AS (
-
-    SELECT
-        GMPI_ID,
-        MAX(ER_VISIT_DATE) AS LAST_ER_VISIT_DATE,
-
-        COUNT(CASE WHEN ER_VISIT_DATE >= DATEADD(day, -30, CURRENT_DATE) THEN 1 END)
-            AS ER_VISITS_LAST_30_DAYS,
-
-        COUNT(CASE WHEN ER_VISIT_DATE >= DATEADD(day, -90, CURRENT_DATE) THEN 1 END)
-            AS ER_VISITS_LAST_90_DAYS,
-
-        COUNT(CASE WHEN ER_VISIT_DATE >= DATEADD(day, -365, CURRENT_DATE) THEN 1 END)
-            AS ER_VISITS_LAST_365_DAYS
-
-    FROM er_visits
-    GROUP BY GMPI_ID
-)
-
-SELECT *
-FROM member_er_summary
-ORDER BY LAST_ER_VISIT_DATE DESC;
+ORDER BY ev.ER_DATE DESC;
