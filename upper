@@ -1,74 +1,13 @@
-SELECT
-    dm.GMPI_ID,
-    dm.MEMBER_MBI,
-    dm.MEMBER_FIRST_NAME,
-    dm.MEMBER_LAST_NAME,
-    dm.MEMBER_DATE_OF_BIRTH,
-
-    lep.LAST_ER_VISIT_DATE,
-    lep.PROCEDURE_CODE,
-
-    -- audit fields
-    lep.CLAIM_ID_ER,
-    lep.HOSPITAL_PROVIDER,
-    lep.ER_STATUS,
-    lep.ER_CATEGORY
-
-FROM
-(
-    -- One row per GMPI_ID: most recent TRUE ER visit + one ED procedure code (if exists)
-    SELECT *
-    FROM
-    (
-        SELECT
-            le.GMPI_ID,
-            le.LAST_ER_VISIT_DATE,
-            le.CLAIM_ID_ER,
-            le.HOSPITAL_PROVIDER,
-            le.ER_STATUS,
-            le.ER_CATEGORY,
-            fcp.CODE AS PROCEDURE_CODE,
-            ROW_NUMBER() OVER (
-                PARTITION BY le.GMPI_ID
-                ORDER BY fcp.SERVICE_FROM_DATE DESC, fcp.SERVICE_LINE DESC
-            ) AS rn
-
-        FROM
-        (
-            -- Latest TRUE ER visit per GMPI_ID
-            SELECT *
-            FROM
-            (
-                SELECT
-                    ev.GMPI_ID,
-                    CAST(ev.ER_DATE AS date) AS LAST_ER_VISIT_DATE,
-                    ev.CLAIM_ID_ER,
-                    ev.HOSPITAL_PROVIDER,
-                    ev.ER_STATUS,
-                    ev.ER_CATEGORY,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY ev.GMPI_ID
-                        ORDER BY ev.ER_DATE DESC
-                    ) AS rn
-                FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-                WHERE ev.ER_STATUS = 'TRUE ER'
-            ) x
-            WHERE x.rn = 1
-        ) le
-
-        LEFT JOIN BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
-            ON fcp.CLAIM_ID = le.CLAIM_ID_ER
-           AND CAST(fcp.SERVICE_FROM_DATE AS date)
-               BETWEEN le.LAST_ER_VISIT_DATE AND DATEADD(day, 1, le.LAST_ER_VISIT_DATE)
-           AND fcp.CODE IN (
-                '99281','99282','99283','99284','99285',
-                'G0380','G0381','G0382','G0383','G0384'
-           )
-    ) y
-    WHERE y.rn = 1
-) lep
-
-LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = lep.GMPI_ID
-
-ORDER BY lep.LAST_ER_VISIT_DATE DESC;
+PROCEDURE_CODE	PROCEDURE_NAME	PROCEDURE_DESCRIPTION
+A0050	AMBULANCE EMERGENCY WATER/SPECIAL TRANSPORT - CPT4	
+99140	ANES COMPLICJ EMERGENCY CONDITIONS SPECIFY - CPT4	Anesthesia services provided during an emergency health situation.
+99285	EMERGENCY DEPARTMENT VISIT HIGH MDM - CPT4	Physician services provided for an emergency room (ER) visit, including medical decisions, evaluation and care.
+99283	EMERGENCY DEPARTMENT VISIT LOW MDM - CPT4	Physician services provided for an emergency room (ER) visit, including medical decisions, evaluation and care.
+99281	EMERGENCY DEPARTMENT VISIT MAY NOT REQ PHYS/QHP - CPT4	Physician services provided for an emergency room (ER) visit, including medical decisions, evaluation and care.
+99284	EMERGENCY DEPARTMENT VISIT MODERATE MDM - CPT4	Physician services provided for an emergency room (ER) visit, including medical decisions, evaluation and care.
+99282	EMERGENCY DEPARTMENT VISIT STRAIGHTFORWARD MDM - CPT4	Physician services provided for an emergency room (ER) visit, including medical decisions, evaluation and care.
+D0130	EMERGENCY ORAL EXAMINATION - CPT4	
+31500	INTUBATION ENDOTRACHEAL EMERGENCY PROCEDURE - CPT4	Emergency treatment with placement of a device in the windpipe (trachea) to establish an open airway. This enables mechanical breathing.
+99288	PHYS/QHP DIRECTION EMERGENCY MEDICAL SYSTEMS - CPT4	Physician services for emergency medical care requiring advanced life support systems.
+31605	TRACHEOSTOMY EMERGENCY CRICOTHYROID MEMBRANE - CPT4	Emergency surgery to create an opening into the windpipe (trachea) to enable breathing.
+31603	TRACHEOSTOMY EMERGENCY PROCEDURE TRANSTRACHEAL - CPT4	Emergency surgery to create an opening into the windpipe (trachea) to enable breathing.
