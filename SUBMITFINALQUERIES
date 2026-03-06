@@ -1,3 +1,29 @@
+--STEP 1
+
+/* STEP 1: Collect latest ER visit per member in last 30 days */
+IF OBJECT_ID('tempdb..#er30') IS NOT NULL DROP TABLE #er30;
+
+SELECT
+    ev.GMPI_ID,
+    CAST(ev.ER_DATE AS date) AS LAST_ER_DATE,
+    ev.CLAIM_ID_ER,
+    ev.HOSPITAL_PROVIDER,
+    ev.ER_STATUS,
+    ev.ER_CATEGORY
+INTO #er30
+FROM (
+    SELECT
+        ev.*,
+        ROW_NUMBER() OVER (PARTITION BY ev.GMPI_ID ORDER BY ev.ER_DATE DESC) AS rn
+    FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
+    WHERE ev.ER_STATUS = 'TRUE ER'
+      AND ev.ER_DATE >= DATEADD(day, -30, CAST(GETDATE() AS date))
+) ev
+WHERE ev.rn = 1;
+
+
+--STEP 2
+
 SELECT
     dm1.GMPI_ID,
     dm1.MEMBER_MBI,
