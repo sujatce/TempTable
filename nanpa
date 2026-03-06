@@ -1,17 +1,62 @@
-SELECT TOP (5000)
-    dm.GMPI_ID,
-    dm.MEMBER_MBI,
-    dm.MEMBER_FIRST_NAME,
-    dm.MEMBER_LAST_NAME,
-    dm.MEMBER_DATE_OF_BIRTH,
-    CAST(ev.ER_DATE AS date) AS ER_DATE,
-    ev.HOSPITAL_PROVIDER,
-    ev.ER_STATUS,
-    ev.ER_CATEGORY,
-    ev.CLAIM_ID_ER
-FROM BI_ANALYSIS.dbo.FACT_ER_VISITS ev
-LEFT JOIN BI_ANALYSIS.dbo.dim_member dm
-    ON dm.GMPI_ID = ev.GMPI_ID
-WHERE ev.ER_STATUS = 'TRUE ER'
-  AND ev.ER_DATE >= DATEADD(day, -10, CAST(GETDATE() AS date))
-ORDER BY ev.ER_DATE DESC;
+SELECT
+    dm1.GMPI_ID,
+    dm1.MEMBER_MBI,
+    dm1.MEMBER_FIRST_NAME,
+    dm1.MEMBER_LAST_NAME,
+    dm1.MEMBER_DATE_OF_BIRTH,
+
+    e.LAST_ER_DATE,
+    e.CLAIM_ID_ER,
+    e.HOSPITAL_PROVIDER,
+    e.ER_STATUS,
+    e.ER_CATEGORY,
+
+    p.PROC_LINE_COUNT,
+    p.ALL_PROCEDURE_CODES,
+    p.ALL_PROCEDURE_CODE_NAMES,
+    p.ALL_PROCEDURE_CODE_NAME_PAIRS
+
+FROM #er30 e
+
+LEFT JOIN (
+    SELECT *
+    FROM (
+        SELECT
+            dm.*,
+            ROW_NUMBER() OVER (
+                PARTITION BY dm.GMPI_ID
+                ORDER BY
+                    CASE WHEN dm.ACTIVE_FLAG = 1 THEN 1 ELSE 2 END,
+                    dm.DW_UPDATE_DATE DESC
+            ) AS rn
+        FROM BI_ANALYSIS.dbo.dim_member dm
+    ) x
+    WHERE x.rn = 1
+) dm1
+    ON dm1.GMPI_ID = e.GMPI_ID
+
+LEFT JOIN (
+    SELECT
+        fcp.CLAIM_ID,
+        COUNT(*) AS PROC_LINE_COUNT,
+
+        STRING_AGG(CAST(fcp.CODE AS VARCHAR(MAX)), ',') AS ALL_PROCEDURE_CODES,
+
+        STRING_AGG(
+            CAST(COALESCE(fcp.CODE_NAME, '') AS VARCHAR(MAX)),
+            ','
+        ) AS ALL_PROCEDURE_CODE_NAMES,
+
+        STRING_AGG(
+            CAST(CONCAT(fcp.CODE, ' - ', COALESCE(fcp.CODE_NAME, '')) AS VARCHAR(MAX)),
+            ' | '
+        ) AS ALL_PROCEDURE_CODE_NAME_PAIRS
+
+    FROM BI_ANALYSIS.dbo.FACT_CLAIM_PROCEDURE fcp
+    JOIN #er30 e2
+        ON e2.CLAIM_ID_ER = fcp.CLAIM_ID
+    GROUP BY fcp.CLAIM_ID
+) p
+    ON p.CLAIM_ID = e.CLAIM_ID_ER
+
+ORDER BY e.LAST_ER_DATE DESC;
