@@ -1,3 +1,14 @@
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where procedure_code = '99281'
+ 
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where procedure_name like '%EMERGENCY%' -- = '99281'
+
+
+
+
+
+
 PROCEDURE_CODE	PROCEDURE_NAME	PROCEDURE_DESCRIPTION
 A0050	AMBULANCE EMERGENCY WATER/SPECIAL TRANSPORT - CPT4	
 99140	ANES COMPLICJ EMERGENCY CONDITIONS SPECIFY - CPT4	Anesthesia services provided during an emergency health situation.
@@ -11,3 +22,19 @@ D0130	EMERGENCY ORAL EXAMINATION - CPT4
 99288	PHYS/QHP DIRECTION EMERGENCY MEDICAL SYSTEMS - CPT4	Physician services for emergency medical care requiring advanced life support systems.
 31605	TRACHEOSTOMY EMERGENCY CRICOTHYROID MEMBRANE - CPT4	Emergency surgery to create an opening into the windpipe (trachea) to enable breathing.
 31603	TRACHEOSTOMY EMERGENCY PROCEDURE TRANSTRACHEAL - CPT4	Emergency surgery to create an opening into the windpipe (trachea) to enable breathing.
+ 
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where PROCEDURE_DESCRIPTION like '%ER%'
+ 
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_NAME LIKE '%EMERGENCY%'
+ORDER BY PROCEDURE_NAME
+
+
+
+
+
+
+
+
