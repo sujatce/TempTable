@@ -1,21 +1,29 @@
-select distinct [dm].[member_mbi],
-	[mrm].[gmpi_id],
-	[mrm].[member_first_name],
-	[mrm].[member_last_name],
-	[mrm].[contract_id],
-	[mrm].[contract_pbp],
-	[mrm].[mbr_date_of_birth] 
-from [bi_analysis].[dbo].[member_report_month] [mrm] 
-	left join [bi_analysis].[dbo].[dim_clinic] [dc] on [mrm].[clinic_id] = [dc].[clinic_id] and [dc].[active_flag] = 1 
-	left join [bi_analysis].[dbo].[dim_member] [dm] on [mrm].[gmpi_id] = [dm].[gmpi_id] and [mrm].[member_id] = [dm].[member_id] and [dm].[active_flag] = 1 
-where [dm].[member_mbi] is not NULL 
-	and [mrm].[data_entity] = 'Wellmed' 
-	and ([dc].[clinic_relation] = 'Affiliated' or [mrm].[owned_flag] = 0) 
-	and [mrm].[active_flag] = 1 
-	and [mrm].[is_hospice_flag] = 0 
-	and [mrm].[lti_flag] = 0 
-	and [mrm].[esrd_flag] = 0 
-	and [mrm].[report_month] = '2026-03-01' 
-	and [mrm].[clinic_group_name] not in ('SWHR') 
-	and [mrm].[mbr_elig_insurance_company_full_name] Like 'United%' 
-order by [dm].[member_mbi]
+
+
+SELECT DISTINCT 
+    [DM].[MEMBER_MBI],
+    [MRM].[GMPI_ID],
+    [MRM].[MEMBER_FIRST_NAME],
+    [MRM].[MEMBER_LAST_NAME],
+    [MRM].[CONTRACT_ID],
+    [MRM].[CONTRACT_PBP],
+    [MRM].[MBR_DATE_OF_BIRTH]
+FROM [BI_ANALYSIS].[DBO].[MEMBER_REPORT_MONTH] [MRM]
+LEFT JOIN [BI_ANALYSIS].[DBO].[DIM_CLINIC] [DC] 
+    ON [MRM].[CLINIC_ID] = [DC].[CLINIC_ID] 
+   AND [DC].[ACTIVE_FLAG] = 1
+LEFT JOIN [BI_ANALYSIS].[DBO].[DIM_MEMBER] [DM] 
+    ON [MRM].[GMPI_ID] = [DM].[GMPI_ID] 
+   AND [MRM].[MEMBER_ID] = [DM].[MEMBER_ID] 
+   AND [DM].[ACTIVE_FLAG] = 1
+WHERE [DM].[MEMBER_MBI] IS NOT NULL
+  AND [MRM].[DATA_ENTITY] = 'WELLMED'
+  AND ([DC].[CLINIC_RELATION] = 'AFFILIATED' OR [MRM].[OWNED_FLAG] = 0)
+  AND [MRM].[ACTIVE_FLAG] = 1
+  AND [MRM].[IS_HOSPICE_FLAG] = 0
+  AND [MRM].[LTI_FLAG] = 0
+  AND [MRM].[ESRD_FLAG] = 0
+  AND [MRM].[REPORT_MONTH] = '2026-03-01'
+  AND [MRM].[CLINIC_GROUP_NAME] NOT IN ('SWHR')
+  AND [MRM].[MBR_ELIG_INSURANCE_COMPANY_FULL_NAME] LIKE 'UNITED%'
+ORDER BY [DM].[MEMBER_MBI];
