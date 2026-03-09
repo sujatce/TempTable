@@ -128,3 +128,195 @@ create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.OMNI_ARCHIVE (
 	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
 	constraint PK_OMN_A_PRIMARYKEY primary key (OMNI_ARCHIVE_ID)
 );
+
+
+
+
+
+
+
+
+
+description of the columns 
+
+Table Column	Description
+OMNI_ARCHIVE_ID	Unique Identifier for every data row
+ArchiveDate	Date the Vendor Archived the days work in this table
+call_time_UTC	Call time when vendor attempted contacting the member
+call_time_CEN	Call time when vendor attempted contacting the member
+call_time_Local	Call time when vendor attempted contacting the member
+record_id	
+contact_info	member phone number
+contact_info_type	
+record_type	
+record_status	
+call_result	Result of attempted call
+attempt	how many times did the vendor attempted to contact the member
+dial_sched_time	
+call_time	
+daily_from	
+daily_till	
+tz_dbid	
+campaign_id	
+agent_id	
+chain_id	
+chain_n	
+group_id	
+app_id	
+treatments	
+media_ref	
+switch_id	
+FLD_CallingList	
+FLD_Function	
+FLD_Segment	
+FLD_Unit	
+FLD_Timezone	
+FLD_FirstName	Member First Name
+FLD_LastName	Member Last Name
+FLD_Address1	Member Address Address1
+FLD_Address2	Member Address Address2
+FLD_City	Member City City
+FLD_State	Member State State
+FLD_Zip	Member Zip Zip
+FLD_County	Member County County
+FLD_DOB	Member  DOB
+FLD_Gender	Member Gender Gender
+FLD_ChildMinorFlag	Member Child Flag
+FLD_Age	Member Age Age
+FLD_Language	Member Language Language
+FLD_RestrictedFlag	Member Restricted Flag
+FLD_Priority	Member Priority Priority
+FLD_AnsMachineMsg	Member Ans Msg
+FLD_CPNDisplay	
+FLD_CPNDigits	
+FLD_AttemptNbr	
+FLD_MarketInfo01	
+FLD_MarketInfo02	
+FLD_AccountNm	
+FLD_CustomerID	
+FLD_ContactIDSource	
+FLD_ContactIDType	
+FLD_ContactType	
+FLD_SubjectType	
+FLD_SubjectID	GMPI_ID
+FLD_SubjectFirstNm	
+FLD_SubjectLastNm	
+FLD_Group	
+FLD_CmpgnDesc	
+FLD_DispositionCD	
+FLD_Date01	
+FLD_Date02	
+FLD_Date03	
+FLD_Date04	
+FLD_Date05	
+FLD_OBCustom01	
+FLD_OBCustom02	
+FLD_OBCustom03	
+FLD_OBCustom04	
+FLD_OBCustom05	
+FLD_OBCustom06	
+FLD_OBCustom07	
+FLD_OBCustom08	
+FLD_OBCustom09	
+FLD_OBCustom10	
+FLD_OBCustom11	
+FLD_OBCustom12	
+FLD_OBCustom13	
+FLD_OBCustom14	
+FLD_OBCustom15	
+FLD_OBCustom16	
+FLD_OBCustom17	
+FLD_OBCustom18	
+FLD_OBCustom19	
+FLD_OBCustom20	
+FLD_LoadDate	Date the Campaign was provided the member list
+FLD_OBCustomPHI01	
+FLD_OBCustomPHI02	
+FLD_OBCustomPHI03	
+FLD_OBCustomPHI04	
+FLD_OBCustomPHI05	
+FLD_OBCustomPHI06	
+FLD_OBCustomPHI07	
+FLD_OBCustomPHI08	
+FLD_OBCustomPHI09	
+FLD_OBCustomPHI10	
+FLD_OBCustomPHI11	
+FLD_OBCustomPHI12	
+FLD_OBCustomPHI13	
+FLD_OBCustomPHI14	
+FLD_OBCustomPHI15	
+FLD_OBCustomPHI16	
+FLD_OBCustomPHI17	
+FLD_OBCustomPHI18	
+FLD_OBCustomPHI19	
+FLD_OBCustomPHI20	
+Dbid	
+AreaCode	
+Prefix	
+TimeZoneCode	
+DST	
+City	
+State	
+TimeZone	
+GMT_Offset	
+TimeZone_Dbid	
+DSTYear	
+DSTStartUTC	
+DSTEndUTC	
+
+
+I want to create a view query for the OMNI_ARCHIVE table 
+add description from the above table. only some of the columns have description. just add descriptins for what you have in the table
+
+
+I will give a sample for create query for the view CREATE OR REPLACE SECURE VIEW ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_NANPA_AREA_CODE (
+	NPA_ID COMMENT 'The NPA or Area Code',
+	TYPE_OF_CODE COMMENT 'What type of code is this NPA (Easily Recognizable Code, General Purpose Code)',
+	ASSIGNABLE COMMENT 'Is this NPA assignable (Yes/No)',
+	EXPLANATION COMMENT 'Is the NPA is not assignable (no in previous field), this is the reason it is not assignable',
+	RESERVED COMMENT 'Is the NPA reserved for the relief of another NPA (Yes/No)',
+	ASSIGNED COMMENT 'Is the NPA assigned for use (Yes/No)',
+	ASSIGNMENT_DT COMMENT 'What date was the assignment made',
+	USE COMMENT 'What is the Use of this code (N - nongeograpic; G - Geographic)',
+	LOCATION COMMENT 'The geographic location to which the code is assigned (AL, TX, Manitoba, etc.)',
+	COUNTRY COMMENT 'The country to which the assignment was made (US, CANADA, BAHAMAS, etc.)',
+	IN_SERVICE COMMENT 'Is this NPA in service (Yes/No)',
+	IN_SERVICE_DT COMMENT 'What date was this NPA placed in service',
+	SERVICE COMMENT 'Special annotation for services accomodated by this NPA',
+	STATUS COMMENT 'Indicates the current status of the record',
+    FILE_NAME COMMENT 'Name of the source file',
+    FILE_CREATION_DATE COMMENT 'Creation date of the source file (SYSDATE at load time)',
+    UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated'
+)COMMENT='The Wellmed Central Quality Reporting team regularly produces member campaign data for stakeholders.  Members should not be contacted at invalid phone numbers.  NANPA is a regulatory body that distributes area codes for north america.  We can filter on area codes to determine which are for business/government/toll free/not in use versus which are reasonably used for individual members.'
+AS
+SELECT NPA_ID, 
+       TYPE_OF_CODE, 
+       ASSIGNABLE, 
+       EXPLANATION, 
+       RESERVED, 
+       ASSIGNED, 
+       ASSIGNMENT_DT,
+       USE, 
+       LOCATION, 
+       COUNTRY, 
+       IN_SERVICE, 
+       IN_SERVICE_DT, 
+       SERVICE, 
+       STATUS,
+       FILE_NAME, 
+       FILE_CREATION_DATE, 
+       UPDATE_DATE 
+  FROM ASQN_DEV_ORCHESTRATION_DB.DBO.NANPA_AREA_CODE
+  WHERE 
+      UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
+                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE')
+    AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE 
+                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE');
+    based on this you can give the create query for the view omni archive
+
+
+
+
+
