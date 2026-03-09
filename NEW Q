@@ -1,26 +1,29 @@
-select distinct
+SELECT DISTINCT
     dm.MEMBER_MBI,
-  	mrm.GMPI_ID,
+    mrm.GMPI_ID,
     mrm.MEMBER_FIRST_NAME,
     mrm.MEMBER_LAST_NAME,
     mrm.CONTRACT_ID,
     mrm.CONTRACT_PBP
-from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH mrm
-left join FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_CLINIC dc
-    on mrm.CLINIC_ID = dc.CLINIC_ID
-   and dc.ACTIVE_FLAG = 1
-left join FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER dm
-    on mrm.GMPI_ID = dm.GMPI_ID
-   and mrm.MEMBER_ID = dm.MEMBER_ID
-   and dm.ACTIVE_FLAG = 1
-where mrm.DATA_ENTITY = 'Wellmed'
-  and (dc.CLINIC_RELATION = 'Affiliated' or mrm.OWNED_FLAG = 0)
-  and mrm.ACTIVE_FLAG = 1
-  and mrm.IS_HOSPICE_FLAG = 0
-  and mrm.LTI_FLAG = 0
-  and mrm.ESRD_FLAG = 0
-  and dm.MEMBER_MBI is not null
-  and mrm.REPORT_MONTH = DATE '2026-03-01'
-  and mrm.CLINIC_GROUP_NAME not in ('SWHR')
-  and mrm.MBR_ELIG_INSURANCE_COMPANY_FULL_NAME like 'United%'
-order by dm.MEMBER_MBI;
+FROM BI_ANALYSIS.dbo.MEMBER_REPORT_MONTH mrm
+
+LEFT JOIN BI_ANALYSIS.dbo.DIM_CLINIC dc
+    ON mrm.CLINIC_ID = dc.CLINIC_ID
+   AND dc.ACTIVE_FLAG = 1
+
+LEFT JOIN BI_ANALYSIS.dbo.DIM_MEMBER dm
+    ON mrm.GMPI_ID = dm.GMPI_ID
+   AND mrm.MEMBER_ID = dm.MEMBER_ID
+   AND dm.ACTIVE_FLAG = 1
+
+WHERE mrm.DATA_ENTITY = 'Wellmed'
+  AND (dc.CLINIC_RELATION = 'Affiliated' OR mrm.OWNED_FLAG = 0)
+  AND mrm.ACTIVE_FLAG = 1
+  AND mrm.IS_HOSPICE_FLAG = 0
+  AND mrm.LTI_FLAG = 0
+  AND mrm.ESRD_FLAG = 0
+  AND dm.MEMBER_MBI IS NOT NULL
+  AND mrm.REPORT_MONTH = '2026-03-01'
+  AND mrm.CLINIC_GROUP_NAME NOT IN ('SWHR')
+  AND mrm.MBR_ELIG_INSURANCE_COMPANY_FULL_NAME LIKE 'United%'
+ORDER BY dm.MEMBER_MBI;
