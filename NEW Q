@@ -1,29 +1,21 @@
-SELECT DISTINCT
-    dm.MEMBER_MBI,
-    mrm.GMPI_ID,
-    mrm.MEMBER_FIRST_NAME,
-    mrm.MEMBER_LAST_NAME,
-    mrm.CONTRACT_ID,
-    mrm.CONTRACT_PBP
-FROM BI_ANALYSIS.dbo.MEMBER_REPORT_MONTH mrm
-
-LEFT JOIN BI_ANALYSIS.dbo.DIM_CLINIC dc
-    ON mrm.CLINIC_ID = dc.CLINIC_ID
-   AND dc.ACTIVE_FLAG = 1
-
-LEFT JOIN BI_ANALYSIS.dbo.DIM_MEMBER dm
-    ON mrm.GMPI_ID = dm.GMPI_ID
-   AND mrm.MEMBER_ID = dm.MEMBER_ID
-   AND dm.ACTIVE_FLAG = 1
-
-WHERE mrm.DATA_ENTITY = 'Wellmed'
-  AND (dc.CLINIC_RELATION = 'Affiliated' OR mrm.OWNED_FLAG = 0)
-  AND mrm.ACTIVE_FLAG = 1
-  AND mrm.IS_HOSPICE_FLAG = 0
-  AND mrm.LTI_FLAG = 0
-  AND mrm.ESRD_FLAG = 0
-  AND dm.MEMBER_MBI IS NOT NULL
-  AND mrm.REPORT_MONTH = '2026-03-01'
-  AND mrm.CLINIC_GROUP_NAME NOT IN ('SWHR')
-  AND mrm.MBR_ELIG_INSURANCE_COMPANY_FULL_NAME LIKE 'United%'
-ORDER BY dm.MEMBER_MBI;
+select distinct [dm].[member_mbi],
+	[mrm].[gmpi_id],
+	[mrm].[member_first_name],
+	[mrm].[member_last_name],
+	[mrm].[contract_id],
+	[mrm].[contract_pbp],
+	[mrm].[mbr_date_of_birth] 
+from [bi_analysis].[dbo].[member_report_month] [mrm] 
+	left join [bi_analysis].[dbo].[dim_clinic] [dc] on [mrm].[clinic_id] = [dc].[clinic_id] and [dc].[active_flag] = 1 
+	left join [bi_analysis].[dbo].[dim_member] [dm] on [mrm].[gmpi_id] = [dm].[gmpi_id] and [mrm].[member_id] = [dm].[member_id] and [dm].[active_flag] = 1 
+where [dm].[member_mbi] is not NULL 
+	and [mrm].[data_entity] = 'Wellmed' 
+	and ([dc].[clinic_relation] = 'Affiliated' or [mrm].[owned_flag] = 0) 
+	and [mrm].[active_flag] = 1 
+	and [mrm].[is_hospice_flag] = 0 
+	and [mrm].[lti_flag] = 0 
+	and [mrm].[esrd_flag] = 0 
+	and [mrm].[report_month] = '2026-03-01' 
+	and [mrm].[clinic_group_name] not in ('SWHR') 
+	and [mrm].[mbr_elig_insurance_company_full_name] Like 'United%' 
+order by [dm].[member_mbi]
