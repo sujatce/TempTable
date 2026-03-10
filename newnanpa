@@ -89,7 +89,7 @@ DST — Indicator showing whether daylight saving time applies to the associated
 CITY — City associated with the contact number or timezone reference.
 STATE — State associated with the contact number or timezone reference.
 TIMEZONE — Timezone name associated with the contact number or member location.
-GMT_OFFSET — Offset from Greenwich Mean Time for the associated timezone.
+GMT_OFFSET —Time difference between GMT and Member Time Zone.
 TIMEZONE_DBID — Internal identifier for the timezone reference record.
 DSTYEAR — Year for which daylight saving time rules apply.
 DSTSTARTUTC — UTC timestamp when daylight saving time begins for the associated timezone and year.
