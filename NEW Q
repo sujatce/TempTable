@@ -1,322 +1,126 @@
-create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.OMNI_ARCHIVE (
-	OMNI_ARCHIVE_ID NUMBER(38,0) NOT NULL DEFAULT ASQN_PRD_ORCHESTRATION_DB.DBO.OMNI_ARCHIVE_SEQ.NEXTVAL,
-	ARCHIVEDATE DATE NOT NULL,
-	CALL_TIME_UTC TIMESTAMP_NTZ(7),
-	CALL_TIME_CEN TIMESTAMP_NTZ(7),
-	CALL_TIME_LOCAL TIMESTAMP_NTZ(7),
-	RECORD_ID NUMBER(38,0) NOT NULL,
-	CONTACT_INFO VARCHAR(128) NOT NULL,
-	CONTACT_INFO_TYPE NUMBER(38,0) NOT NULL,
-	RECORD_TYPE NUMBER(38,0) NOT NULL,
-	RECORD_STATUS NUMBER(38,0) NOT NULL,
-	CALL_RESULT NUMBER(38,0),
-	ATTEMPT NUMBER(38,0) NOT NULL,
-	DIAL_SCHED_TIME NUMBER(38,0),
-	CALL_TIME NUMBER(38,0),
-	DAILY_FROM NUMBER(38,0) NOT NULL,
-	DAILY_TILL NUMBER(38,0) NOT NULL,
-	TZ_DBID NUMBER(38,0) NOT NULL,
-	CAMPAIGN_ID NUMBER(38,0),
-	AGENT_ID VARCHAR(32),
-	CHAIN_ID NUMBER(38,0) NOT NULL,
-	CHAIN_N NUMBER(38,0) NOT NULL,
-	GROUP_ID NUMBER(38,0),
-	APP_ID NUMBER(38,0),
-	TREATMENTS VARCHAR(255),
-	MEDIA_REF NUMBER(38,0),
-	SWITCH_ID NUMBER(38,0),
-	FLD_CALLINGLIST VARCHAR(255) NOT NULL,
-	FLD_FUNCTION VARCHAR(255) NOT NULL,
-	FLD_SEGMENT VARCHAR(255) NOT NULL,
-	FLD_UNIT VARCHAR(255) NOT NULL,
-	FLD_TIMEZONE VARCHAR(6),
-	FLD_FIRSTNAME VARCHAR(50),
-	FLD_LASTNAME VARCHAR(50),
-	FLD_ADDRESS1 VARCHAR(100),
-	FLD_ADDRESS2 VARCHAR(50),
-	FLD_CITY VARCHAR(50),
-	FLD_STATE VARCHAR(3),
-	FLD_ZIP VARCHAR(10),
-	FLD_COUNTY VARCHAR(50),
-	FLD_DOB DATE,
-	FLD_GENDER VARCHAR(10),
-	FLD_CHILDMINORFLAG VARCHAR(5),
-	FLD_AGE VARCHAR(3),
-	FLD_LANGUAGE VARCHAR(20),
-	FLD_RESTRICTEDFLAG VARCHAR(5),
-	FLD_PRIORITY VARCHAR(20),
-	FLD_ANSMACHINEMSG VARCHAR(255),
-	FLD_CPNDISPLAY VARCHAR(255),
-	FLD_CPNDIGITS VARCHAR(10),
-	FLD_ATTEMPTNBR VARCHAR(3),
-	FLD_MARKETINFO01 VARCHAR(255),
-	FLD_MARKETINFO02 VARCHAR(255),
-	FLD_ACCOUNTNM VARCHAR(255),
-	FLD_CUSTOMERID VARCHAR(50),
-	FLD_CONTACTIDSOURCE VARCHAR(50),
-	FLD_CONTACTIDTYPE VARCHAR(50),
-	FLD_CONTACTTYPE VARCHAR(50),
-	FLD_SUBJECTTYPE VARCHAR(50),
-	FLD_SUBJECTID VARCHAR(50),
-	FLD_SUBJECTFIRSTNM VARCHAR(50),
-	FLD_SUBJECTLASTNM VARCHAR(50),
-	FLD_GROUP VARCHAR(255),
-	FLD_CMPGNDESC VARCHAR(255),
-	FLD_DISPOSITIONCD VARCHAR(255),
-	FLD_DATE01 TIMESTAMP_NTZ(7),
-	FLD_DATE02 TIMESTAMP_NTZ(7),
-	FLD_DATE03 TIMESTAMP_NTZ(7),
-	FLD_DATE04 TIMESTAMP_NTZ(7),
-	FLD_DATE05 TIMESTAMP_NTZ(7),
-	FLD_OBCUSTOM01 VARCHAR(255),
-	FLD_OBCUSTOM02 VARCHAR(255),
-	FLD_OBCUSTOM03 VARCHAR(255),
-	FLD_OBCUSTOM04 VARCHAR(255),
-	FLD_OBCUSTOM05 VARCHAR(255),
-	FLD_OBCUSTOM06 VARCHAR(255),
-	FLD_OBCUSTOM07 VARCHAR(255),
-	FLD_OBCUSTOM08 VARCHAR(255),
-	FLD_OBCUSTOM09 VARCHAR(255),
-	FLD_OBCUSTOM10 VARCHAR(255),
-	FLD_OBCUSTOM11 VARCHAR(255),
-	FLD_OBCUSTOM12 VARCHAR(255),
-	FLD_OBCUSTOM13 VARCHAR(255),
-	FLD_OBCUSTOM14 VARCHAR(255),
-	FLD_OBCUSTOM15 VARCHAR(255),
-	FLD_OBCUSTOM16 VARCHAR(255),
-	FLD_OBCUSTOM17 VARCHAR(255),
-	FLD_OBCUSTOM18 VARCHAR(255),
-	FLD_OBCUSTOM19 VARCHAR(255),
-	FLD_OBCUSTOM20 VARCHAR(255),
-	FLD_LOADDATE TIMESTAMP_NTZ(7) NOT NULL,
-	FLD_OBCUSTOMPHI01 VARCHAR(255),
-	FLD_OBCUSTOMPHI02 VARCHAR(255),
-	FLD_OBCUSTOMPHI03 VARCHAR(255),
-	FLD_OBCUSTOMPHI04 VARCHAR(255),
-	FLD_OBCUSTOMPHI05 VARCHAR(255),
-	FLD_OBCUSTOMPHI06 VARCHAR(255),
-	FLD_OBCUSTOMPHI07 VARCHAR(255),
-	FLD_OBCUSTOMPHI08 VARCHAR(255),
-	FLD_OBCUSTOMPHI09 VARCHAR(255),
-	FLD_OBCUSTOMPHI10 VARCHAR(255),
-	FLD_OBCUSTOMPHI11 VARCHAR(255),
-	FLD_OBCUSTOMPHI12 VARCHAR(255),
-	FLD_OBCUSTOMPHI13 VARCHAR(255),
-	FLD_OBCUSTOMPHI14 VARCHAR(255),
-	FLD_OBCUSTOMPHI15 VARCHAR(255),
-	FLD_OBCUSTOMPHI16 VARCHAR(255),
-	FLD_OBCUSTOMPHI17 VARCHAR(255),
-	FLD_OBCUSTOMPHI18 VARCHAR(255),
-	FLD_OBCUSTOMPHI19 VARCHAR(255),
-	FLD_OBCUSTOMPHI20 VARCHAR(255),
-	DBID NUMBER(38,0),
-	AREACODE NUMBER(38,0),
-	PREFIX NUMBER(38,0),
-	TIMEZONECODE NUMBER(38,0),
-	DST NUMBER(38,0),
-	CITY VARCHAR(255),
-	STATE VARCHAR(255),
-	TIMEZONE VARCHAR(255),
-	GMT_OFFSET NUMBER(38,0),
-	TIMEZONE_DBID NUMBER(38,0),
-	DSTYEAR NUMBER(38,0),
-	DSTSTARTUTC TIMESTAMP_NTZ(7),
-	DSTENDUTC TIMESTAMP_NTZ(7),
-	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
-	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
-	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
-	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
-	constraint PK_OMN_A_PRIMARYKEY primary key (OMNI_ARCHIVE_ID)
-);
-
-
-
-
-
-
-
-
-
-description of the columns 
-
-Table Column	Description
-OMNI_ARCHIVE_ID	Unique Identifier for every data row
-ArchiveDate	Date the Vendor Archived the days work in this table
-call_time_UTC	Call time when vendor attempted contacting the member
-call_time_CEN	Call time when vendor attempted contacting the member
-call_time_Local	Call time when vendor attempted contacting the member
-record_id	
-contact_info	member phone number
-contact_info_type	
-record_type	
-record_status	
-call_result	Result of attempted call
-attempt	how many times did the vendor attempted to contact the member
-dial_sched_time	
-call_time	
-daily_from	
-daily_till	
-tz_dbid	
-campaign_id	
-agent_id	
-chain_id	
-chain_n	
-group_id	
-app_id	
-treatments	
-media_ref	
-switch_id	
-FLD_CallingList	
-FLD_Function	
-FLD_Segment	
-FLD_Unit	
-FLD_Timezone	
-FLD_FirstName	Member First Name
-FLD_LastName	Member Last Name
-FLD_Address1	Member Address Address1
-FLD_Address2	Member Address Address2
-FLD_City	Member City City
-FLD_State	Member State State
-FLD_Zip	Member Zip Zip
-FLD_County	Member County County
-FLD_DOB	Member  DOB
-FLD_Gender	Member Gender Gender
-FLD_ChildMinorFlag	Member Child Flag
-FLD_Age	Member Age Age
-FLD_Language	Member Language Language
-FLD_RestrictedFlag	Member Restricted Flag
-FLD_Priority	Member Priority Priority
-FLD_AnsMachineMsg	Member Ans Msg
-FLD_CPNDisplay	
-FLD_CPNDigits	
-FLD_AttemptNbr	
-FLD_MarketInfo01	
-FLD_MarketInfo02	
-FLD_AccountNm	
-FLD_CustomerID	
-FLD_ContactIDSource	
-FLD_ContactIDType	
-FLD_ContactType	
-FLD_SubjectType	
-FLD_SubjectID	GMPI_ID
-FLD_SubjectFirstNm	
-FLD_SubjectLastNm	
-FLD_Group	
-FLD_CmpgnDesc	
-FLD_DispositionCD	
-FLD_Date01	
-FLD_Date02	
-FLD_Date03	
-FLD_Date04	
-FLD_Date05	
-FLD_OBCustom01	
-FLD_OBCustom02	
-FLD_OBCustom03	
-FLD_OBCustom04	
-FLD_OBCustom05	
-FLD_OBCustom06	
-FLD_OBCustom07	
-FLD_OBCustom08	
-FLD_OBCustom09	
-FLD_OBCustom10	
-FLD_OBCustom11	
-FLD_OBCustom12	
-FLD_OBCustom13	
-FLD_OBCustom14	
-FLD_OBCustom15	
-FLD_OBCustom16	
-FLD_OBCustom17	
-FLD_OBCustom18	
-FLD_OBCustom19	
-FLD_OBCustom20	
-FLD_LoadDate	Date the Campaign was provided the member list
-FLD_OBCustomPHI01	
-FLD_OBCustomPHI02	
-FLD_OBCustomPHI03	
-FLD_OBCustomPHI04	
-FLD_OBCustomPHI05	
-FLD_OBCustomPHI06	
-FLD_OBCustomPHI07	
-FLD_OBCustomPHI08	
-FLD_OBCustomPHI09	
-FLD_OBCustomPHI10	
-FLD_OBCustomPHI11	
-FLD_OBCustomPHI12	
-FLD_OBCustomPHI13	
-FLD_OBCustomPHI14	
-FLD_OBCustomPHI15	
-FLD_OBCustomPHI16	
-FLD_OBCustomPHI17	
-FLD_OBCustomPHI18	
-FLD_OBCustomPHI19	
-FLD_OBCustomPHI20	
-Dbid	
-AreaCode	
-Prefix	
-TimeZoneCode	
-DST	
-City	
-State	
-TimeZone	
-GMT_Offset	
-TimeZone_Dbid	
-DSTYear	
-DSTStartUTC	
-DSTEndUTC	
-
-
-I want to create a view query for the OMNI_ARCHIVE table 
-add description from the above table. only some of the columns have description. just add descriptins for what you have in the table
-
-
-I will give a sample for create query for the view CREATE OR REPLACE SECURE VIEW ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_NANPA_AREA_CODE (
-	NPA_ID COMMENT 'The NPA or Area Code',
-	TYPE_OF_CODE COMMENT 'What type of code is this NPA (Easily Recognizable Code, General Purpose Code)',
-	ASSIGNABLE COMMENT 'Is this NPA assignable (Yes/No)',
-	EXPLANATION COMMENT 'Is the NPA is not assignable (no in previous field), this is the reason it is not assignable',
-	RESERVED COMMENT 'Is the NPA reserved for the relief of another NPA (Yes/No)',
-	ASSIGNED COMMENT 'Is the NPA assigned for use (Yes/No)',
-	ASSIGNMENT_DT COMMENT 'What date was the assignment made',
-	USE COMMENT 'What is the Use of this code (N - nongeograpic; G - Geographic)',
-	LOCATION COMMENT 'The geographic location to which the code is assigned (AL, TX, Manitoba, etc.)',
-	COUNTRY COMMENT 'The country to which the assignment was made (US, CANADA, BAHAMAS, etc.)',
-	IN_SERVICE COMMENT 'Is this NPA in service (Yes/No)',
-	IN_SERVICE_DT COMMENT 'What date was this NPA placed in service',
-	SERVICE COMMENT 'Special annotation for services accomodated by this NPA',
-	STATUS COMMENT 'Indicates the current status of the record',
-    FILE_NAME COMMENT 'Name of the source file',
-    FILE_CREATION_DATE COMMENT 'Creation date of the source file (SYSDATE at load time)',
-    UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated'
-)COMMENT='The Wellmed Central Quality Reporting team regularly produces member campaign data for stakeholders.  Members should not be contacted at invalid phone numbers.  NANPA is a regulatory body that distributes area codes for north america.  We can filter on area codes to determine which are for business/government/toll free/not in use versus which are reasonably used for individual members.'
-AS
-SELECT NPA_ID, 
-       TYPE_OF_CODE, 
-       ASSIGNABLE, 
-       EXPLANATION, 
-       RESERVED, 
-       ASSIGNED, 
-       ASSIGNMENT_DT,
-       USE, 
-       LOCATION, 
-       COUNTRY, 
-       IN_SERVICE, 
-       IN_SERVICE_DT, 
-       SERVICE, 
-       STATUS,
-       FILE_NAME, 
-       FILE_CREATION_DATE, 
-       UPDATE_DATE 
-  FROM ASQN_DEV_ORCHESTRATION_DB.DBO.NANPA_AREA_CODE
-  WHERE 
-      UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE 
-                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE')
-    AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE 
-                    FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-                    WHERE VIEW_NAME = 'VW_NANPA_AREA_CODE');
-    based on this you can give the create query for the view omni archive
-
-
-
-
-
+create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_OMNI_ARCHIVE(
+	OMNI_ARCHIVE_ID COMMENT 'Unique Identifier for every data row',
+	ARCHIVEDATE COMMENT 'Date the Vendor Archived the days work in this table',
+	CALL_TIME_UTC COMMENT 'Call time when vendor attempted contacting the member',
+	CALL_TIME_CEN COMMENT 'Call time when vendor attempted contacting the member',
+	CALL_TIME_LOCAL COMMENT 'Call time when vendor attempted contacting the member',
+	RECORD_ID COMMENT 'Unique identifier assigned to the record within the vendor dialing system',
+	CONTACT_INFO COMMENT 'Member phone number',
+	CONTACT_INFO_TYPE COMMENT 'Type of contact information used such as mobile, home phone, or other contact method',
+	RECORD_TYPE COMMENT 'Classification of the record within the vendor dialing platform',
+	RECORD_STATUS COMMENT 'Indicates the current status of the record',
+	CALL_RESULT COMMENT 'Result of attempted call',
+	ATTEMPT COMMENT 'How many times did the vendor attempt to contact the member',
+	DIAL_SCHED_TIME COMMENT 'Scheduled time for the outbound call attempt in the vendor dialing system',
+	CALL_TIME COMMENT 'Vendor system call duration or system call time value',
+	DAILY_FROM COMMENT 'Earliest allowed calling time for the member during the day',
+	DAILY_TILL COMMENT 'Latest allowed calling time for the member during the day',
+	TZ_DBID COMMENT 'Vendor timezone identifier associated with the dialing record',
+	CAMPAIGN_ID COMMENT 'Identifier of the outreach campaign associated with the call attempt',
+	AGENT_ID COMMENT 'Identifier of the agent or automated dialing system that attempted the call',
+	CHAIN_ID COMMENT 'Identifier representing the dialing chain workflow used for the call record',
+	CHAIN_N COMMENT 'Sequence number of the record within the dialing chain',
+	GROUP_ID COMMENT 'Identifier for the vendor dialing group associated with the call record',
+	APP_ID COMMENT 'Identifier of the dialing application or platform used to process the call',
+	TREATMENTS COMMENT 'Outbound messaging or outreach treatment applied to the member record',
+	MEDIA_REF COMMENT 'Reference identifier for the call script, media, or messaging asset used during the call',
+	SWITCH_ID COMMENT 'Identifier of the telephony switch used by the vendor dialing system',
+	FLD_CALLINGLIST COMMENT 'Name of the source outreach file or calling list provided to the vendor',
+	FLD_FUNCTION COMMENT 'Business function or outreach program associated with the record',
+	FLD_SEGMENT COMMENT 'Business segment responsible for the outreach such as OptumCare',
+	FLD_UNIT COMMENT 'Business unit responsible for the outreach campaign',
+	FLD_TIMEZONE COMMENT 'Timezone provided in the source member outreach file',
+	FLD_FIRSTNAME COMMENT 'Member First Name',
+	FLD_LASTNAME COMMENT 'Member Last Name',
+	FLD_ADDRESS1 COMMENT 'Member Address Address1',
+	FLD_ADDRESS2 COMMENT 'Member Address Address2',
+	FLD_CITY COMMENT 'Member City',
+	FLD_STATE COMMENT 'Member State',
+	FLD_ZIP COMMENT 'Member Zip',
+	FLD_COUNTY COMMENT 'Member County',
+	FLD_DOB COMMENT 'Member DOB',
+	FLD_GENDER COMMENT 'Member Gender',
+	FLD_CHILDMINORFLAG COMMENT 'Member Child Flag',
+	FLD_AGE COMMENT 'Member Age',
+	FLD_LANGUAGE COMMENT 'Member Language',
+	FLD_RESTRICTEDFLAG COMMENT 'Member Restricted Flag',
+	FLD_PRIORITY COMMENT 'Member Priority',
+	FLD_ANSMACHINEMSG COMMENT 'Member Ans Msg',
+	FLD_CPNDISPLAY COMMENT 'Caller ID display value shown to the member during the outbound call',
+	FLD_CPNDIGITS COMMENT 'Caller ID phone number digits used during the outbound call attempt',
+	FLD_ATTEMPTNBR COMMENT 'Attempt number assigned to the record within the vendor dialing process',
+	FLD_MARKETINFO01 COMMENT 'Additional market related information associated with the outreach record',
+	FLD_MARKETINFO02 COMMENT 'Additional market related information associated with the outreach record',
+	FLD_ACCOUNTNM COMMENT 'Account name associated with the outreach record or campaign',
+	FLD_CUSTOMERID COMMENT 'Customer identifier associated with the outreach record',
+	FLD_CONTACTIDSOURCE COMMENT 'Source system from which the contact identifier originated',
+	FLD_CONTACTIDTYPE COMMENT 'Type of contact identifier associated with the outreach record',
+	FLD_CONTACTTYPE COMMENT 'Type of contact relationship or communication method associated with the member',
+	FLD_SUBJECTTYPE COMMENT 'Type of subject associated with the record such as member or dependent',
+	FLD_SUBJECTID COMMENT 'GMPI_ID',
+	FLD_SUBJECTFIRSTNM COMMENT 'First name of the subject associated with the outreach record',
+	FLD_SUBJECTLASTNM COMMENT 'Last name of the subject associated with the outreach record',
+	FLD_GROUP COMMENT 'Grouping value used to organize outreach records within the campaign',
+	FLD_CMPGNDESC COMMENT 'Description of the campaign associated with the outreach record',
+	FLD_DISPOSITIONCD COMMENT 'Disposition code indicating the final outcome of the call attempt',
+	FLD_DATE01 COMMENT 'Custom date field 1 associated with the outreach record.',
+	FLD_DATE02 COMMENT 'Custom date field 2 associated with the outreach record.',
+	FLD_DATE03 COMMENT 'Custom date field 3 associated with the outreach record.',
+	FLD_DATE04 COMMENT 'Custom date field 4 associated with the outreach record.',
+	FLD_DATE05 COMMENT 'Custom date field 5 associated with the outreach record.',
+	FLD_OBCUSTOM01 COMMENT 'Custom outbound field 1 associated with the outreach record.',
+	FLD_OBCUSTOM02 COMMENT 'Custom outbound field 2 associated with the outreach record.',
+	FLD_OBCUSTOM03 COMMENT 'Custom outbound field 3 associated with the outreach record.',
+	FLD_OBCUSTOM04 COMMENT 'Custom outbound field 4 associated with the outreach record.',
+	FLD_OBCUSTOM05 COMMENT 'Custom outbound field 5 associated with the outreach record.',
+	FLD_OBCUSTOM06 COMMENT 'Custom outbound field 6 associated with the outreach record.',
+	FLD_OBCUSTOM07 COMMENT 'Custom outbound field 7 associated with the outreach record.',
+	FLD_OBCUSTOM08 COMMENT 'Custom outbound field 8 associated with the outreach record.',
+	FLD_OBCUSTOM09 COMMENT 'Custom outbound field 9 associated with the outreach record.',
+	FLD_OBCUSTOM10 COMMENT 'Custom outbound field 10 associated with the outreach record.',
+	FLD_OBCUSTOM11 COMMENT 'Custom outbound field 11 associated with the outreach record.',
+	FLD_OBCUSTOM12 COMMENT 'Custom outbound field 12 associated with the outreach record.',
+	FLD_OBCUSTOM13 COMMENT 'Custom outbound field 13 associated with the outreach record.',
+	FLD_OBCUSTOM14 COMMENT 'Custom outbound field 14 associated with the outreach record.',
+	FLD_OBCUSTOM15 COMMENT 'Custom outbound field 15 associated with the outreach record.',
+	FLD_OBCUSTOM16 COMMENT 'Custom outbound field 16 associated with the outreach record.',
+	FLD_OBCUSTOM17 COMMENT 'Custom outbound field 17 associated with the outreach record.',
+	FLD_OBCUSTOM18 COMMENT 'Custom outbound field 18 associated with the outreach record.',
+	FLD_OBCUSTOM19 COMMENT 'Custom outbound field 19 associated with the outreach record.',
+	FLD_OBCUSTOM20 COMMENT 'Custom outbound field 20 associated with the outreach record.',
+	FLD_LOADDATE COMMENT 'Date the Campaign was provided the member list',
+	FLD_OBCUSTOMPHI01 COMMENT 'Custom outbound PHI field 1 associated with the outreach record.',
+	FLD_OBCUSTOMPHI02 COMMENT 'Custom outbound PHI field 2 associated with the outreach record.',
+	FLD_OBCUSTOMPHI03 COMMENT 'Custom outbound PHI field 3 associated with the outreach record.',
+	FLD_OBCUSTOMPHI04 COMMENT 'Custom outbound PHI field 4 associated with the outreach record.',
+	FLD_OBCUSTOMPHI05 COMMENT 'Custom outbound PHI field 5 associated with the outreach record.',
+	FLD_OBCUSTOMPHI06 COMMENT 'Custom outbound PHI field 6 associated with the outreach record.',
+	FLD_OBCUSTOMPHI07 COMMENT 'Custom outbound PHI field 7 associated with the outreach record.',
+	FLD_OBCUSTOMPHI08 COMMENT 'Custom outbound PHI field 8 associated with the outreach record.',
+	FLD_OBCUSTOMPHI09 COMMENT 'Custom outbound PHI field 9 associated with the outreach record.',
+	FLD_OBCUSTOMPHI10 COMMENT 'Custom outbound PHI field 10 associated with the outreach record.',
+	FLD_OBCUSTOMPHI11 COMMENT 'Custom outbound PHI field 11 associated with the outreach record.',
+	FLD_OBCUSTOMPHI12 COMMENT 'Custom outbound PHI field 12 associated with the outreach record.',
+	FLD_OBCUSTOMPHI13 COMMENT 'Custom outbound PHI field 13 associated with the outreach record.',
+	FLD_OBCUSTOMPHI14 COMMENT 'Custom outbound PHI field 14 associated with the outreach record.',
+	FLD_OBCUSTOMPHI15 COMMENT 'Custom outbound PHI field 15 associated with the outreach record.',
+	FLD_OBCUSTOMPHI16 COMMENT 'Custom outbound PHI field 16 associated with the outreach record.',
+	FLD_OBCUSTOMPHI17 COMMENT 'Custom outbound PHI field 17 associated with the outreach record.',
+	FLD_OBCUSTOMPHI18 COMMENT 'Custom outbound PHI field 18 associated with the outreach record.',
+	FLD_OBCUSTOMPHI19 COMMENT 'Custom outbound PHI field 19 associated with the outreach record.',
+	FLD_OBCUSTOMPHI20 COMMENT 'Custom outbound PHI field 20 associated with the outreach record.',
+	DBID COMMENT 'Internal database identifier from the vendor dialing or timezone reference system.',
+	AREACODE COMMENT 'Telephone area code associated with the contact number',
+	PREFIX COMMENT 'Telephone prefix associated with the contact number.',
+	TIMEZONECODE COMMENT 'Code representing the timezone associated with the contact number or member location.',
+	DST COMMENT 'Indicator showing whether daylight saving time applies to the associated time zone.',
+	CITY COMMENT 'City associated with the contact number or timezone reference.',
+	STATE COMMENT 'State associated with the contact number or timezone reference.',
+	TIMEZONE COMMENT 'Timezone name associated with the contact number or member location.',
+	GMT_OFFSET COMMENT 'Time difference between GMT and Member Time Zone.',
+	TIMEZONE_DBID COMMENT 'Internal identifier for the timezone reference record.',
+	DSTYEAR COMMENT 'Year for which daylight saving time rules apply.',
+	DSTSTARTUTC COMMENT 'UTC timestamp when daylight saving time begins for the associated timezone and year.',
+	DSTENDUTC COMMENT 'UTC timestamp when daylight saving time ends for the associated timezone and year.',
+	UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated'
+)
