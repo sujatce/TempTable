@@ -1,1 +1,1 @@
-Filter dbo.omni_archive with archivedate where archivedate between '01-JAN-2026' to '31-DEC-2026'
+DROP VIEW IF EXISTS ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_OMNI_ARCHIVE;
