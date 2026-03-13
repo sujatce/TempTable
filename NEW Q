@@ -1,126 +1,95 @@
-create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_OMNI_ARCHIVE(
-	OMNI_ARCHIVE_ID COMMENT 'Unique Identifier for every data row',
-	ARCHIVEDATE COMMENT 'Date the Vendor Archived the days work in this table',
-	CALL_TIME_UTC COMMENT 'Call time when vendor attempted contacting the member',
-	CALL_TIME_CEN COMMENT 'Call time when vendor attempted contacting the member',
-	CALL_TIME_LOCAL COMMENT 'Call time when vendor attempted contacting the member',
-	RECORD_ID COMMENT 'Unique identifier assigned to the record within the vendor dialing system',
-	CONTACT_INFO COMMENT 'Member phone number',
-	CONTACT_INFO_TYPE COMMENT 'Type of contact information used such as mobile, home phone, or other contact method',
-	RECORD_TYPE COMMENT 'Classification of the record within the vendor dialing platform',
-	RECORD_STATUS COMMENT 'Indicates the current status of the record',
-	CALL_RESULT COMMENT 'Result of attempted call',
-	ATTEMPT COMMENT 'How many times did the vendor attempt to contact the member',
-	DIAL_SCHED_TIME COMMENT 'Scheduled time for the outbound call attempt in the vendor dialing system',
-	CALL_TIME COMMENT 'Vendor system call duration or system call time value',
-	DAILY_FROM COMMENT 'Earliest allowed calling time for the member during the day',
-	DAILY_TILL COMMENT 'Latest allowed calling time for the member during the day',
-	TZ_DBID COMMENT 'Vendor timezone identifier associated with the dialing record',
-	CAMPAIGN_ID COMMENT 'Identifier of the outreach campaign associated with the call attempt',
-	AGENT_ID COMMENT 'Identifier of the agent or automated dialing system that attempted the call',
-	CHAIN_ID COMMENT 'Identifier representing the dialing chain workflow used for the call record',
-	CHAIN_N COMMENT 'Sequence number of the record within the dialing chain',
-	GROUP_ID COMMENT 'Identifier for the vendor dialing group associated with the call record',
-	APP_ID COMMENT 'Identifier of the dialing application or platform used to process the call',
-	TREATMENTS COMMENT 'Outbound messaging or outreach treatment applied to the member record',
-	MEDIA_REF COMMENT 'Reference identifier for the call script, media, or messaging asset used during the call',
-	SWITCH_ID COMMENT 'Identifier of the telephony switch used by the vendor dialing system',
-	FLD_CALLINGLIST COMMENT 'Name of the source outreach file or calling list provided to the vendor',
-	FLD_FUNCTION COMMENT 'Business function or outreach program associated with the record',
-	FLD_SEGMENT COMMENT 'Business segment responsible for the outreach such as OptumCare',
-	FLD_UNIT COMMENT 'Business unit responsible for the outreach campaign',
-	FLD_TIMEZONE COMMENT 'Timezone provided in the source member outreach file',
-	FLD_FIRSTNAME COMMENT 'Member First Name',
-	FLD_LASTNAME COMMENT 'Member Last Name',
-	FLD_ADDRESS1 COMMENT 'Member Address Address1',
-	FLD_ADDRESS2 COMMENT 'Member Address Address2',
-	FLD_CITY COMMENT 'Member City',
-	FLD_STATE COMMENT 'Member State',
-	FLD_ZIP COMMENT 'Member Zip',
-	FLD_COUNTY COMMENT 'Member County',
-	FLD_DOB COMMENT 'Member DOB',
-	FLD_GENDER COMMENT 'Member Gender',
-	FLD_CHILDMINORFLAG COMMENT 'Member Child Flag',
-	FLD_AGE COMMENT 'Member Age',
-	FLD_LANGUAGE COMMENT 'Member Language',
-	FLD_RESTRICTEDFLAG COMMENT 'Member Restricted Flag',
-	FLD_PRIORITY COMMENT 'Member Priority',
-	FLD_ANSMACHINEMSG COMMENT 'Member Ans Msg',
-	FLD_CPNDISPLAY COMMENT 'Caller ID display value shown to the member during the outbound call',
-	FLD_CPNDIGITS COMMENT 'Caller ID phone number digits used during the outbound call attempt',
-	FLD_ATTEMPTNBR COMMENT 'Attempt number assigned to the record within the vendor dialing process',
-	FLD_MARKETINFO01 COMMENT 'Additional market related information associated with the outreach record',
-	FLD_MARKETINFO02 COMMENT 'Additional market related information associated with the outreach record',
-	FLD_ACCOUNTNM COMMENT 'Account name associated with the outreach record or campaign',
-	FLD_CUSTOMERID COMMENT 'Customer identifier associated with the outreach record',
-	FLD_CONTACTIDSOURCE COMMENT 'Source system from which the contact identifier originated',
-	FLD_CONTACTIDTYPE COMMENT 'Type of contact identifier associated with the outreach record',
-	FLD_CONTACTTYPE COMMENT 'Type of contact relationship or communication method associated with the member',
-	FLD_SUBJECTTYPE COMMENT 'Type of subject associated with the record such as member or dependent',
-	FLD_SUBJECTID COMMENT 'GMPI_ID',
-	FLD_SUBJECTFIRSTNM COMMENT 'First name of the subject associated with the outreach record',
-	FLD_SUBJECTLASTNM COMMENT 'Last name of the subject associated with the outreach record',
-	FLD_GROUP COMMENT 'Grouping value used to organize outreach records within the campaign',
-	FLD_CMPGNDESC COMMENT 'Description of the campaign associated with the outreach record',
-	FLD_DISPOSITIONCD COMMENT 'Disposition code indicating the final outcome of the call attempt',
-	FLD_DATE01 COMMENT 'Custom date field 1 associated with the outreach record.',
-	FLD_DATE02 COMMENT 'Custom date field 2 associated with the outreach record.',
-	FLD_DATE03 COMMENT 'Custom date field 3 associated with the outreach record.',
-	FLD_DATE04 COMMENT 'Custom date field 4 associated with the outreach record.',
-	FLD_DATE05 COMMENT 'Custom date field 5 associated with the outreach record.',
-	FLD_OBCUSTOM01 COMMENT 'Custom outbound field 1 associated with the outreach record.',
-	FLD_OBCUSTOM02 COMMENT 'Custom outbound field 2 associated with the outreach record.',
-	FLD_OBCUSTOM03 COMMENT 'Custom outbound field 3 associated with the outreach record.',
-	FLD_OBCUSTOM04 COMMENT 'Custom outbound field 4 associated with the outreach record.',
-	FLD_OBCUSTOM05 COMMENT 'Custom outbound field 5 associated with the outreach record.',
-	FLD_OBCUSTOM06 COMMENT 'Custom outbound field 6 associated with the outreach record.',
-	FLD_OBCUSTOM07 COMMENT 'Custom outbound field 7 associated with the outreach record.',
-	FLD_OBCUSTOM08 COMMENT 'Custom outbound field 8 associated with the outreach record.',
-	FLD_OBCUSTOM09 COMMENT 'Custom outbound field 9 associated with the outreach record.',
-	FLD_OBCUSTOM10 COMMENT 'Custom outbound field 10 associated with the outreach record.',
-	FLD_OBCUSTOM11 COMMENT 'Custom outbound field 11 associated with the outreach record.',
-	FLD_OBCUSTOM12 COMMENT 'Custom outbound field 12 associated with the outreach record.',
-	FLD_OBCUSTOM13 COMMENT 'Custom outbound field 13 associated with the outreach record.',
-	FLD_OBCUSTOM14 COMMENT 'Custom outbound field 14 associated with the outreach record.',
-	FLD_OBCUSTOM15 COMMENT 'Custom outbound field 15 associated with the outreach record.',
-	FLD_OBCUSTOM16 COMMENT 'Custom outbound field 16 associated with the outreach record.',
-	FLD_OBCUSTOM17 COMMENT 'Custom outbound field 17 associated with the outreach record.',
-	FLD_OBCUSTOM18 COMMENT 'Custom outbound field 18 associated with the outreach record.',
-	FLD_OBCUSTOM19 COMMENT 'Custom outbound field 19 associated with the outreach record.',
-	FLD_OBCUSTOM20 COMMENT 'Custom outbound field 20 associated with the outreach record.',
-	FLD_LOADDATE COMMENT 'Date the Campaign was provided the member list',
-	FLD_OBCUSTOMPHI01 COMMENT 'Custom outbound PHI field 1 associated with the outreach record.',
-	FLD_OBCUSTOMPHI02 COMMENT 'Custom outbound PHI field 2 associated with the outreach record.',
-	FLD_OBCUSTOMPHI03 COMMENT 'Custom outbound PHI field 3 associated with the outreach record.',
-	FLD_OBCUSTOMPHI04 COMMENT 'Custom outbound PHI field 4 associated with the outreach record.',
-	FLD_OBCUSTOMPHI05 COMMENT 'Custom outbound PHI field 5 associated with the outreach record.',
-	FLD_OBCUSTOMPHI06 COMMENT 'Custom outbound PHI field 6 associated with the outreach record.',
-	FLD_OBCUSTOMPHI07 COMMENT 'Custom outbound PHI field 7 associated with the outreach record.',
-	FLD_OBCUSTOMPHI08 COMMENT 'Custom outbound PHI field 8 associated with the outreach record.',
-	FLD_OBCUSTOMPHI09 COMMENT 'Custom outbound PHI field 9 associated with the outreach record.',
-	FLD_OBCUSTOMPHI10 COMMENT 'Custom outbound PHI field 10 associated with the outreach record.',
-	FLD_OBCUSTOMPHI11 COMMENT 'Custom outbound PHI field 11 associated with the outreach record.',
-	FLD_OBCUSTOMPHI12 COMMENT 'Custom outbound PHI field 12 associated with the outreach record.',
-	FLD_OBCUSTOMPHI13 COMMENT 'Custom outbound PHI field 13 associated with the outreach record.',
-	FLD_OBCUSTOMPHI14 COMMENT 'Custom outbound PHI field 14 associated with the outreach record.',
-	FLD_OBCUSTOMPHI15 COMMENT 'Custom outbound PHI field 15 associated with the outreach record.',
-	FLD_OBCUSTOMPHI16 COMMENT 'Custom outbound PHI field 16 associated with the outreach record.',
-	FLD_OBCUSTOMPHI17 COMMENT 'Custom outbound PHI field 17 associated with the outreach record.',
-	FLD_OBCUSTOMPHI18 COMMENT 'Custom outbound PHI field 18 associated with the outreach record.',
-	FLD_OBCUSTOMPHI19 COMMENT 'Custom outbound PHI field 19 associated with the outreach record.',
-	FLD_OBCUSTOMPHI20 COMMENT 'Custom outbound PHI field 20 associated with the outreach record.',
-	DBID COMMENT 'Internal database identifier from the vendor dialing or timezone reference system.',
-	AREACODE COMMENT 'Telephone area code associated with the contact number',
-	PREFIX COMMENT 'Telephone prefix associated with the contact number.',
-	TIMEZONECODE COMMENT 'Code representing the timezone associated with the contact number or member location.',
-	DST COMMENT 'Indicator showing whether daylight saving time applies to the associated time zone.',
-	CITY COMMENT 'City associated with the contact number or timezone reference.',
-	STATE COMMENT 'State associated with the contact number or timezone reference.',
-	TIMEZONE COMMENT 'Timezone name associated with the contact number or member location.',
-	GMT_OFFSET COMMENT 'Time difference between GMT and Member Time Zone.',
-	TIMEZONE_DBID COMMENT 'Internal identifier for the timezone reference record.',
-	DSTYEAR COMMENT 'Year for which daylight saving time rules apply.',
-	DSTSTARTUTC COMMENT 'UTC timestamp when daylight saving time begins for the associated timezone and year.',
-	DSTENDUTC COMMENT 'UTC timestamp when daylight saving time ends for the associated timezone and year.',
-	UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated'
-)
+import streamlit as st
+# Import get_active_session if running in Streamlit in Snowflake
+from snowflake.snowpark.context import get_active_session 
+# from snowflake.snowpark import Session # Use this if running locally and managing connections manually
+
+# Function to get the active Snowpark session
+# If running in Snowflake, st.connection("snowflake") is also a valid way to get the session
+def get_session():
+    return get_active_session()
+
+st.set_page_config(layout="wide")
+
+session = get_session()
+TABLE_NAME = "CFG_VW_CONTROL" # Replace with your table details
+COL_1="PROGRAM_NAME" # Replace with column name
+COL_2="VIEW_NAME" # Replace with column name
+
+st.title(":orange[Cfg View Control]")
+st.subheader(":blue[Search for Program or View]")
+
+# --- 1. Search for records ---
+with st.form("search_form"):
+        search_value = st.text_input("**Enter Value:**")
+        search_button = st.form_submit_button(label="Search")
+   
+    
+if search_button and search_value:
+    try:
+        # Query the table based on the search criteria
+        # Use prepared statements (?) for security against SQL injection
+
+        query = f"SELECT CFG_VW_CONTROL_ID,PROGRAM_NAME,VIEW_NAME,MIN_DISPLAY_DATE,MAX_DISPLAY_DATE,COMMENTS,USER_STORY FROM {TABLE_NAME} WHERE {COL_1} ILIKE ? OR {COL_2} ILIKE ?"
+
+         # Add wildcards for partial matching
+        search_pattern = f"%{search_value}%"
+
+        df = session.sql(query, params=[search_pattern, search_pattern]).to_pandas()
+      
+        if not df.empty:
+            st.success(f"Found {len(df)} records.")
+            # Store the search results in session state for later updates
+            st.session_state["search_results"] = df
+        else:
+            st.warning("No record found.")
+            st.session_state["search_results"] = None
+    except Exception as e:
+        st.error(f"Error during search: {e}")
+        
+
+# --- 2. Display and edit records ---
+if "search_results" in st.session_state and st.session_state["search_results"] is not None:
+    st.subheader(":blue[Edit Records]")
+    # Use st.data_editor to allow users to make changes to the data
+    edited_df = st.data_editor(st.session_state["search_results"],num_rows="fixed",hide_index=True,disabled=["CFG_VW_CONTROL_ID","PROGRAM_NAME","VIEW_NAME"])
+    
+    # Store the edited data in session state as well
+    st.session_state["edited_data"] = edited_df
+
+    update_button = st.button("Update")
+
+    # --- 3. Update the Snowflake table ---
+    if update_button:
+        try:
+            # For simplicity, this example overwrites the filtered/edited rows in the database
+            # A more robust solution for large tables would involve tracking specific changes
+            # using Streamlit's data editor capabilities (e.g., st.experimental_get_editor_changes)
+            
+            # Convert the edited pandas DataFrame back to a Snowpark DataFrame
+            snowpark_df_changes = session.create_dataframe(st.session_state["edited_data"])
+
+            # Save changes back to the original table
+            # This uses the Snowpark DataFrame update method which provides a more robust way to handle updates
+            target_table = session.table(TABLE_NAME)
+            
+            # Define how to update. The 'KEY_COLUMN' needs to be a unique identifier in your table
+            # Replace 'ID' with your actual primary/unique key column name
+            KEY_COLUMN = 'CFG_VW_CONTROL_ID' 
+            
+            # Create a dictionary for column assignments for the update
+            assignments = {col: snowpark_df_changes[col] for col in snowpark_df_changes.columns if col != KEY_COLUMN}
+            
+            # Perform the update
+            target_table.update(
+                assignments=assignments,
+                condition=target_table[KEY_COLUMN] == snowpark_df_changes[KEY_COLUMN],
+                source=snowpark_df_changes
+            )
+            
+            st.success("Records successfully updated in CFG_VW_CONTROL table.")
+            # Clear session state to prompt a re-search and re-display
+            del st.session_state["search_results"]
+            del st.session_state["edited_data"]
+
+        except Exception as e:
+            st.error(f"Error applying updates: {e}")
