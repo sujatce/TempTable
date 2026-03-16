@@ -103,3 +103,17 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
 
         except Exception as e:
             st.error(f"Error applying updates: {e}")
+
+
+
+
+
+
+
+Error applying updates: 100072: DML operation to table CFG_VW_CONTROL failed on column UPDATE_USER with error: NULL result in a non-nullable column
+
+
+
+
+
+
