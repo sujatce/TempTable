@@ -1,1 +1,180 @@
 
+import streamlit as st
+from snowflake.snowpark.context import get_active_session
+import snowflake.snowpark.functions as F
+import pandas as pd
+
+def get_session():
+    return get_active_session()
+
+st.set_page_config(layout="wide")
+
+session = get_session()
+TABLE_NAME = "CFG_VW_CONTROL"
+
+st.title(":orange[Cfg View Control]")
+st.subheader(":blue[Search for Program or View]")
+
+# --- Search form ---
+with st.form("search_form", clear_on_submit=True, enter_to_submit=False, border=False):
+    col1, col2 = st.columns(2, border=True)
+
+    with col1:
+        search_value_pn = st.text_input("**Enter Program Name:**")
+        search_button_pn = st.form_submit_button(label="Search for Program")
+
+    with col2:
+        search_value_vn = st.text_input("**Enter View Name:**")
+        search_button_vn = st.form_submit_button(label="Search for View")
+
+if search_button_pn and search_value_pn:
+    try:
+        query = f"""
+            SELECT
+                CFG_VW_CONTROL_ID,
+                PROGRAM_NAME,
+                VIEW_NAME,
+                MIN_DISPLAY_DATE,
+                MAX_DISPLAY_DATE,
+                COMMENTS,
+                USER_STORY,
+                UPDATE_DATE,
+                UPDATE_USER
+            FROM {TABLE_NAME}
+            WHERE PROGRAM_NAME ILIKE ?
+            ORDER BY VIEW_NAME
+        """
+        df = session.sql(query, [f"%{search_value_pn}%"]).to_pandas()
+
+        if not df.empty:
+            st.success(f"Found {len(df)} records.")
+            st.session_state["search_results"] = df.copy()
+        else:
+            st.warning("No records found.")
+            st.session_state["search_results"] = None
+
+    except Exception as e:
+        st.error(f"Error during search: {e}")
+
+if search_button_vn and search_value_vn:
+    try:
+        query = f"""
+            SELECT
+                CFG_VW_CONTROL_ID,
+                PROGRAM_NAME,
+                VIEW_NAME,
+                MIN_DISPLAY_DATE,
+                MAX_DISPLAY_DATE,
+                COMMENTS,
+                USER_STORY,
+                UPDATE_DATE,
+                UPDATE_USER
+            FROM {TABLE_NAME}
+            WHERE VIEW_NAME ILIKE ?
+            ORDER BY VIEW_NAME
+        """
+        df = session.sql(query, [f"%{search_value_vn}%"]).to_pandas()
+
+        if not df.empty:
+            st.success(f"Found {len(df)} records.")
+            st.session_state["search_results"] = df.copy()
+        else:
+            st.warning("No records found.")
+            st.session_state["search_results"] = None
+
+    except Exception as e:
+        st.error(f"Error during search: {e}")
+
+# --- Display and edit ---
+if "search_results" in st.session_state and st.session_state["search_results"] is not None:
+    st.subheader(":blue[Edit Records]")
+
+    original_df = st.session_state["search_results"].reset_index(drop=True)
+
+    edited_df = st.data_editor(
+        original_df,
+        key="cfg_editor",
+        num_rows="fixed",
+        hide_index=True,
+        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE", "UPDATE_USER"]
+    )
+
+    update_button = st.button("Update")
+
+    if update_button:
+        try:
+            edited_rows_dict = st.session_state["cfg_editor"].get("edited_rows", {})
+
+            if not edited_rows_dict:
+                st.info("No rows were changed.")
+            else:
+                changed_records = []
+
+                for row_index, changed_cols in edited_rows_dict.items():
+                    row_data = edited_df.iloc[row_index].to_dict()
+                    changed_records.append(row_data)
+
+                changed_df = pd.DataFrame(changed_records)
+
+                KEY_COLUMN = "CFG_VW_CONTROL_ID"
+
+                source_df = session.create_dataframe(changed_df)
+                target_table = session.table(TABLE_NAME)
+
+                assignments = {
+                    col: source_df[col]
+                    for col in changed_df.columns
+                    if col not in [KEY_COLUMN, "UPDATE_DATE", "UPDATE_USER"]
+                }
+
+                # Always refresh audit columns only for changed rows
+                assignments["UPDATE_DATE"] = F.current_timestamp()
+                assignments["UPDATE_USER"] = F.current_user()
+
+                result = target_table.update(
+                    assignments=assignments,
+                    condition=target_table[KEY_COLUMN] == source_df[KEY_COLUMN],
+                    source=source_df
+                )
+
+                st.success(f"{result.rows_updated} record(s) updated successfully.")
+
+                # Requery updated rows so latest UPDATE_DATE shows immediately
+                updated_ids = changed_df[KEY_COLUMN].tolist()
+                placeholders = ",".join(["?"] * len(updated_ids))
+
+                refresh_query = f"""
+                    SELECT
+                        CFG_VW_CONTROL_ID,
+                        PROGRAM_NAME,
+                        VIEW_NAME,
+                        MIN_DISPLAY_DATE,
+                        MAX_DISPLAY_DATE,
+                        COMMENTS,
+                        USER_STORY,
+                        UPDATE_DATE,
+                        UPDATE_USER
+                    FROM {TABLE_NAME}
+                    WHERE CFG_VW_CONTROL_ID IN ({placeholders})
+                """
+
+                refreshed_changed = session.sql(refresh_query, updated_ids).to_pandas()
+
+                refreshed_all = original_df.copy()
+                for _, refreshed_row in refreshed_changed.iterrows():
+                    refreshed_all.loc[
+                        refreshed_all[KEY_COLUMN] == refreshed_row[KEY_COLUMN],
+                        refreshed_changed.columns
+                    ] = refreshed_row.values
+
+                st.session_state["search_results"] = refreshed_all
+                st.rerun()
+
+        except Exception as e:
+            st.error(f"Error applying updates: {e}")
+
+
+is this the final updated code?
+
+
+if so please explain line by line and what have changed from the original code please
