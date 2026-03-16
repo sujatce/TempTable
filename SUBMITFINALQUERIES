@@ -1,270 +1,132 @@
-CREATE OR REPLACE SECURE VIEW ASQN_PRD_ORCHESTRATION_DB.ACCESS.VW_OMNI_ARCHIVE (
-    OMNI_ARCHIVE_ID COMMENT 'Unique Identifier for every data row',
-    ARCHIVEDATE COMMENT 'Date the Vendor Archived the days work in this table',
-    CALL_TIME_UTC COMMENT 'Call time when vendor attempted contacting the member',
-    CALL_TIME_CEN COMMENT 'Call time when vendor attempted contacting the member',
-    CALL_TIME_LOCAL COMMENT 'Call time when vendor attempted contacting the member',
-    RECORD_ID,
-    CONTACT_INFO COMMENT 'Member phone number',
-    CONTACT_INFO_TYPE,
-    RECORD_TYPE,
-    RECORD_STATUS,
-    CALL_RESULT COMMENT 'Result of attempted call',
-    ATTEMPT COMMENT 'How many times did the vendor attempt to contact the member',
-    DIAL_SCHED_TIME,
-    CALL_TIME,
-    DAILY_FROM,
-    DAILY_TILL,
-    TZ_DBID,
-    CAMPAIGN_ID,
-    AGENT_ID,
-    CHAIN_ID,
-    CHAIN_N,
-    GROUP_ID,
-    APP_ID,
-    TREATMENTS,
-    MEDIA_REF,
-    SWITCH_ID,
-    FLD_CALLINGLIST,
-    FLD_FUNCTION,
-    FLD_SEGMENT,
-    FLD_UNIT,
-    FLD_TIMEZONE,
-    FLD_FIRSTNAME COMMENT 'Member First Name',
-    FLD_LASTNAME COMMENT 'Member Last Name',
-    FLD_ADDRESS1 COMMENT 'Member Address Address1',
-    FLD_ADDRESS2 COMMENT 'Member Address Address2',
-    FLD_CITY COMMENT 'Member City',
-    FLD_STATE COMMENT 'Member State',
-    FLD_ZIP COMMENT 'Member Zip',
-    FLD_COUNTY COMMENT 'Member County',
-    FLD_DOB COMMENT 'Member DOB',
-    FLD_GENDER COMMENT 'Member Gender',
-    FLD_CHILDMINORFLAG COMMENT 'Member Child Flag',
-    FLD_AGE COMMENT 'Member Age',
-    FLD_LANGUAGE COMMENT 'Member Language',
-    FLD_RESTRICTEDFLAG COMMENT 'Member Restricted Flag',
-    FLD_PRIORITY COMMENT 'Member Priority',
-    FLD_ANSMACHINEMSG COMMENT 'Member Ans Msg',
-    FLD_CPNDISPLAY,
-    FLD_CPNDIGITS,
-    FLD_ATTEMPTNBR,
-    FLD_MARKETINFO01,
-    FLD_MARKETINFO02,
-    FLD_ACCOUNTNM,
-    FLD_CUSTOMERID,
-    FLD_CONTACTIDSOURCE,
-    FLD_CONTACTIDTYPE,
-    FLD_CONTACTTYPE,
-    FLD_SUBJECTTYPE,
-    FLD_SUBJECTID COMMENT 'GMPI_ID',
-    FLD_SUBJECTFIRSTNM,
-    FLD_SUBJECTLASTNM,
-    FLD_GROUP,
-    FLD_CMPGNDESC,
-    FLD_DISPOSITIONCD,
-    FLD_DATE01,
-    FLD_DATE02,
-    FLD_DATE03,
-    FLD_DATE04,
-    FLD_DATE05,
-    FLD_OBCUSTOM01,
-    FLD_OBCUSTOM02,
-    FLD_OBCUSTOM03,
-    FLD_OBCUSTOM04,
-    FLD_OBCUSTOM05,
-    FLD_OBCUSTOM06,
-    FLD_OBCUSTOM07,
-    FLD_OBCUSTOM08,
-    FLD_OBCUSTOM09,
-    FLD_OBCUSTOM10,
-    FLD_OBCUSTOM11,
-    FLD_OBCUSTOM12,
-    FLD_OBCUSTOM13,
-    FLD_OBCUSTOM14,
-    FLD_OBCUSTOM15,
-    FLD_OBCUSTOM16,
-    FLD_OBCUSTOM17,
-    FLD_OBCUSTOM18,
-    FLD_OBCUSTOM19,
-    FLD_OBCUSTOM20,
-    FLD_LOADDATE COMMENT 'Date the Campaign was provided the member list',
-    FLD_OBCUSTOMPHI01,
-    FLD_OBCUSTOMPHI02,
-    FLD_OBCUSTOMPHI03,
-    FLD_OBCUSTOMPHI04,
-    FLD_OBCUSTOMPHI05,
-    FLD_OBCUSTOMPHI06,
-    FLD_OBCUSTOMPHI07,
-    FLD_OBCUSTOMPHI08,
-    FLD_OBCUSTOMPHI09,
-    FLD_OBCUSTOMPHI10,
-    FLD_OBCUSTOMPHI11,
-    FLD_OBCUSTOMPHI12,
-    FLD_OBCUSTOMPHI13,
-    FLD_OBCUSTOMPHI14,
-    FLD_OBCUSTOMPHI15,
-    FLD_OBCUSTOMPHI16,
-    FLD_OBCUSTOMPHI17,
-    FLD_OBCUSTOMPHI18,
-    FLD_OBCUSTOMPHI19,
-    FLD_OBCUSTOMPHI20,
-    DBID,
-    AREACODE,
-    PREFIX,
-    TIMEZONECODE,
-    DST,
-    CITY,
-    STATE,
-    TIMEZONE,
-    GMT_OFFSET,
-    TIMEZONE_DBID,
-    DSTYEAR,
-    DSTSTARTUTC,
-    DSTENDUTC,
-    INSERT_DATE,
-    INSERT_USER,
-    UPDATE_DATE,
-    UPDATE_USER
-)
-COMMENT='This view exposes archived OMNI outbound campaign call history, including member contact details, campaign metadata, call attempt details, disposition information, and timezone enrichment attributes for reporting and analytics use cases.'
-AS
-SELECT
-    OMNI_ARCHIVE_ID,
-    ARCHIVEDATE,
-    CALL_TIME_UTC,
-    CALL_TIME_CEN,
-    CALL_TIME_LOCAL,
-    RECORD_ID,
-    CONTACT_INFO,
-    CONTACT_INFO_TYPE,
-    RECORD_TYPE,
-    RECORD_STATUS,
-    CALL_RESULT,
-    ATTEMPT,
-    DIAL_SCHED_TIME,
-    CALL_TIME,
-    DAILY_FROM,
-    DAILY_TILL,
-    TZ_DBID,
-    CAMPAIGN_ID,
-    AGENT_ID,
-    CHAIN_ID,
-    CHAIN_N,
-    GROUP_ID,
-    APP_ID,
-    TREATMENTS,
-    MEDIA_REF,
-    SWITCH_ID,
-    FLD_CALLINGLIST,
-    FLD_FUNCTION,
-    FLD_SEGMENT,
-    FLD_UNIT,
-    FLD_TIMEZONE,
-    FLD_FIRSTNAME,
-    FLD_LASTNAME,
-    FLD_ADDRESS1,
-    FLD_ADDRESS2,
-    FLD_CITY,
-    FLD_STATE,
-    FLD_ZIP,
-    FLD_COUNTY,
-    FLD_DOB,
-    FLD_GENDER,
-    FLD_CHILDMINORFLAG,
-    FLD_AGE,
-    FLD_LANGUAGE,
-    FLD_RESTRICTEDFLAG,
-    FLD_PRIORITY,
-    FLD_ANSMACHINEMSG,
-    FLD_CPNDISPLAY,
-    FLD_CPNDIGITS,
-    FLD_ATTEMPTNBR,
-    FLD_MARKETINFO01,
-    FLD_MARKETINFO02,
-    FLD_ACCOUNTNM,
-    FLD_CUSTOMERID,
-    FLD_CONTACTIDSOURCE,
-    FLD_CONTACTIDTYPE,
-    FLD_CONTACTTYPE,
-    FLD_SUBJECTTYPE,
-    FLD_SUBJECTID,
-    FLD_SUBJECTFIRSTNM,
-    FLD_SUBJECTLASTNM,
-    FLD_GROUP,
-    FLD_CMPGNDESC,
-    FLD_DISPOSITIONCD,
-    FLD_DATE01,
-    FLD_DATE02,
-    FLD_DATE03,
-    FLD_DATE04,
-    FLD_DATE05,
-    FLD_OBCUSTOM01,
-    FLD_OBCUSTOM02,
-    FLD_OBCUSTOM03,
-    FLD_OBCUSTOM04,
-    FLD_OBCUSTOM05,
-    FLD_OBCUSTOM06,
-    FLD_OBCUSTOM07,
-    FLD_OBCUSTOM08,
-    FLD_OBCUSTOM09,
-    FLD_OBCUSTOM10,
-    FLD_OBCUSTOM11,
-    FLD_OBCUSTOM12,
-    FLD_OBCUSTOM13,
-    FLD_OBCUSTOM14,
-    FLD_OBCUSTOM15,
-    FLD_OBCUSTOM16,
-    FLD_OBCUSTOM17,
-    FLD_OBCUSTOM18,
-    FLD_OBCUSTOM19,
-    FLD_OBCUSTOM20,
-    FLD_LOADDATE,
-    FLD_OBCUSTOMPHI01,
-    FLD_OBCUSTOMPHI02,
-    FLD_OBCUSTOMPHI03,
-    FLD_OBCUSTOMPHI04,
-    FLD_OBCUSTOMPHI05,
-    FLD_OBCUSTOMPHI06,
-    FLD_OBCUSTOMPHI07,
-    FLD_OBCUSTOMPHI08,
-    FLD_OBCUSTOMPHI09,
-    FLD_OBCUSTOMPHI10,
-    FLD_OBCUSTOMPHI11,
-    FLD_OBCUSTOMPHI12,
-    FLD_OBCUSTOMPHI13,
-    FLD_OBCUSTOMPHI14,
-    FLD_OBCUSTOMPHI15,
-    FLD_OBCUSTOMPHI16,
-    FLD_OBCUSTOMPHI17,
-    FLD_OBCUSTOMPHI18,
-    FLD_OBCUSTOMPHI19,
-    FLD_OBCUSTOMPHI20,
-    DBID,
-    AREACODE,
-    PREFIX,
-    TIMEZONECODE,
-    DST,
-    CITY,
-    STATE,
-    TIMEZONE,
-    GMT_OFFSET,
-    TIMEZONE_DBID,
-    DSTYEAR,
-    DSTSTARTUTC,
-    DSTENDUTC,
-    INSERT_DATE,
-    INSERT_USER,
-    UPDATE_DATE,
-    UPDATE_USER
-FROM ASQN_PRD_ORCHESTRATION_DB.DBO.OMNI_ARCHIVE
-WHERE UPDATE_DATE <= (
-        SELECT MAX_DISPLAY_DATE
-        FROM ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL
-        WHERE VIEW_NAME = 'VW_OMNI_ARCHIVE'
+import streamlit as st
+
+# Import get_active_session if running in Streamlit in Snowflake
+from snowflake.snowpark.context import get_active_session
+# from snowflake.snowpark import Session  # Use this if running locally and managing connections manually
+
+# >>> UPDATED: added imports for automatic timestamp and user stamping
+from snowflake.snowpark.functions import current_timestamp, current_user
+
+# Function to get the active Snowpark session
+# If running in Snowflake, st.connection("snowflake") is also a valid way to get the session
+def get_session():
+    return get_active_session()
+
+st.set_page_config(layout="wide")
+
+session = get_session()
+TABLE_NAME = "CFG_VW_CONTROL"  # Replace with your table details
+COL_1 = "PROGRAM_NAME"  # Replace with column name
+COL_2 = "VIEW_NAME"  # Replace with column name
+
+st.title(":orange[Cfg View Control]")
+st.subheader(":blue[Search for Program or View]")
+
+# --- 1. Search for records ---
+with st.form("search_form"):
+    search_value = st.text_input("**Enter Value:**")
+    search_button = st.form_submit_button(label="Search")
+
+if search_button and search_value:
+    try:
+        # Query the table based on the search criteria
+        # Use prepared statements (?) for security against SQL injection
+
+        # >>> UPDATED START: added UPDATE_DATE and UPDATE_USER to SELECT
+        query = f"""
+            SELECT
+                CFG_VW_CONTROL_ID,
+                PROGRAM_NAME,
+                VIEW_NAME,
+                MIN_DISPLAY_DATE,
+                MAX_DISPLAY_DATE,
+                COMMENTS,
+                USER_STORY,
+                UPDATE_DATE,
+                UPDATE_USER
+            FROM {TABLE_NAME}
+            WHERE {COL_1} ILIKE ? OR {COL_2} ILIKE ?
+        """
+        # >>> UPDATED END
+
+        # Add wildcards for partial matching
+        search_pattern = f"%{search_value}%"
+
+        df = session.sql(query, params=[search_pattern, search_pattern]).to_pandas()
+
+        if not df.empty:
+            st.success(f"Found {len(df)} records.")
+            # Store the search results in session state for later updates
+            st.session_state["search_results"] = df
+        else:
+            st.warning("No record found.")
+            st.session_state["search_results"] = None
+
+    except Exception as e:
+        st.error(f"Error during search: {e}")
+
+# --- 2. Display and edit records ---
+if "search_results" in st.session_state and st.session_state["search_results"] is not None:
+    st.subheader(":blue[Edit Records]")
+
+    # Use st.data_editor to allow users to make changes to the data
+
+    # >>> UPDATED START: disabled UPDATE_DATE and UPDATE_USER from manual editing
+    edited_df = st.data_editor(
+        st.session_state["search_results"],
+        num_rows="fixed",
+        hide_index=True,
+        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE", "UPDATE_USER"]
     )
-  AND UPDATE_DATE >= (
-        SELECT MIN_DISPLAY_DATE
-        FROM ASQN_PRD_CFG_DB.DBO.CFG_VW_CONTROL
-        WHERE VIEW_NAME = 'VW_OMNI_ARCHIVE'
-    );
+    # >>> UPDATED END
+
+    # Store the edited data in session state as well
+    st.session_state["edited_data"] = edited_df
+
+    update_button = st.button("Update")
+
+    # --- 3. Update the Snowflake table ---
+    if update_button:
+        try:
+            # For simplicity, this example overwrites the filtered/edited rows in the database
+            # A more robust solution for large tables would involve tracking specific changes
+            # using Streamlit's data editor capabilities (e.g., st.experimental_get_editor_changes)
+
+            # Convert the edited pandas DataFrame back to a Snowpark DataFrame
+            snowpark_df_changes = session.create_dataframe(st.session_state["edited_data"])
+
+            # Save changes back to the original table
+            # This uses the Snowpark DataFrame update method which provides a more robust way to handle updates
+            target_table = session.table(TABLE_NAME)
+
+            # Define how to update. The 'KEY_COLUMN' needs to be a unique identifier in your table
+            # Replace 'ID' with your actual primary/unique key column name
+            KEY_COLUMN = "CFG_VW_CONTROL_ID"
+
+            # >>> UPDATED START: exclude UPDATE_DATE and UPDATE_USER from dataframe values,
+            # then stamp them automatically with system timestamp and current user
+            assignments = {
+                col: snowpark_df_changes[col]
+                for col in snowpark_df_changes.columns
+                if col not in [KEY_COLUMN, "UPDATE_DATE", "UPDATE_USER"]
+            }
+
+            assignments["UPDATE_DATE"] = current_timestamp()
+            assignments["UPDATE_USER"] = current_user()
+            # >>> UPDATED END
+
+            # Perform the update
+            target_table.update(
+                assignments=assignments,
+                condition=target_table[KEY_COLUMN] == snowpark_df_changes[KEY_COLUMN],
+                source=snowpark_df_changes
+            )
+
+            st.success("Records successfully updated in CFG_VW_CONTROL table.")
+
+            # Clear session state to prompt a re-search and re-display
+            del st.session_state["search_results"]
+            del st.session_state["edited_data"]
+
+        except Exception as e:
+            st.error(f"Error applying updates: {e}")
