@@ -2,13 +2,8 @@ import streamlit as st
 
 # Import get_active_session if running in Streamlit in Snowflake
 from snowflake.snowpark.context import get_active_session
-# from snowflake.snowpark import Session  # Use this if running locally and managing connections manually
-
-# >>> UPDATED: import Snowpark functions as module
-import snowflake.snowpark.functions as F
 
 # Function to get the active Snowpark session
-# If running in Snowflake, st.connection("snowflake") is also a valid way to get the session
 def get_session():
     return get_active_session()
 
@@ -48,10 +43,12 @@ if search_button and search_value:
 
         if not df.empty:
             st.success(f"Found {len(df)} records.")
-            st.session_state["search_results"] = df
+            st.session_state["search_results"] = df.copy()
+            st.session_state["edited_data"] = df.copy()
         else:
             st.warning("No record found.")
             st.session_state["search_results"] = None
+            st.session_state["edited_data"] = None
 
     except Exception as e:
         st.error(f"Error during search: {e}")
@@ -61,7 +58,7 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
     st.subheader(":blue[Edit Records]")
 
     edited_df = st.data_editor(
-        st.session_state["search_results"],
+        st.session_state["edited_data"],
         num_rows="fixed",
         hide_index=True,
         disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE"]
@@ -74,30 +71,79 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
     # --- 3. Update the Snowflake table ---
     if update_button:
         try:
-            snowpark_df_changes = session.create_dataframe(st.session_state["edited_data"])
-            target_table = session.table(TABLE_NAME)
+            original_df = st.session_state["search_results"]
+            updated_df = st.session_state["edited_data"]
 
-            KEY_COLUMN = "CFG_VW_CONTROL_ID"
+            rows_updated = 0
 
-            assignments = {
-                col: snowpark_df_changes[col]
-                for col in snowpark_df_changes.columns
-                if col not in [KEY_COLUMN, "UPDATE_DATE"]
-            }
+            for i in range(len(updated_df)):
+                old_row = original_df.iloc[i]
+                new_row = updated_df.iloc[i]
 
-            # >>> UPDATED: only update UPDATE_DATE
-            assignments["UPDATE_DATE"] = F.current_timestamp()
+                key_value = new_row["CFG_VW_CONTROL_ID"]
 
-            target_table.update(
-                assignments=assignments,
-                condition=target_table[KEY_COLUMN] == snowpark_df_changes[KEY_COLUMN],
-                source=snowpark_df_changes
-            )
+                # Check if editable columns changed
+                changed = (
+                    old_row["MIN_DISPLAY_DATE"] != new_row["MIN_DISPLAY_DATE"] or
+                    old_row["MAX_DISPLAY_DATE"] != new_row["MAX_DISPLAY_DATE"] or
+                    old_row["COMMENTS"] != new_row["COMMENTS"] or
+                    old_row["USER_STORY"] != new_row["USER_STORY"]
+                )
 
-            st.success("Records successfully updated in CFG_VW_CONTROL table.")
+                if changed:
+                    update_sql = f"""
+                        UPDATE {TABLE_NAME}
+                        SET
+                            MIN_DISPLAY_DATE = ?,
+                            MAX_DISPLAY_DATE = ?,
+                            COMMENTS = ?,
+                            USER_STORY = ?,
+                            UPDATE_DATE = CURRENT_TIMESTAMP()
+                        WHERE CFG_VW_CONTROL_ID = ?
+                    """
 
-            del st.session_state["search_results"]
-            del st.session_state["edited_data"]
+                    session.sql(
+                        update_sql,
+                        params=[
+                            new_row["MIN_DISPLAY_DATE"],
+                            new_row["MAX_DISPLAY_DATE"],
+                            new_row["COMMENTS"],
+                            new_row["USER_STORY"],
+                            key_value
+                        ]
+                    ).collect()
+
+                    rows_updated += 1
+
+            if rows_updated > 0:
+                st.success(f"{rows_updated} record(s) successfully updated in CFG_VW_CONTROL table.")
+
+                # Refresh search results after update
+                refresh_query = f"""
+                    SELECT
+                        CFG_VW_CONTROL_ID,
+                        PROGRAM_NAME,
+                        VIEW_NAME,
+                        MIN_DISPLAY_DATE,
+                        MAX_DISPLAY_DATE,
+                        COMMENTS,
+                        USER_STORY,
+                        UPDATE_DATE
+                    FROM {TABLE_NAME}
+                    WHERE {COL_1} ILIKE ? OR {COL_2} ILIKE ?
+                """
+
+                search_pattern = f"%{search_value}%"
+                refreshed_df = session.sql(
+                    refresh_query,
+                    params=[search_pattern, search_pattern]
+                ).to_pandas()
+
+                st.session_state["search_results"] = refreshed_df.copy()
+                st.session_state["edited_data"] = refreshed_df.copy()
+
+            else:
+                st.info("No changes detected.")
 
         except Exception as e:
             st.error(f"Error applying updates: {e}")
