@@ -1,264 +1,105 @@
-create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_OMNI_ARCHIVE(
-	OMNI_ARCHIVE_ID COMMENT 'Unique Identifier for every data row',
-	ARCHIVEDATE COMMENT 'Date the Vendor Archived the days work in this table',
-	CALL_TIME_UTC COMMENT 'Call time when vendor attempted contacting the member',
-	CALL_TIME_CEN COMMENT 'Call time when vendor attempted contacting the member',
-	CALL_TIME_LOCAL COMMENT 'Call time when vendor attempted contacting the member',
-	RECORD_ID,
-	CONTACT_INFO COMMENT 'Member phone number',
-	CONTACT_INFO_TYPE,
-	RECORD_TYPE,
-	RECORD_STATUS COMMENT 'Indicates the current status of the record',
-	CALL_RESULT COMMENT 'Result of attempted call',
-	ATTEMPT COMMENT 'How many times did the vendor attempt to contact the member',
-	DIAL_SCHED_TIME,
-	CALL_TIME,
-	DAILY_FROM,
-	DAILY_TILL,
-	TZ_DBID,
-	CAMPAIGN_ID,
-	AGENT_ID,
-	CHAIN_ID,
-	CHAIN_N,
-	GROUP_ID,
-	APP_ID,
-	TREATMENTS,
-	MEDIA_REF,
-	SWITCH_ID,
-	FLD_CALLINGLIST,
-	FLD_FUNCTION,
-	FLD_SEGMENT,
-	FLD_UNIT,
-	FLD_TIMEZONE,
-	FLD_FIRSTNAME COMMENT 'Member First Name',
-	FLD_LASTNAME COMMENT 'Member Last Name',
-	FLD_ADDRESS1 COMMENT 'Member Address Address1',
-	FLD_ADDRESS2 COMMENT 'Member Address Address2',
-	FLD_CITY COMMENT 'Member City',
-	FLD_STATE COMMENT 'Member State',
-	FLD_ZIP COMMENT 'Member Zip',
-	FLD_COUNTY COMMENT 'Member County',
-	FLD_DOB COMMENT 'Member DOB',
-	FLD_GENDER COMMENT 'Member Gender',
-	FLD_CHILDMINORFLAG COMMENT 'Member Child Flag',
-	FLD_AGE COMMENT 'Member Age',
-	FLD_LANGUAGE COMMENT 'Member Language',
-	FLD_RESTRICTEDFLAG COMMENT 'Member Restricted Flag',
-	FLD_PRIORITY COMMENT 'Member Priority',
-	FLD_ANSMACHINEMSG COMMENT 'Member Ans Msg',
-	FLD_CPNDISPLAY,
-	FLD_CPNDIGITS,
-	FLD_ATTEMPTNBR,
-	FLD_MARKETINFO01,
-	FLD_MARKETINFO02,
-	FLD_ACCOUNTNM,
-	FLD_CUSTOMERID,
-	FLD_CONTACTIDSOURCE,
-	FLD_CONTACTIDTYPE,
-	FLD_CONTACTTYPE,
-	FLD_SUBJECTTYPE,
-	FLD_SUBJECTID COMMENT 'GMPI_ID',
-	FLD_SUBJECTFIRSTNM,
-	FLD_SUBJECTLASTNM,
-	FLD_GROUP,
-	FLD_CMPGNDESC,
-	FLD_DISPOSITIONCD,
-	FLD_DATE01 COMMENT 'Custom date field 1 associated with the outreach record.',
-	FLD_DATE02 COMMENT 'Custom date field 2 associated with the outreach record.',
-	FLD_DATE03 COMMENT 'Custom date field 3 associated with the outreach record.',
-	FLD_DATE04 COMMENT 'Custom date field 4 associated with the outreach record.',
-	FLD_DATE05 COMMENT 'Custom date field 5 associated with the outreach record.',
-	FLD_OBCUSTOM01 COMMENT 'Custom outbound field 1 associated with the outreach record.',
-	FLD_OBCUSTOM02 COMMENT 'Custom outbound field 2 associated with the outreach record.',
-	FLD_OBCUSTOM03 COMMENT 'Custom outbound field 3 associated with the outreach record.',
-	FLD_OBCUSTOM04 COMMENT 'Custom outbound field 4 associated with the outreach record.',
-	FLD_OBCUSTOM05 COMMENT 'Custom outbound field 5 associated with the outreach record.',
-	FLD_OBCUSTOM06 COMMENT 'Custom outbound field 6 associated with the outreach record.',
-	FLD_OBCUSTOM07 COMMENT 'Custom outbound field 7 associated with the outreach record.',
-	FLD_OBCUSTOM08 COMMENT 'Custom outbound field 8 associated with the outreach record.',
-	FLD_OBCUSTOM09 COMMENT 'Custom outbound field 9 associated with the outreach record.',
-	FLD_OBCUSTOM10 COMMENT 'Custom outbound field 10 associated with the outreach record.',
-	FLD_OBCUSTOM11 COMMENT 'Custom outbound field 11 associated with the outreach record.',
-	FLD_OBCUSTOM12 COMMENT 'Custom outbound field 12 associated with the outreach record.',
-	FLD_OBCUSTOM13 COMMENT 'Custom outbound field 13 associated with the outreach record.',
-	FLD_OBCUSTOM14 COMMENT 'Custom outbound field 14 associated with the outreach record.',
-	FLD_OBCUSTOM15 COMMENT 'Custom outbound field 15 associated with the outreach record.',
-	FLD_OBCUSTOM16 COMMENT 'Custom outbound field 16 associated with the outreach record.',
-	FLD_OBCUSTOM17 COMMENT 'Custom outbound field 17 associated with the outreach record.',
-	FLD_OBCUSTOM18 COMMENT 'Custom outbound field 18 associated with the outreach record.',
-	FLD_OBCUSTOM19 COMMENT 'Custom outbound field 19 associated with the outreach record.',
-	FLD_OBCUSTOM20 COMMENT 'Custom outbound field 20 associated with the outreach record.',
-	FLD_LOADDATE COMMENT 'Date the Campaign was provided the member list',
-	FLD_OBCUSTOMPHI01 COMMENT 'Custom outbound PHI field 1 associated with the outreach record.',
-	FLD_OBCUSTOMPHI02 COMMENT 'Custom outbound PHI field 2 associated with the outreach record.',
-	FLD_OBCUSTOMPHI03 COMMENT 'Custom outbound PHI field 3 associated with the outreach record.',
-	FLD_OBCUSTOMPHI04 COMMENT 'Custom outbound PHI field 4 associated with the outreach record.',
-	FLD_OBCUSTOMPHI05 COMMENT 'Custom outbound PHI field 5 associated with the outreach record.',
-	FLD_OBCUSTOMPHI06 COMMENT 'Custom outbound PHI field 6 associated with the outreach record.',
-	FLD_OBCUSTOMPHI07 COMMENT 'Custom outbound PHI field 7 associated with the outreach record.',
-	FLD_OBCUSTOMPHI08 COMMENT 'Custom outbound PHI field 8 associated with the outreach record.',
-	FLD_OBCUSTOMPHI09 COMMENT 'Custom outbound PHI field 9 associated with the outreach record.',
-	FLD_OBCUSTOMPHI10 COMMENT 'Custom outbound PHI field 10 associated with the outreach record.',
-	FLD_OBCUSTOMPHI11 COMMENT 'Custom outbound PHI field 11 associated with the outreach record.',
-	FLD_OBCUSTOMPHI12 COMMENT 'Custom outbound PHI field 12 associated with the outreach record.',
-	FLD_OBCUSTOMPHI13 COMMENT 'Custom outbound PHI field 13 associated with the outreach record.',
-	FLD_OBCUSTOMPHI14 COMMENT 'Custom outbound PHI field 14 associated with the outreach record.',
-	FLD_OBCUSTOMPHI15 COMMENT 'Custom outbound PHI field 15 associated with the outreach record.',
-	FLD_OBCUSTOMPHI16 COMMENT 'Custom outbound PHI field 16 associated with the outreach record.',
-	FLD_OBCUSTOMPHI17 COMMENT 'Custom outbound PHI field 17 associated with the outreach record.',
-	FLD_OBCUSTOMPHI18 COMMENT 'Custom outbound PHI field 18 associated with the outreach record.',
-	FLD_OBCUSTOMPHI19 COMMENT 'Custom outbound PHI field 19 associated with the outreach record.',
-	FLD_OBCUSTOMPHI20 COMMENT 'Custom outbound PHI field 20 associated with the outreach record.',
-	DBID COMMENT 'Internal database identifier from the vendor dialing or timezone reference system.',
-	AREACODE COMMENT 'Telephone area code associated with the contact number',
-	PREFIX COMMENT 'Telephone prefix associated with the contact number.',
-	TIMEZONECODE COMMENT 'Code representing the timezone associated with the contact number or member location.',
-	DST COMMENT 'Indicator showing whether daylight saving time applies to the associated time zone.',
-	CITY COMMENT 'City associated with the contact number or timezone reference.',
-	STATE COMMENT 'State associated with the contact number or timezone reference.',
-	TIMEZONE COMMENT 'Timezone name associated with the contact number or member location.',
-	GMT_OFFSET COMMENT 'Time difference between GMT and Member Time Zone.',
-	TIMEZONE_DBID COMMENT 'Internal identifier for the timezone reference record.',
-	DSTYEAR COMMENT 'Year for which daylight saving time rules apply.',
-	DSTSTARTUTC COMMENT 'UTC timestamp when daylight saving time begins for the associated timezone and year.',
-	DSTENDUTC COMMENT 'UTC timestamp when daylight saving time ends for the associated timezone and year.',
-	UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated'
-) COMMENT='The Wellmed Central Quality Reporting team regularly produces member campaign data for stakeholders  that should be captured.  The goal of capturing this data includes:\n* capture point in time data because data can move, this is very important to vendor \n* ability to suppress populations from subsequent campaigns\n* reduce member abrasion\n* would eventually allow multiple people to run vendor app\n* archive data that would be lost after 45 days from source'
- as
-SELECT 
-    OMNI_ARCHIVE_ID,
-    ARCHIVEDATE,
-    CALL_TIME_UTC,
-    CALL_TIME_CEN,
-    CALL_TIME_LOCAL,
-    RECORD_ID,
-    CONTACT_INFO,
-    CONTACT_INFO_TYPE,
-    RECORD_TYPE,
-    RECORD_STATUS,
-    CALL_RESULT,
-    ATTEMPT,
-    DIAL_SCHED_TIME,
-    CALL_TIME,
-    DAILY_FROM,
-    DAILY_TILL,
-    TZ_DBID,
-    CAMPAIGN_ID,
-    AGENT_ID,
-    CHAIN_ID,
-    CHAIN_N,
-    GROUP_ID,
-    APP_ID,
-    TREATMENTS,
-    MEDIA_REF,
-    SWITCH_ID,
-    FLD_CALLINGLIST,
-    FLD_FUNCTION,
-    FLD_SEGMENT,
-    FLD_UNIT,
-    FLD_TIMEZONE,
-    FLD_FIRSTNAME,
-    FLD_LASTNAME,
-    FLD_ADDRESS1,
-    FLD_ADDRESS2,
-    FLD_CITY,
-    FLD_STATE,
-    FLD_ZIP,
-    FLD_COUNTY,
-    FLD_DOB,
-    FLD_GENDER,
-    FLD_CHILDMINORFLAG,
-    FLD_AGE,
-    FLD_LANGUAGE,
-    FLD_RESTRICTEDFLAG,
-    FLD_PRIORITY,
-    FLD_ANSMACHINEMSG,
-    FLD_CPNDISPLAY,
-    FLD_CPNDIGITS,
-    FLD_ATTEMPTNBR,
-    FLD_MARKETINFO01,
-    FLD_MARKETINFO02,
-    FLD_ACCOUNTNM,
-    FLD_CUSTOMERID,
-    FLD_CONTACTIDSOURCE,
-    FLD_CONTACTIDTYPE,
-    FLD_CONTACTTYPE,
-    FLD_SUBJECTTYPE,
-    FLD_SUBJECTID,
-    FLD_SUBJECTFIRSTNM,
-    FLD_SUBJECTLASTNM,
-    FLD_GROUP,
-    FLD_CMPGNDESC,
-    FLD_DISPOSITIONCD,
-    FLD_DATE01,
-    FLD_DATE02,
-    FLD_DATE03,
-    FLD_DATE04,
-    FLD_DATE05,
-    FLD_OBCUSTOM01,
-    FLD_OBCUSTOM02,
-    FLD_OBCUSTOM03,
-    FLD_OBCUSTOM04,
-    FLD_OBCUSTOM05,
-    FLD_OBCUSTOM06,
-    FLD_OBCUSTOM07,
-    FLD_OBCUSTOM08,
-    FLD_OBCUSTOM09,
-    FLD_OBCUSTOM10,
-    FLD_OBCUSTOM11,
-    FLD_OBCUSTOM12,
-    FLD_OBCUSTOM13,
-    FLD_OBCUSTOM14,
-    FLD_OBCUSTOM15,
-    FLD_OBCUSTOM16,
-    FLD_OBCUSTOM17,
-    FLD_OBCUSTOM18,
-    FLD_OBCUSTOM19,
-    FLD_OBCUSTOM20,
-    FLD_LOADDATE,
-    FLD_OBCUSTOMPHI01,
-    FLD_OBCUSTOMPHI02,
-    FLD_OBCUSTOMPHI03,
-    FLD_OBCUSTOMPHI04,
-    FLD_OBCUSTOMPHI05,
-    FLD_OBCUSTOMPHI06,
-    FLD_OBCUSTOMPHI07,
-    FLD_OBCUSTOMPHI08,
-    FLD_OBCUSTOMPHI09,
-    FLD_OBCUSTOMPHI10,
-    FLD_OBCUSTOMPHI11,
-    FLD_OBCUSTOMPHI12,
-    FLD_OBCUSTOMPHI13,
-    FLD_OBCUSTOMPHI14,
-    FLD_OBCUSTOMPHI15,
-    FLD_OBCUSTOMPHI16,
-    FLD_OBCUSTOMPHI17,
-    FLD_OBCUSTOMPHI18,
-    FLD_OBCUSTOMPHI19,
-    FLD_OBCUSTOMPHI20,
-    DBID,
-    AREACODE,
-    PREFIX,
-    TIMEZONECODE,
-    DST,
-    CITY,
-    STATE,
-    TIMEZONE,
-    GMT_OFFSET,
-    TIMEZONE_DBID,
-    DSTYEAR,
-    DSTSTARTUTC,
-    DSTENDUTC,
-    UPDATE_DATE
-FROM ASQN_DEV_ORCHESTRATION_DB.DBO.OMNI_ARCHIVE
-WHERE UPDATE_DATE <= (
-        SELECT MAX_DISPLAY_DATE
-        FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-        WHERE VIEW_NAME = 'VW_OMNI_ARCHIVE'
+import streamlit as st
+
+# Import get_active_session if running in Streamlit in Snowflake
+from snowflake.snowpark.context import get_active_session
+# from snowflake.snowpark import Session  # Use this if running locally and managing connections manually
+
+# >>> UPDATED: import Snowpark functions as module
+import snowflake.snowpark.functions as F
+
+# Function to get the active Snowpark session
+# If running in Snowflake, st.connection("snowflake") is also a valid way to get the session
+def get_session():
+    return get_active_session()
+
+st.set_page_config(layout="wide")
+
+session = get_session()
+TABLE_NAME = "CFG_VW_CONTROL"
+COL_1 = "PROGRAM_NAME"
+COL_2 = "VIEW_NAME"
+
+st.title(":orange[Cfg View Control]")
+st.subheader(":blue[Search for Program or View]")
+
+# --- 1. Search for records ---
+with st.form("search_form"):
+    search_value = st.text_input("**Enter Value:**")
+    search_button = st.form_submit_button(label="Search")
+
+if search_button and search_value:
+    try:
+        query = f"""
+            SELECT
+                CFG_VW_CONTROL_ID,
+                PROGRAM_NAME,
+                VIEW_NAME,
+                MIN_DISPLAY_DATE,
+                MAX_DISPLAY_DATE,
+                COMMENTS,
+                USER_STORY,
+                UPDATE_DATE,
+                UPDATE_USER
+            FROM {TABLE_NAME}
+            WHERE {COL_1} ILIKE ? OR {COL_2} ILIKE ?
+        """
+
+        search_pattern = f"%{search_value}%"
+        df = session.sql(query, params=[search_pattern, search_pattern]).to_pandas()
+
+        if not df.empty:
+            st.success(f"Found {len(df)} records.")
+            st.session_state["search_results"] = df
+        else:
+            st.warning("No record found.")
+            st.session_state["search_results"] = None
+
+    except Exception as e:
+        st.error(f"Error during search: {e}")
+
+# --- 2. Display and edit records ---
+if "search_results" in st.session_state and st.session_state["search_results"] is not None:
+    st.subheader(":blue[Edit Records]")
+
+    edited_df = st.data_editor(
+        st.session_state["search_results"],
+        num_rows="fixed",
+        hide_index=True,
+        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE", "UPDATE_USER"]
     )
-  AND UPDATE_DATE >= (
-        SELECT MIN_DISPLAY_DATE
-        FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
-        WHERE VIEW_NAME = 'VW_OMNI_ARCHIVE'
-    )
-  AND ARCHIVEDATE BETWEEN '01-JAN-2026' AND '31-DEC-2026';
+
+    st.session_state["edited_data"] = edited_df
+
+    update_button = st.button("Update")
+
+    # --- 3. Update the Snowflake table ---
+    if update_button:
+        try:
+            snowpark_df_changes = session.create_dataframe(st.session_state["edited_data"])
+            target_table = session.table(TABLE_NAME)
+
+            KEY_COLUMN = "CFG_VW_CONTROL_ID"
+
+            assignments = {
+                col: snowpark_df_changes[col]
+                for col in snowpark_df_changes.columns
+                if col not in [KEY_COLUMN, "UPDATE_DATE", "UPDATE_USER"]
+            }
+
+            # >>> UPDATED: use module-based functions
+            assignments["UPDATE_DATE"] = F.current_timestamp()
+            assignments["UPDATE_USER"] = F.current_user()
+
+            target_table.update(
+                assignments=assignments,
+                condition=target_table[KEY_COLUMN] == snowpark_df_changes[KEY_COLUMN],
+                source=snowpark_df_changes
+            )
+
+            st.success("Records successfully updated in CFG_VW_CONTROL table.")
+
+            del st.session_state["search_results"]
+            del st.session_state["edited_data"]
+
+        except Exception as e:
+            st.error(f"Error applying updates: {e}")
