@@ -38,8 +38,7 @@ if search_button and search_value:
                 MAX_DISPLAY_DATE,
                 COMMENTS,
                 USER_STORY,
-                UPDATE_DATE,
-                UPDATE_USER
+                UPDATE_DATE
             FROM {TABLE_NAME}
             WHERE {COL_1} ILIKE ? OR {COL_2} ILIKE ?
         """
@@ -65,7 +64,7 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
         st.session_state["search_results"],
         num_rows="fixed",
         hide_index=True,
-        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE", "UPDATE_USER"]
+        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE"]
     )
 
     st.session_state["edited_data"] = edited_df
@@ -83,7 +82,7 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
             assignments = {
                 col: snowpark_df_changes[col]
                 for col in snowpark_df_changes.columns
-                if col not in [KEY_COLUMN, "UPDATE_DATE", "UPDATE_USER"]
+                if col not in [KEY_COLUMN, "UPDATE_DATE"]
             }
 
             # >>> UPDATED: only update UPDATE_DATE
