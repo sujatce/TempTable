@@ -1,16 +1,18 @@
-
 import streamlit as st
+# Import get_active_session if running in Streamlit in Snowflake
 from snowflake.snowpark.context import get_active_session
 import snowflake.snowpark.functions as F
 import pandas as pd
-
+# from snowflake.snowpark import Session # Use this if running locally and managing connections manually
+# Function to get the active Snowpark session
+# If running in Snowflake, st.connection("snowflake") is also a valid way to get the session
 def get_session():
     return get_active_session()
 
 st.set_page_config(layout="wide")
 
 session = get_session()
-TABLE_NAME = "CFG_VW_CONTROL"
+TABLE_NAME = "CFG_VW_CONTROL" # Replace with your table details
 
 st.title(":orange[Cfg View Control]")
 st.subheader(":blue[Search for Program or View]")
@@ -77,9 +79,10 @@ if search_button_vn and search_value_vn:
 
         if not df.empty:
             st.success(f"Found {len(df)} records.")
+              # Store the search results in session state for later updates
             st.session_state["search_results"] = df.copy()
         else:
-            st.warning("No records found.")
+            st.warning("No record found.")
             st.session_state["search_results"] = None
 
     except Exception as e:
@@ -88,7 +91,7 @@ if search_button_vn and search_value_vn:
 # --- Display and edit ---
 if "search_results" in st.session_state and st.session_state["search_results"] is not None:
     st.subheader(":blue[Edit Records]")
-
+# Use st.data_editor to allow users to make changes to the data
     original_df = st.session_state["search_results"].reset_index(drop=True)
 
     edited_df = st.data_editor(
@@ -96,7 +99,7 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
         key="cfg_editor",
         num_rows="fixed",
         hide_index=True,
-        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE", "UPDATE_USER"]
+        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE"]#Changed, "UPDATE_USER"]
     )
 
     update_button = st.button("Update")
@@ -124,12 +127,12 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
                 assignments = {
                     col: source_df[col]
                     for col in changed_df.columns
-                    if col not in [KEY_COLUMN, "UPDATE_DATE", "UPDATE_USER"]
+                    if col not in [KEY_COLUMN, "UPDATE_DATE"]#Changed, "UPDATE_USER"]
                 }
 
                 # Always refresh audit columns only for changed rows
                 assignments["UPDATE_DATE"] = F.current_timestamp()
-                assignments["UPDATE_USER"] = F.current_user()
+              #  assignments["UPDATE_USER"] = F.current_user()
 
                 result = target_table.update(
                     assignments=assignments,
@@ -137,7 +140,7 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
                     source=source_df
                 )
 
-                st.success(f"{result.rows_updated} record(s) updated successfully.")
+                st.success(f"{result.rows_updated} record(s) successfully updated in CFG_VW_CONTROL table..")
 
                 # Requery updated rows so latest UPDATE_DATE shows immediately
                 updated_ids = changed_df[KEY_COLUMN].tolist()
@@ -174,7 +177,3 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
             st.error(f"Error applying updates: {e}")
 
 
-is this the final updated code?
-
-
-if so please explain line by line and what have changed from the original code please
