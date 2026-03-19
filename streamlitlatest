@@ -1,3 +1,21 @@
+Error applying updates: (1304): 01c323b6-0203-f263-0010-e20305547c56: 002023 (22000): SQL compilation error: Expression type does not match column data type, expecting DATE but got NUMBER(38,0) for column MIN_DISPLAY_DATE
+
+I am getting this error when the min display date is none 
+
+why ? 
+
+
+also as per your change I made the change ot the code and now the update date is not editable 
+and I found one thing - dont know if it is an issue 
+
+I updated the updated data and I see the the success message that row updated
+
+but it immediately vanishes 
+
+please tell me if this is an issue ?
+
+----------------------------------------
+
 import streamlit as st
 
 # Import get_active_session if running in Streamlit in Snowflake
@@ -140,7 +158,7 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
         key="cfg_editor",
         num_rows="fixed",
         hide_index=True,
-        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE"]  # Changed, "UPDATE_USER"]
+        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE","UPDATE_USER"]
     )
 
     # Button to apply updates to Snowflake table
@@ -239,3 +257,5 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
 
         except Exception as e:
             st.error(f"Error applying updates: {e}")
+
+
