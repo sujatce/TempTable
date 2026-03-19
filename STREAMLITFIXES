@@ -1,0 +1,253 @@
+import streamlit as st
+
+# Import get_active_session if running in Streamlit in Snowflake
+from snowflake.snowpark.context import get_active_session
+
+# Import Snowpark functions module to use built-in Snowflake functions
+# like current_timestamp()
+import snowflake.snowpark.functions as F
+
+# Import pandas to build a DataFrame containing only changed rows
+import pandas as pd
+
+# from snowflake.snowpark import Session # Use this if running locally and managing connections manually
+
+# Function to get the active Snowpark session
+# If running in Snowflake, st.connection("snowflake") is also a valid way to get the session
+def get_session():
+    return get_active_session()
+
+
+# Set Streamlit page layout to wide so the editor has more space
+st.set_page_config(layout="wide")
+
+# Create Snowflake session and define target table name
+session = get_session()
+#result = session.sql("""SELECT CURRENT_USER(),CURRENT_ROLE()""").collect()
+#st.write(result[0].as_dict())
+#st.write(st.experimental_user)
+CURR_USR=''
+if not st.user.email is None:
+ CURR_USR = st.user.email.upper()
+TABLE_NAME = "CFG_VW_CONTROL"  # Replace with your table details
+
+# Page title and section heading
+st.title(":orange[Cfg View Control]")
+st.subheader(":blue[Search for Program or View]")
+
+# Show success message after rerun, if present
+if "update_success_msg" in st.session_state:
+    st.success(st.session_state["update_success_msg"])
+    del st.session_state["update_success_msg"]
+
+
+# --- Search form ---
+# This form lets the user search either by Program Name or by View Name
+with st.form("search_form", clear_on_submit=True, enter_to_submit=False, border=False):
+    col1, col2 = st.columns(2, border=True)
+
+    # Left column: search by Program Name
+    with col1:
+        search_value_pn = st.text_input("**Enter Program Name:**")
+        search_button_pn = st.form_submit_button(label="Search for Program")
+
+    # Right column: search by View Name
+    with col2:
+        search_value_vn = st.text_input("**Enter View Name:**")
+        search_button_vn = st.form_submit_button(label="Search for View")
+
+
+# --- Search logic for Program Name ---
+if search_button_pn and search_value_pn:
+    try:
+        # Query the table using case-insensitive search on PROGRAM_NAME
+        query = f"""
+            SELECT
+                CFG_VW_CONTROL_ID,
+                PROGRAM_NAME,
+                VIEW_NAME,
+                MIN_DISPLAY_DATE,
+                MAX_DISPLAY_DATE,
+                COMMENTS,
+                USER_STORY,
+                UPDATE_DATE,
+                UPDATE_USER
+            FROM {TABLE_NAME}
+            WHERE PROGRAM_NAME ILIKE ?
+            ORDER BY VIEW_NAME
+        """
+
+        # Execute query and convert result to pandas DataFrame
+        df = session.sql(query, [f"%{search_value_pn}%"]).to_pandas()
+
+        if not df.empty:
+            st.success(f"Found {len(df)} records.")
+
+            # Store the search results in session state for later editing/updating
+            st.session_state["search_results"] = df.copy()
+        else:
+            st.warning("No records found.")
+            st.session_state["search_results"] = None
+
+    except Exception as e:
+        st.error(f"Error during search: {e}")
+
+
+# --- Search logic for View Name ---
+if search_button_vn and search_value_vn:
+    try:
+        # Query the table using case-insensitive search on VIEW_NAME
+        query = f"""
+            SELECT
+                CFG_VW_CONTROL_ID,
+                PROGRAM_NAME,
+                VIEW_NAME,
+                MIN_DISPLAY_DATE,
+                MAX_DISPLAY_DATE,
+                COMMENTS,
+                USER_STORY,
+                UPDATE_DATE,
+                UPDATE_USER
+            FROM {TABLE_NAME}
+            WHERE VIEW_NAME ILIKE ?
+            ORDER BY VIEW_NAME
+        """
+
+        # Execute query and convert result to pandas DataFrame
+        df = session.sql(query, [f"%{search_value_vn}%"]).to_pandas()
+
+        if not df.empty:
+            st.success(f"Found {len(df)} records.")
+
+            # Store the search results in session state for later updates
+            st.session_state["search_results"] = df.copy()
+        else:
+            st.warning("No record found.")
+            st.session_state["search_results"] = None
+
+    except Exception as e:
+        st.error(f"Error during search: {e}")
+
+
+# --- Display and edit section ---
+# Show the editable grid only if search results exist in session state
+if "search_results" in st.session_state and st.session_state["search_results"] is not None:
+    st.subheader(":blue[Edit Records]")
+
+    # Reset the index so row positions are clean and predictable
+    # This helps when identifying which rows were edited in st.data_editor
+    original_df = st.session_state["search_results"].reset_index(drop=True)
+
+    # Use st.data_editor to allow users to edit the selected columns
+    # Disabled columns cannot be changed by the user
+    edited_df = st.data_editor(
+        original_df,
+        key="cfg_editor",
+        num_rows="fixed",
+        hide_index=True,
+        disabled=["CFG_VW_CONTROL_ID", "PROGRAM_NAME", "VIEW_NAME", "UPDATE_DATE","UPDATE_USER"]
+    )
+
+    # Button to apply updates to Snowflake table
+    update_button = st.button("Update")
+
+    # --- Update logic ---
+    if update_button:
+        try:
+            # Read only the rows that were actually edited in the data editor
+            edited_rows_dict = st.session_state["cfg_editor"].get("edited_rows", {})
+
+            # If no rows were changed, show informational message
+            if not edited_rows_dict:
+                st.info("No rows were changed.")
+            else:
+                changed_records = []
+
+                # Build a list containing only the changed rows
+                # Only row index is needed because the code updates the full edited row
+                for row_index in edited_rows_dict:
+                    row_data = edited_df.iloc[row_index].to_dict()
+                    changed_records.append(row_data)
+
+                # Convert changed rows list to pandas DataFrame
+                changed_df = pd.DataFrame(changed_records)
+
+                # Normalize date columns so blank values become None and valid values stay as DATE
+                for date_col in ["MIN_DISPLAY_DATE", "MAX_DISPLAY_DATE"]:
+                    if date_col in changed_df.columns:
+                        changed_df[date_col] = pd.to_datetime(
+                            changed_df[date_col], errors="coerce"
+                        ).apply(lambda x: x.date() if pd.notna(x) else None)
+
+                # Define the key column used to match source rows to target table rows
+                KEY_COLUMN = "CFG_VW_CONTROL_ID"
+
+                # Convert changed rows pandas DataFrame to Snowpark DataFrame
+                source_df = session.create_dataframe(changed_df)
+
+                # Reference the target Snowflake table
+                target_table = session.table(TABLE_NAME)
+
+                # Build assignments dictionary for update
+                # Exclude key column and audit columns that should not be manually overwritten
+                assignments = {
+                    col: source_df[col]
+                    for col in changed_df.columns
+                    if col not in [KEY_COLUMN, "UPDATE_DATE"]  # Changed, "UPDATE_USER"]
+                }
+
+                # Always refresh UPDATE_DATE with the latest Snowflake system timestamp
+                assignments["UPDATE_DATE"] = F.current_timestamp()
+
+                # Optional: automatically refresh UPDATE_USER with current Snowflake user
+                assignments["UPDATE_USER"] = CURR_USR
+               
+
+                # Perform update only for rows present in source_df
+                result = target_table.update(
+                    assignments=assignments,
+                    condition=target_table[KEY_COLUMN] == source_df[KEY_COLUMN],
+                    source=source_df
+                )
+
+                # Store success message so it remains visible after rerun
+                st.session_state["update_success_msg"] = f"{result.rows_updated} record(s) successfully updated in CFG_VW_CONTROL table.."
+
+                # Requery updated rows so latest UPDATE_DATE shows immediately in the editor
+                updated_ids = changed_df[KEY_COLUMN].tolist()
+                placeholders = ",".join(["?"] * len(updated_ids))
+
+                refresh_query = f"""
+                    SELECT
+                        CFG_VW_CONTROL_ID,
+                        PROGRAM_NAME,
+                        VIEW_NAME,
+                        MIN_DISPLAY_DATE,
+                        MAX_DISPLAY_DATE,
+                        COMMENTS,
+                        USER_STORY,
+                        UPDATE_DATE,
+                        UPDATE_USER
+                    FROM {TABLE_NAME}
+                    WHERE CFG_VW_CONTROL_ID IN ({placeholders})
+                """
+
+                # Fetch refreshed values from Snowflake
+                refreshed_changed = session.sql(refresh_query, updated_ids).to_pandas()
+
+                # Start with original displayed data
+                refreshed_all = original_df.copy()
+
+                # Replace only the updated rows with fresh values from Snowflake
+                for _, refreshed_row in refreshed_changed.iterrows():
+                    refreshed_all.loc[
+                        refreshed_all[KEY_COLUMN] == refreshed_row[KEY_COLUMN],
+                        refreshed_changed.columns
+                    ] = refreshed_row.values
+
+                # Save refreshed data back to session state and rerun app
+                st.session_state["search_results"] = refreshed_all
+                st.rerun()
+
+        except Exception as e:
+            st.error(f"Error applying updates: {e}")
