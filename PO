@@ -9,3 +9,28 @@ dependencies:
   - python=3.11.*
   - snowflake-snowpark-python=
   - streamlit=
+
+
+
+I have created a stream lit app with python code in snowflake deV now I want to deploy it in PROD using github and how to strore it in github what components are in stream lit I need to fighure out how to deploy through githubSince your code currently lives in Snowflake DEV, you must first export it:
+1.	Extract Code: Open your app in Snowsight, go to the Files tab in the editor, and copy the content of your .py files.
+2.	Create Repository: Create a new private or public repository on GitHub.
+3.	Upload Files: Add your streamlit_app.py and environment.yml to the root of this repository. You can do this via the GitHub Desktop app or by running git push from your local terminal. 
+ Moser Consulting +4
+3. How to Deploy to PROD through GitHub
+Once your code is in GitHub, follow these steps in your Snowflake PROD account to deploy it:
+1.	Set up Git Integration: Follow the official Snowflake Git setup to create a Secret (for your GitHub token) and an API Integration.
+2.	Create Git Repository Object: Run the following SQL to link Snowflake to your repo:
+sql
+CREATE OR REPLACE GIT REPOSITORY prod_github_repo
+  API_INTEGRATION = my_git_api_int
+  GIT_CREDENTIALS = my_github_secret
+  ORIGIN = 'https://github.com';
+Use code with caution.
+3.	Deploy the PROD App: Use the "Create from repository" option in the Snowsight UI.
+1.	Go to Projects > Streamlit.
+2.	Click the dropdown next to + Streamlit and select Create from repository.
+3.	Select your prod_github_repo, the main branch, and your streamlit_app.py file.
+4.	Automate Updates: Whenever you push changes to GitHub, run ALTER GIT REPOSITORY prod_github_repo FETCH; in Snowflake to pull the latest version into your production app. 
+ Snowflake Docs +4
+
