@@ -34,3 +34,45 @@ Use code with caution.
 4.	Automate Updates: Whenever you push changes to GitHub, run ALTER GIT REPOSITORY prod_github_repo FETCH; in Snowflake to pull the latest version into your production app. 
  Snowflake Docs +4
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+clean SDLC approach.
+
+Here’s what each step means:
+
+1. Set up Snowflake Git integration in DEV
+This is the one-time connection between Snowflake and your GitHub repo. You create the required Snowflake Git objects so Snowflake can access the remote repository. Snowflake documents this under Git setup.
+
+2. Connect the DEV Streamlit app to the Git repo/branch
+In Snowsight, open the existing Streamlit app, go to the Files tab, and choose Connect Git Repository. Then pick the repository and branch you want the app to sync with. Snowflake supports connecting an existing Streamlit app to a Git repository this way.
+
+3. Use Push to Git from Snowsight
+Once the app is connected, you can push the current app files from Snowsight into that Git branch using Push to Git. You’ll provide a commit message and Git credentials/PAT. This is the easiest way to get your existing DEV app into GitHub without manually copying every file.
+
+4. In PROD, create the app from repository
+In the PROD Snowflake account, go to Projects → Streamlit → Create from repository, then choose the repo, branch, and main .py file. Snowflake supports creating a Streamlit app directly from a file in a Git repository.
+
+A couple of important notes:
+
+This feature is documented by Snowflake as Git integration for Streamlit in Snowflake, and it includes connect existing app, push to Git, pull from branch, and create from repository.
+If you want more automation later, Snowflake also documents CI/CD for Streamlit apps using Snowflake CLI + GitHub Actions.
+
+A polished way to explain it to your manager:
+
+“We’ll connect the DEV Streamlit app to a GitHub branch, push the current app code from Snowsight into Git, and then in PROD we’ll create the Streamlit app directly from that repository branch. That gives u
