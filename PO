@@ -1,78 +1,329 @@
-Research the feasibility of finding membership based on the below:
 
-Labs or test ordered - in the last 60 days
+use secondary roles all
 
-name: app_environment
-channels:
-  - snowflake
-dependencies:
-  - python=3.11.*
-  - snowflake-snowpark-python=
-  - streamlit=
+--CPT® Codes (Emergency Department Services): 99281, 99282, 99283, 99284, 99285 (Level 1-5).
+--HCPCS Codes (Type B ED visits): G0380, G0381, G0382, G0383, G0384.
+--Observation/Related Codes: 99217–99220 (Observation Care).
 
+select distinct PROCEDURE_CODE --NAME_PANEL, NAME_TEST
+from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_LAB
+where PROCEDURE_CODE is not null 
+ORDER BY PROCEDURE_CODE --  NAME_PANEL, NAME_TEST
+ 
+ 
+select  *
+  from fwrb_prd_wmidr_db.bi_analysis.definition_result_active
+WHERE CODE_TYPE = 'CPT' --99281–99285.
+   AND RESULT_CODE IN ('99281', '99282', '99283', '99284', '99285')
+   and result_date > '2025-12-01'
+   AND UPPER(claim_specialty_value) like '%EMERGENCY%'
+--ASQN_PRD_WCQ_WH (X-Small)
+ 
+select *
+  from fwrb_prd_wmidr_db.bi_analysis.definition_result_active
+WHERE CODE_TYPE = 'HCPCS'
+ AND RESULT_CODE IN ('G0380', 'G0381', 'G0382', 'G0383', 'G0384')
+   and result_date > '2026-01-20'
+ 
+select *
 
+  from fwrb_prd_wmidr_db.bi_analysis.definition_result_active
 
-I have created a stream lit app with python code in snowflake deV now I want to deploy it in PROD using github and how to strore it in github what components are in stream lit I need to fighure out how to deploy through githubSince your code currently lives in Snowflake DEV, you must first export it:
-1.	Extract Code: Open your app in Snowsight, go to the Files tab in the editor, and copy the content of your .py files.
-2.	Create Repository: Create a new private or public repository on GitHub.
-3.	Upload Files: Add your streamlit_app.py and environment.yml to the root of this repository. You can do this via the GitHub Desktop app or by running git push from your local terminal. 
- Moser Consulting +4
-3. How to Deploy to PROD through GitHub
-Once your code is in GitHub, follow these steps in your Snowflake PROD account to deploy it:
-1.	Set up Git Integration: Follow the official Snowflake Git setup to create a Secret (for your GitHub token) and an API Integration.
-2.	Create Git Repository Object: Run the following SQL to link Snowflake to your repo:
-sql
-CREATE OR REPLACE GIT REPOSITORY prod_github_repo
-  API_INTEGRATION = my_git_api_int
-  GIT_CREDENTIALS = my_github_secret
-  ORIGIN = 'https://github.com';
-Use code with caution.
-3.	Deploy the PROD App: Use the "Create from repository" option in the Snowsight UI.
-1.	Go to Projects > Streamlit.
-2.	Click the dropdown next to + Streamlit and select Create from repository.
-3.	Select your prod_github_repo, the main branch, and your streamlit_app.py file.
-4.	Automate Updates: Whenever you push changes to GitHub, run ALTER GIT REPOSITORY prod_github_repo FETCH; in Snowflake to pull the latest version into your production app. 
- Snowflake Docs +4
+WHERE CODE_TYPE = 'HCPCS'
+ AND RESULT_CODE IN ('99217', '99218', '99219', '99220')
 
-
+   and result_date > '2026-01-20'
 
 
+ --membership -> provider -> insurance details -> contracts plans -> claims
+--gaps -> measure based data -> gap tables to identity the member gap data - qm member total
+--wellmed - gmpi id is specific to WellMed, MBI -> Links to UHC Member -> Is not reliable
+enterprise id -> enterprise invd id -> available in epmp too
+ 
+--member ER Visits in the last 30 days
+--member claims 
+--MRM -> link to claims -> to identify the claims need some identifier
+--Procedure code - CPT Code
+--Diagnosis code - Diag code
+--ICD Code - ICD Code 
+--CPT Code, Gcodes HCPCS
+ 
+use secondary roles all
+ 
+select DISTINCT CODE_TYPE --
+  from fwrb_prd_wmidr_db.bi_analysis.definition_result_active
+ 
+select *
+  from fwrb_prd_wmidr_db.bi_analysis.definition_result_active
+WHERE CODE_TYPE = 'HCPCS' --Look at G Codes for emergency
+UNION ALL
+select distinct report_month
+  from fwrb_prd_wmidr_db.bi_analysis.definition_result_active
+WHERE CODE_TYPE = 'CPT' --99281–99285.
+   AND RESULT_CODE IN ('99281', '99282', '99283', '99284', '99285')
+  -- and result_date > '2026-01-20'
+   group by report_month
+
+  -- fact_claim_procedure
+
+   SELECT TOP 100 * FROM FACT_CLAIM_PROCEDURE
+select distinct code_name
+from fwrb_prd_wmidr_db.bi_analysis.fact_claim_procedure
+order by code_name
+
+
+select distinct CODE, code_name, COUNT(*) AS CNT
+from fwrb_prd_wmidr_db.bi_analysis.fact_claim_procedure
+WHERE  service_from_date >= DATEADD(day, -60, CURRENT_DATE)
+AND CODE IN('99281','99282','99283','99284','99285','G0380', 'G0381', 'G0382', 'G0383', 'G0384')
+ AND code_name IS NOT NULL
+  AND (
+        UPPER(code_name) LIKE '%EMERGENCY DEPARTMENT VISIT%'
+       OR UPPER(code_name) LIKE '%EMERGENCY DEPT%'
+  )
+GROUP BY CODE, CODE_NAME
+ORDER BY CODE
+
+select distinct code,code_name from fwrb_prd_wmidr_db.bi_analysis.fact_claim_procedure
+where code like '%23%'
+
+
+select distinct code,code_name from fwrb_prd_wmidr_db.bi_analysis.fact_claim_procedure
+where code between '0450' and '0459'
 
 
 
 
 
 
+SELECT
+  code,
+  code_name,
+  COUNT(*) AS cnt
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_CLAIM_PROCEDURE
+WHERE service_from_date >= DATEADD(day, -60, CURRENT_DATE)
+  AND code_name IS NOT NULL
+  AND (
+        UPPER(code_name) LIKE '%EMERGENCY DEPARTMENT VISIT%'
+       OR UPPER(code_name) LIKE '%EMERGENCY DEPT%'
+  --   OR UPPER(code_name) LIKE '%ED%'
+   --  OR UPPER(code_name) LIKE '%DEPARTMENT%'
+  )
+GROUP BY code, code_name
+ORDER BY cnt DESC;
+
+
+SELECT
+  code,
+  code_name,
+  COUNT(*) AS cnt
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_CLAIM_PROCEDURE
+WHERE service_from_date >= DATEADD(day, -30, CURRENT_DATE)
+  AND code_name IS NOT NULL
+  AND (
+        UPPER(code_name) LIKE '%EMERGENCY DEPARTMENT VISIT%'
+       OR UPPER(code_name) LIKE '%EMERGENCY DEPT%'
+  )
+GROUP BY code, code_name
+ORDER BY cnt DESC;
+   
+ 
+select distinct code from fwrb_prd_wmidr_db.bi_analysis.fact_claim_procedure
+order by code
+
+DESC TABLE FWRB_PRD_WMIDR_DB.BI_ANALYSIS.fact_claim_procedure
+ 
+select TOP 100 *
+from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DEFINITION_RESULT_ACTIVE
+where report_month = '2025-12-01'
+AND RESULT_DATE >='2025-12-01'
+AND UPPER(claim_specialty_value) like '%EMERGENCY%';
 
 
 
 
 
 
+--DRA
+select *
+from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DEFINITION_RESULT_ACTIVE
+--where report_month = '2025-01-01'
+where RESULT_DATE >='2026-01-26'
+AND UPPER(claim_specialty_value) like '%ER%';
+
+
+ select DISTINCT UPPER(claim_specialty_value) 
+from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DEFINITION_RESULT_ACTIVE
+WHERE  UPPER(claim_specialty_value)  like '%EMERGENCY%'
+
+
+ select top 100  *  
+from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DEFINITION_RESULT_ACTIVE
+
+
+DESC TABLE FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DEFINITION_RESULT_ACTIVE
+
+--FACT_CLAIM
+ 
+select DISTINCT ADMIT_TYPE
+  from fwrb_prd_wmidr_db.bi_analysis.fact_claim
+ 
+  select TOP 100 *
+  from fwrb_prd_wmidr_db.bi_analysis.fact_claim
+ 
+  SELECT * FROM FWRB_PRD_WMIDR_DB.INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_CATALOG = 'FWRB_PRD_WMIDR_DB'
+     AND COLUMN_NAME LIKE '%ADMIT%TYPE%'
+
+     DESC TABLE FWRB_PRD_WMIDR_DB.BI_ANALYSIS.fact_claim
+
+   
+
+--FACR_ADMIT_DETAIL
+ 
+SELECT *
+  FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_ADMIT_DETAIL
+WHERE ADMIT_TYPE_DESC LIKE '%Emergency%'
+
+  select distinct admit_type_desc 
+       FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_ADMIT_DETAIL
+WHERE ADMIT_TYPE_DESC LIKE '%Emergency%'
+
+
+     DESC TABLE FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_ADMIT_DETAIL
+
+USE SECONDARY ROLES ALL
+
+-----------------
+
+SELECT
+  MIN(ER_DATE) AS MIN_ER_DATE,
+  MAX(ER_DATE) AS MAX_ER_DATE,
+  COUNT(*)     AS ROWS_CNT
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_ER_VISITS;
+
+DESC TABLE FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_ER_VISITS
+
+--------------------------------------------------------------------------
+
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where procedure_code = '99281'
+ 
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where procedure_name like '%EMERGENCY%' -- = '99281'
+ 
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where PROCEDURE_DESCRIPTION like '%ER%'
+ 
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_NAME LIKE '%EMERGENCY%'
+ORDER BY PROCEDURE_NAME
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_CODE LIKE 'G%'
+and PROCEDURE_description LIKE '%emergency%'
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_CODE LIKE 'G%'
+and PROCEDURE_name LIKE '%emergency%' order by procedure_code
+--ORDER BY PROCEDURE_NAME
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+--WHERE PROCEDURE_CODE LIKE 'G%'
+WHERE PROCEDURE_name LIKE '%emergency%' order by procedure_code
+--ORDER BY PROCEDURE_NAME
+
+-----------------------------------------
+
+   SELECT * 
+
+     FROM fwrb_prd_wmidr_db.casenet.DIAGNOSISCODE
+
+    WHERE DIAGNOSIS_NAME LIKE '%ER%'
+
+ SELECT DISTINCT CODE_TYPE,DIAGNOSIS_CODE,DIAGNOSIS_NAME
+  FROM fwrb_prd_wmidr_db.casenet.DIAGNOSISCODE
+WHERE DIAGNOSIS_NAME LIKE '%at ER%'
+--ORDER BY DIAGNOSIS_NAME
+
+-------------------------------------
+SELECT * --23 LOCATION CODE 
+
+  FROM FWRB_PRD_WMIDR_DB.CASENET.LOCATIONCODE
+
+WHERE 1 = 1 --LOCATION_NAME LIKE '%ER%'
+
+ORDER BY LOCATION_cODE, LOCATION_NAME
+
+
+SELECT DISTINCT location_CODE,LOCATION_NAME
+  FROM fwrb_prd_wmidr_db.casenet.LOCATIONCODE
+WHERE location_CODE = '23'
 
 
 
-clean SDLC approach.
+  
+SELECT *
+  FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_CATALOG = 'FWRB_PRD_WMIDR_DB'
+   AND TABLE_SCHEMA = 'CASENET'
+   AND COLUMN_NAME LIKE '%CODE%'
+ 
+   SELECT * 
+     FROM fwrb_prd_wmidr_db.casenet.DIAGNOSISCODE
+    WHERE DIAGNOSIS_NAME LIKE '%ER%'
+ 
+SELECT * --23 LOCATION CODE 
+  FROM FWRB_PRD_WMIDR_DB.CASENET.LOCATIONCODE
+WHERE 1 = 1 --LOCATION_NAME LIKE '%ER%'
+ORDER BY LOCATION_cODE, LOCATION_NAME
+ 
+SELECT TOP 100 * 
+   FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.FACT_CLAIM_PROCEDURE
+ 
+SELECT *
+  FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_CATALOG = 'FWRB_PRD_WMIDR_DB'
+   AND TABLE_SCHEMA = 'BI_ANALYSIS'
+   AND COLUMN_NAME LIKE '%CODE%'
+ 
+   SELECT *
+  FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_CATALOG = 'FWRB_PRD_WMIDR_DB'
+   AND TABLE_SCHEMA = 'EDW_ATOMIC'
+   AND TABLE_NAME LIKE '%REV%'
+ 
+SELECT *
+  FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_CATALOG = 'FWRB_PRD_WMIDR_DB'
+   AND TABLE_SCHEMA = 'EDW_ATOMIC'
+   AND COLUMN_NAME LIKE '%REV%'
+ 
+   select * from fwrb_prd_wmidr_db.edw_atomic.revenue_code_lkp
+    where hce_revenue_category_desc like '%Emergency%'
+ 
+select distinct admit_type,ADMIT_TYPE_DESC, ADMIT_DISCHARGE_PLAN,ADMIT_ORG_CODE from fwrb_prd_wmidr_db.edw_atomic.admit_Detail
+WHERE ADMIT_TYPE_DESC LIKE '%Emergency%'
 
-Here’s what each step means:
+ 
+select  * from fwrb_prd_wmidr_db.edw_atomic.admit_Detail
+ 
+select top 100 * from fwrb_prd_wmidr_db.edw_atomic.EMR_PATIENT_VISIT_DI_PROCEDURE_DETAIL
+where patient_di_proc_name like '%EMERGENCY%'
+ 
+EMR_PATIENT_VISIT_LAB_DETAIL
 
-1. Set up Snowflake Git integration in DEV
-This is the one-time connection between Snowflake and your GitHub repo. You create the required Snowflake Git objects so Snowflake can access the remote repository. Snowflake documents this under Git setup.
 
-2. Connect the DEV Streamlit app to the Git repo/branch
-In Snowsight, open the existing Streamlit app, go to the Files tab, and choose Connect Git Repository. Then pick the repository and branch you want the app to sync with. Snowflake supports connecting an existing Streamlit app to a Git repository this way.
+   select * from fwrb_prd_wmidr_db.edw_atomic.revenue_code_lkp
+    where hce_revenue_category_desc like '%Emergency%'
 
-3. Use Push to Git from Snowsight
-Once the app is connected, you can push the current app files from Snowsight into that Git branch using Push to Git. You’ll provide a commit message and Git credentials/PAT. This is the easiest way to get your existing DEV app into GitHub without manually copying every file.
 
-4. In PROD, create the app from repository
-In the PROD Snowflake account, go to Projects → Streamlit → Create from repository, then choose the repo, branch, and main .py file. Snowflake supports creating a Streamlit app directly from a file in a Git repository.
-
-A couple of important notes:
-
-This feature is documented by Snowflake as Git integration for Streamlit in Snowflake, and it includes connect existing app, push to Git, pull from branch, and create from repository.
-If you want more automation later, Snowflake also documents CI/CD for Streamlit apps using Snowflake CLI + GitHub Actions.
-
-A polished way to explain it to your manager:
-
-“We’ll connect the DEV Streamlit app to a GitHub branch, push the current app code from Snowsight into Git, and then in PROD we’ll create the Streamlit app directly from that repository branch. That gives u
+    
+SELECT DISTINCT REVENUE_CODE,REVENUE_CODE_DESC,REVENUE_CODE_TYPE,HCE_REVENUE_CATEGORY_DESC
+  FROM fwrb_prd_wmidr_db.EDW_ATOMIC.REVENUE_CODE_LKP
+where hce_revenue_category_desc like '%Emergency%'
+----------------------------------------------------------
