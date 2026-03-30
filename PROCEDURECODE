@@ -1,0 +1,31 @@
+
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where procedure_code = '99281'
+ 
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where procedure_name like '%EMERGENCY%' -- = '99281'
+ 
+select * from fwrb_prd_wmidr_db.casenet.procedurecode
+where PROCEDURE_DESCRIPTION like '%ER%'
+ 
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_NAME LIKE '%EMERGENCY%'
+ORDER BY PROCEDURE_NAME
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_CODE LIKE 'G%'
+and PROCEDURE_description LIKE '%emergency%'
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_CODE LIKE 'G%'
+and PROCEDURE_name LIKE '%emergency%' order by procedure_code
+--ORDER BY PROCEDURE_NAME
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+--WHERE PROCEDURE_CODE LIKE 'G%'
+WHERE PROCEDURE_name LIKE '%emergency%' order by procedure_code
+--ORDER BY PROCEDURE_NAME
