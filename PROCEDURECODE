@@ -1,39 +1,20 @@
-LOCATION_NAME
-Pharmacy
-School
-Homeless Shelter
-Tribal Clinic
-Office
-Home
-Assisted Living Facility
-Group Home
-Mobile Unit
-Urgent Care
-Inpatient Hospital
-Outpatient Hospital
-Emergency Room - Hospital
-Ambulatory Surgical Center
-Birthing Center
-Military Treatment Facility
-Skilled Nursing Facility
-Nursing Facility
-Custodial Care Facility
-Hospice Facility
-Ambulance - Land
-Ambulance - Air or Water
-Independent Clinic
-Federally Qualified Health Center
-Inpatient Psychiatric Facility
-Psychiatric Facility Partial Hospitalization
-Community Mental Health Center
-Intermediate Care Facility/MR
-Residential Substance Abuse Treatment Facility
-Non-Residential Substance Abuse Treatment Facility
-Mass Immunization Center
-Comprehensive Inpatient Rehabilitative Facility
-Comprehensive Outpatient Rehabilitative Facility
-Dialysis Center (ERSD Facility)
-Public Health Clinic
-Rural Health Clinic
-Independent Laboratory
-Other
+
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE PROCEDURE_DESCRIPTION LIKE '%lab%' or
+procedure_name like '%LAB%' or
+PROCEDURE_DESCRIPTION LIKE '%test%' or
+procedure_name like '%TEST%' 
+ORDER BY PROCEDURE_CODE
+-
+
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE SEARCH(PROCEDURE_DESCRIPTION, 'LAB') 
+  OR SEARCH(PROCEDURE_NAME, 'LAB')
+UNION
+SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
+  FROM fwrb_prd_wmidr_db.casenet.procedurecode
+WHERE SEARCH(PROCEDURE_DESCRIPTION, 'TEST') 
+  OR SEARCH(PROCEDURE_NAME, 'TEST')
