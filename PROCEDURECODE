@@ -1,35 +1,38 @@
-SELECT DISTINCT
-    PROCEDURE_CODE,
-    PROCEDURE_NAME,
-    PROCEDURE_DESCRIPTION
-FROM fwrb_prd_wmidr_db.casenet.procedurecode
-WHERE PROCEDURE_CODE LIKE 'G%'
-  AND (
-       SEARCH(PROCEDURE_DESCRIPTION, 'LAB')
-    OR SEARCH(PROCEDURE_NAME, 'LAB')
-    OR SEARCH(PROCEDURE_DESCRIPTION, 'TEST')
-    OR SEARCH(PROCEDURE_NAME, 'TEST')
-    OR SEARCH(PROCEDURE_DESCRIPTION, 'LABORATORY')
-    OR SEARCH(PROCEDURE_NAME, 'LABORATORY')
-  )
-ORDER BY PROCEDURE_CODE;
+how to identify a specialist visit in database
+To identify a specialist visit in a database, you typically need to look for specific codes and identifiers that distinguish them from primary care or general wellness visits.
+1. Provider Taxonomy and Specialty Codes
+The most direct way to identify a specialist is by the National Provider Identifier (NPI) or the associated Taxonomy Code.
+Taxonomy Codes: These are alphanumeric codes (e.g., 207R00000X for Internal Medicine or 207L00000X for Anesthesiology) that define a provider's specific area of expertise. You can use tools like the NPPES NPI Registry to match a provider's NPI to their specialty.
 
 
+Provider Specialty Codes: In administrative or claims databases (like Medicare), providers are often assigned a numerical specialty code (e.g., 06 for Cardiology). 
+NPI Registry (.gov)
+NPI Registry (.gov)
+ +2
+2. Billing and Procedure Codes (CPT/HCPCS)
+The nature of the services performed often indicates a specialist visit.
+Evaluation and Management (E&M) Codes: While codes like 99202–99215 are used for office visits, specialist-specific visits may be flagged by different ranges or modifiers.
+Specialized Procedures: Procedures unique to a field (e.g., a colonoscopy or a cardiac catheterization) automatically identify the visit as specialized.
 
-  SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
-  FROM fwrb_prd_wmidr_db.casenet.procedurecode
-WHERE SEARCH(PROCEDURE_DESCRIPTION, 'LAB') 
-  OR SEARCH(PROCEDURE_NAME, 'LAB')
-UNION
-SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
-  FROM fwrb_prd_wmidr_db.casenet.procedurecode
-WHERE SEARCH(PROCEDURE_DESCRIPTION, 'TEST') 
-  OR SEARCH(PROCEDURE_NAME, 'TEST')
-  union
-  SELECT DISTINCT PROCEDURE_CODE,PROCEDURE_NAME,PROCEDURE_DESCRIPTION
-  FROM fwrb_prd_wmidr_db.casenet.procedurecode
-WHERE SEARCH(PROCEDURE_DESCRIPTION, 'LABORATORY') 
-  OR SEARCH(PROCEDURE_NAME, 'LABORATORY')
+Place of Service (POS) Codes: Visits occurring in specialized facilities, such as an Ambulatory Surgical Center (POS 24) or an Inpatient Psychiatric Facility (POS 51), are strong indicators. 
+Centers for Medicare & Medicaid Services | CMS (.gov)
+Centers for Medicare & Medicaid Services | CMS (.gov)
+ +2
+3. Diagnosis Codes (ICD-10)
+Specialist visits are frequently linked to specific, complex ICD-10-CM diagnosis codes that a primary care physician might not typically manage. For example, a diagnosis of a rare genetic disorder or a specific stage of oncology treatment often triggers a referral to a specialist. 
+Definitive Healthcare
+Definitive Healthcare
+ +1
+4. Referral Flags and EHR Data Referral Orders: A database entry that links a primary care visit to a subsequent specialist visit.
+Provider Credentials: Databases like Certification Matters can verify if a physician is board-certified in a specific specialty. 
+Certification Matters
+Certification Matters
+ +3
+Summary of Key Database Fields
+Field Category 	Common Database Columns
+Provider	NPI, Taxonomy_Code, Provider_Specialty_Description
+Service	CPT_Code, HCPCS_Code, Procedure_Category
 
-
-
+Location	Place_of_Service_Code, Facility_Type
+Diagnosis	ICD10_Code, Primary_Diagnosis_Description
+In Electronic Health Record (EHR) systems, you can look for:
