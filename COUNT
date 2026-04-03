@@ -1,6 +1,133 @@
-PCP_IND	CNT
-0	315664
-1	32278
-N	963841
-Y	68169
-	27448493
+Good validation query
+
+Run this to compare PCP_IND against specialty description:
+
+SELECT
+    p.PCP_IND,
+    l.PROVIDER_SPECIALTY_DESC,
+    l.PROVIDER_SPECIALTY_TYPE,
+    COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+    ON p.PROVIDER_ID = s.PROVIDER_ID
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
+WHERE p.ACTIVE_FLAG = 1
+  AND s.ACTIVE_FLAG = 1
+GROUP BY
+    p.PCP_IND,
+    l.PROVIDER_SPECIALTY_DESC,
+    l.PROVIDER_SPECIALTY_TYPE
+ORDER BY CNT DESC;
+
+This will tell you whether:
+
+Y / 1 lines up with PCP specialties
+N / 0 lines up with specialist specialties
+Practical way to define specialist for now
+
+A good first-pass filter is:
+
+WHERE COALESCE(TRIM(PCP_IND), '') IN ('0', 'N')
+
+But because blanks are huge, better is:
+
+WHERE COALESCE(TRIM(PCP_IND), '') NOT IN ('1', 'Y')
+
+That means:
+
+exclude known PCPs
+keep non-PCP and blank values
+
+But this can include unknowns, so it is broader.
+
+Safer version
+
+If you want only strong specialist candidates:
+
+WHERE COALESCE(TRIM(PCP_IND), '') IN ('0', 'N')
+
+If you want broader specialist candidate capture:
+
+WHERE COALESCE(TRIM(PCP_IND), '') NOT IN ('1', 'Y')
+My recommendation
+
+For your research spike, use this approach:
+
+Known PCP
+COALESCE(TRIM(p.PCP_IND), '') IN ('1', 'Y')
+Known non-PCP
+COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N')
+Unknown
+COALESCE(TRIM(p.PCP_IND), '') = ''
+
+Then validate with specialty description.
+
+Example query to inspect specialist candidates
+SELECT
+    p.PROVIDER_ID,
+    p.PROVIDER_FULL_NAME,
+    p.NPI_ID,
+    p.PCP_IND,
+    s.PROVIDER_SPECIALTY_CODE,
+    l.PROVIDER_SPECIALTY_DESC,
+    l.PROVIDER_SPECIALTY_TYPE
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+    ON p.PROVIDER_ID = s.PROVIDER_ID
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
+WHERE p.ACTIVE_FLAG = 1
+  AND s.ACTIVE_FLAG = 1
+  AND COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N')
+LIMIT 100;
+Better summary logic
+
+For your final specialist visit logic, I would use:
+
+CASE
+    WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('1', 'Y') THEN 'PCP'
+    WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N') THEN 'NON_PCP'
+    ELSE 'UNKNOWN'
+END
+
+That gives you a cleaner classification.
+
+Example:
+
+SELECT
+    p.PROVIDER_ID,
+    p.PROVIDER_FULL_NAME,
+    p.NPI_ID,
+    p.PCP_IND,
+    CASE
+        WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('1', 'Y') THEN 'PCP'
+        WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N') THEN 'NON_PCP'
+        ELSE 'UNKNOWN'
+    END AS PCP_CLASS,
+    s.PROVIDER_SPECIALTY_CODE,
+    l.PROVIDER_SPECIALTY_DESC
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+    ON p.PROVIDER_ID = s.PROVIDER_ID
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
+WHERE p.ACTIVE_FLAG = 1
+  AND s.ACTIVE_FLAG = 1;
+Plain-English takeaway
+
+Yes — your results suggest:
+
+1 and Y probably mean PCP
+0 and N probably mean non-PCP
+blank means unknown/not populated
+
+Because blank is huge, you should not use PCP_IND alone to define specialist visits. Use it together with specialty code/description.
+
+What to say in standup
+
+You can say:
+
+I checked the PCP indicator in DIM_PROVIDER and found it contains mixed values like 0, 1, N, Y, and a large number of blanks, so it’s not fully standardized. I’m using it as a supporting flag, but I still need to validate specialist versus PCP using the provider specialty tables.
+
+If you share the columns from your claims table next, I’ll help you connect this directly to specialist visit CPT claims.
