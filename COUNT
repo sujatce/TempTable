@@ -1,9 +1,10 @@
-Good validation query
+Step 1: inspect specialty descriptions for known PCP providers
 
-Run this to compare PCP_IND against specialty description:
+Run this:
 
 SELECT
     p.PCP_IND,
+    s.PROVIDER_SPECIALTY_CODE,
     l.PROVIDER_SPECIALTY_DESC,
     l.PROVIDER_SPECIALTY_TYPE,
     COUNT(*) AS CNT
@@ -16,54 +17,61 @@ WHERE p.ACTIVE_FLAG = 1
   AND s.ACTIVE_FLAG = 1
 GROUP BY
     p.PCP_IND,
+    s.PROVIDER_SPECIALTY_CODE,
     l.PROVIDER_SPECIALTY_DESC,
     l.PROVIDER_SPECIALTY_TYPE
 ORDER BY CNT DESC;
 
-This will tell you whether:
+This will show you which specialty descriptions appear under Y, N, 0, 1, etc.
 
-Y / 1 lines up with PCP specialties
-N / 0 lines up with specialist specialties
-Practical way to define specialist for now
+Step 2: identify the true PCP specialties
 
-A good first-pass filter is:
+Usually PCP specialties are things like:
 
-WHERE COALESCE(TRIM(PCP_IND), '') IN ('0', 'N')
+Family Practice
+Family Medicine
+Internal Medicine
+General Practice
+Pediatrics
+Geriatrics
 
-But because blanks are huge, better is:
+Depending on your business definition
 
-WHERE COALESCE(TRIM(PCP_IND), '') NOT IN ('1', 'Y')
+So once you review the lookup table, create a PCP list based on specialty description, not PCP_IND.
 
-That means:
+Example idea:
 
-exclude known PCPs
-keep non-PCP and blank values
+CASE
+    WHEN UPPER(l.PROVIDER_SPECIALTY_DESC) IN (
+        'FAMILY PRACTICE',
+        'FAMILY MEDICINE',
+        'INTERNAL MEDICINE',
+        'GENERAL PRACTICE',
+        'PEDIATRICS',
+        'GERIATRIC MEDICINE'
+    ) THEN 'PCP'
+    ELSE 'SPECIALIST'
+END
+Better approach for your use case
 
-But this can include unknowns, so it is broader.
+Use this logic:
 
-Safer version
+PCP
 
-If you want only strong specialist candidates:
+Defined by specialty description/type
 
-WHERE COALESCE(TRIM(PCP_IND), '') IN ('0', 'N')
+Specialist
 
-If you want broader specialist candidate capture:
+Anything not in PCP specialty list
 
-WHERE COALESCE(TRIM(PCP_IND), '') NOT IN ('1', 'Y')
-My recommendation
+So your specialist identification becomes based on:
 
-For your research spike, use this approach:
+l.PROVIDER_SPECIALTY_DESC
 
-Known PCP
-COALESCE(TRIM(p.PCP_IND), '') IN ('1', 'Y')
-Known non-PCP
-COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N')
-Unknown
-COALESCE(TRIM(p.PCP_IND), '') = ''
+not on:
 
-Then validate with specialty description.
-
-Example query to inspect specialist candidates
+p.PCP_IND
+Example query to classify by specialty
 SELECT
     p.PROVIDER_ID,
     p.PROVIDER_FULL_NAME,
@@ -71,7 +79,18 @@ SELECT
     p.PCP_IND,
     s.PROVIDER_SPECIALTY_CODE,
     l.PROVIDER_SPECIALTY_DESC,
-    l.PROVIDER_SPECIALTY_TYPE
+    l.PROVIDER_SPECIALTY_TYPE,
+    CASE
+        WHEN UPPER(COALESCE(l.PROVIDER_SPECIALTY_DESC, '')) IN (
+            'FAMILY PRACTICE',
+            'FAMILY MEDICINE',
+            'INTERNAL MEDICINE',
+            'GENERAL PRACTICE',
+            'PEDIATRICS',
+            'GERIATRIC MEDICINE'
+        ) THEN 'PCP'
+        ELSE 'SPECIALIST_OR_UNKNOWN'
+    END AS PROVIDER_CLASS
 FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
 JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
     ON p.PROVIDER_ID = s.PROVIDER_ID
@@ -79,55 +98,35 @@ LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
     ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
 WHERE p.ACTIVE_FLAG = 1
   AND s.ACTIVE_FLAG = 1
-  AND COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N')
-LIMIT 100;
-Better summary logic
+LIMIT 200;
+Best conclusion
 
-For your final specialist visit logic, I would use:
+So now the conclusion is:
 
-CASE
-    WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('1', 'Y') THEN 'PCP'
-    WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N') THEN 'NON_PCP'
-    ELSE 'UNKNOWN'
-END
+PCP_IND cannot be trusted as the main flag because the same PCP providers appear under both Y and N.
 
-That gives you a cleaner classification.
+That means your main identification should come from the specialty lookup table, not from PCP_IND.
 
-Example:
-
-SELECT
-    p.PROVIDER_ID,
-    p.PROVIDER_FULL_NAME,
-    p.NPI_ID,
-    p.PCP_IND,
-    CASE
-        WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('1', 'Y') THEN 'PCP'
-        WHEN COALESCE(TRIM(p.PCP_IND), '') IN ('0', 'N') THEN 'NON_PCP'
-        ELSE 'UNKNOWN'
-    END AS PCP_CLASS,
-    s.PROVIDER_SPECIALTY_CODE,
-    l.PROVIDER_SPECIALTY_DESC
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
-JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
-    ON p.PROVIDER_ID = s.PROVIDER_ID
-LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
-    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
-WHERE p.ACTIVE_FLAG = 1
-  AND s.ACTIVE_FLAG = 1;
-Plain-English takeaway
-
-Yes — your results suggest:
-
-1 and Y probably mean PCP
-0 and N probably mean non-PCP
-blank means unknown/not populated
-
-Because blank is huge, you should not use PCP_IND alone to define specialist visits. Use it together with specialty code/description.
-
-What to say in standup
+What to tell your team
 
 You can say:
 
-I checked the PCP indicator in DIM_PROVIDER and found it contains mixed values like 0, 1, N, Y, and a large number of blanks, so it’s not fully standardized. I’m using it as a supporting flag, but I still need to validate specialist versus PCP using the provider specialty tables.
+I validated the PCP indicator and found it isn’t reliable on its own, because I’m seeing PCP providers under both Y and N values. So I’m shifting the logic to use the provider specialty lookup table as the primary way to distinguish PCP versus specialist.
 
-If you share the columns from your claims table next, I’ll help you connect this directly to specialist visit CPT claims.
+Next best step
+
+Run this one next:
+
+SELECT DISTINCT
+    s.PROVIDER_SPECIALTY_CODE,
+    l.PROVIDER_SPECIALTY_DESC,
+    l.PROVIDER_SPECIALTY_TYPE
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
+WHERE s.ACTIVE_FLAG = 1
+ORDER BY l.PROVIDER_SPECIALTY_DESC, s.PROVIDER_SPECIALTY_CODE;
+
+That will help you build the real PCP-vs-specialist list.
+
+If you paste a sample of the PROVIDER_SPECIALTY_DESC values you see, I’ll help you turn that into a clean final filter.
