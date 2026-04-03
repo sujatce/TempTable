@@ -1,0 +1,248 @@
+Step 1: Check whether provider table has numeric provider_id values
+
+Run this first:
+
+SELECT
+    COUNT(*) AS TOTAL_ROWS,
+    COUNT(TRY_TO_NUMBER(PROVIDER_ID)) AS NUMERIC_PROVIDER_ID_ROWS
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER;
+What this tells you
+If NUMERIC_PROVIDER_ID_ROWS is very low or 0, then this join will fail:
+TRY_TO_NUMBER(p.PROVIDER_ID) = s.PROVIDER_ID
+Step 2: See sample provider_id values from provider table
+SELECT DISTINCT
+    PROVIDER_ID
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER
+LIMIT 50;
+
+Check whether values look like:
+
+12345 → numeric, join may work
+P12345 or ABC001 → numeric cast will fail
+GUID-like values → wrong join key
+Step 3: Check specialty table by itself
+
+Make sure it has data:
+
+SELECT
+    COUNT(*) AS TOTAL_ROWS,
+    COUNT(DISTINCT PROVIDER_ID) AS DISTINCT_PROVIDER_IDS,
+    COUNT(DISTINCT PROVIDER_SPECIALTY_CODE) AS DISTINCT_SPECIALTY_CODES
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY;
+
+Then:
+
+SELECT
+    ACTIVE_FLAG,
+    COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY
+GROUP BY ACTIVE_FLAG
+ORDER BY ACTIVE_FLAG;
+
+If ACTIVE_FLAG = 1 has no rows, that explains everything.
+
+Step 4: Test provider-to-specialty join only
+
+Remove the lookup table first.
+
+SELECT
+    COUNT(*) AS JOINED_ROWS
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER p
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+    ON TRY_TO_NUMBER(p.PROVIDER_ID) = s.PROVIDER_ID;
+Result meaning
+If this returns 0, the problem is between PROVIDER and DIM_PROVIDER_SPECIALTY
+If this returns rows, then the problem is the lookup table join
+Step 5: Test lookup table separately
+
+Check whether lookup table has data:
+
+SELECT
+    COUNT(*) AS TOTAL_ROWS,
+    COUNT(DISTINCT PROVIDER_SPECIALTY_CODE) AS DISTINCT_CODES
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP;
+
+Then:
+
+SELECT
+    ACTIVE_FLAG,
+    COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP
+GROUP BY ACTIVE_FLAG
+ORDER BY ACTIVE_FLAG;
+
+Then test specialty-to-lookup join:
+
+SELECT
+    COUNT(*) AS JOINED_ROWS
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE;
+
+If this gives rows, lookup is fine.
+
+Step 6: Use LEFT JOIN to see where it breaks
+
+This is the best diagnostic query:
+
+SELECT
+    p.PROVIDER_ID AS P_PROVIDER_ID,
+    TRY_TO_NUMBER(p.PROVIDER_ID) AS P_PROVIDER_ID_NUM,
+    s.PROVIDER_ID AS S_PROVIDER_ID,
+    s.PROVIDER_SPECIALTY_CODE,
+    l.PROVIDER_SPECIALTY_DESC,
+    l.PROVIDER_SPECIALTY_TYPE
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER p
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+    ON TRY_TO_NUMBER(p.PROVIDER_ID) = s.PROVIDER_ID
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
+LIMIT 100;
+Why this helps
+
+You will see:
+
+whether TRY_TO_NUMBER(p.PROVIDER_ID) is null
+whether specialty join is failing
+whether lookup join is failing
+Most likely issue
+
+I strongly suspect this:
+
+CASENET.PROVIDER.PROVIDER_ID is not the same key as BI_ANALYSIS.DIM_PROVIDER_SPECIALTY.PROVIDER_ID
+
+Even though both columns are called PROVIDER_ID, they may come from different systems.
+
+This happens a lot.
+
+For example:
+
+CASENET.PROVIDER.PROVIDER_ID could be a source-system provider key
+BI_ANALYSIS.DIM_PROVIDER_SPECIALTY.PROVIDER_ID could be a warehouse surrogate key
+
+If that is true, they will never join directly.
+
+Step 7: Compare sample values from both tables
+
+Run these side by side.
+
+Provider table
+SELECT DISTINCT
+    PROVIDER_ID
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER
+LIMIT 20;
+Specialty table
+SELECT DISTINCT
+    PROVIDER_ID
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY
+LIMIT 20;
+
+If the values look completely different, that confirms the join key is wrong.
+
+Step 8: Check if NPI may be the real link
+
+Your provider table has NPI.
+
+If your claim/provider specialty side has another table that maps provider_id to NPI, that may be the real bridge.
+
+Try checking whether DIM_PROVIDER_SPECIALTY has a path through some DIM_PROVIDER, DIM_RENDERING_PROVIDER, or DIM_BILLING_PROVIDER table.
+
+Search your BI schema for tables like:
+
+DIM_PROVIDER
+DIM_CLAIM_PROVIDER
+BRIDGE_PROVIDER
+PROVIDER_XREF
+
+Because often:
+
+claims use warehouse provider id
+casenet provider uses source provider id
+NPI is the common business key
+Quick isolation queries
+
+These will tell you exactly where the problem is.
+
+A. Does provider-specialty join work?
+SELECT COUNT(*)
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER p
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+  ON TRY_TO_NUMBER(p.PROVIDER_ID) = s.PROVIDER_ID;
+B. Does specialty-lookup join work?
+SELECT COUNT(*)
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+  ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE;
+C. Does active filter remove everything?
+SELECT COUNT(*)
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+WHERE s.ACTIVE_FLAG = 1;
+SELECT COUNT(*)
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+WHERE l.ACTIVE_FLAG = 1;
+What I think you should do next
+
+Run these in order:
+
+1
+SELECT COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER;
+2
+SELECT COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY;
+3
+SELECT COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP;
+4
+SELECT COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER p
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+  ON TRY_TO_NUMBER(p.PROVIDER_ID) = s.PROVIDER_ID;
+5
+SELECT COUNT(*) AS CNT
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
+  ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE;
+
+That will pinpoint the failure.
+
+Very likely final answer
+
+The query returned nothing because the join between:
+
+CASENET.PROVIDER.PROVIDER_ID
+
+and
+
+BI_ANALYSIS.DIM_PROVIDER_SPECIALTY.PROVIDER_ID
+
+is probably not the correct relationship.
+
+The column names match, but the underlying IDs may be different business keys.
+
+A better troubleshooting query
+
+Use this one now:
+
+SELECT
+    p.PROVIDER_ID,
+    TRY_TO_NUMBER(p.PROVIDER_ID) AS PROVIDER_ID_NUM,
+    p.PROVIDER_NAME,
+    p.NPI,
+    s.PROVIDER_ID AS SPEC_PROVIDER_ID,
+    s.PROVIDER_SPECIALTY_CODE,
+    s.ACTIVE_FLAG AS SPEC_ACTIVE_FLAG
+FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER p
+LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
+    ON TRY_TO_NUMBER(p.PROVIDER_ID) = s.PROVIDER_ID
+LIMIT 100;
+
+If SPEC_PROVIDER_ID is null for every row, then that join is wrong.
+
+If you paste back the results of these 3 queries:
+
+SELECT DISTINCT PROVIDER_ID FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER LIMIT 20;
+SELECT DISTINCT PROVIDER_ID FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY LIMIT 20;
+SELECT COUNT(*) FROM FWRB_PRD_WMIDR_DB.CASENET.PROVIDER p JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s ON TRY_TO_NUMBER(p.PROVIDER_ID)=s.PROVIDER_ID;
+
+I can help you figure out the exact correct join.
