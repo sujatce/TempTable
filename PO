@@ -1,199 +1,42 @@
-Why this is better
-
-Because now:
-
-DIM_PROVIDER = provider master
-DIM_PROVIDER_SPECIALTY = provider specialty
-DIM_PROVIDER_SPECIALTY_LKP = specialty meaning/description
-
-So together these 3 tables can tell you:
-
-provider id
-provider name
-NPI
-PCP indicator
-specialty code
-specialty description
-specialty type
-
-That is exactly what you need.
-
-Very useful point: PCP_IND
-
-This column is especially helpful:
-
-PCP_IND
-
-This may already tell you whether the provider is a PCP.
-
-So instead of only relying on specialty exclusions, you may be able to use:
-
-PCP_IND = 'Y' or similar for PCP
-non-PCP for specialist
-
-You should first inspect the values.
-
-Run:
-
-SELECT
-    PCP_IND,
-    COUNT(*) AS CNT
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER
-GROUP BY PCP_IND
-ORDER BY PCP_IND;
-
-This will show whether values are like:
-
-Y / N
-1 / 0
-something else
-Best next query to run
-
-This is a great validation query:
-
 SELECT
     p.PROVIDER_ID,
     p.PROVIDER_FULL_NAME,
     p.NPI_ID,
-    p.PCP_IND,
     s.PROVIDER_SPECIALTY_CODE,
     l.PROVIDER_SPECIALTY_DESC,
-    l.PROVIDER_SPECIALTY_TYPE
+    CASE
+        WHEN UPPER(TRIM(l.PROVIDER_SPECIALTY_DESC)) IN (
+            'FAMILY PRACTICE',
+            'PHYSICIAN/FAMILY PRACTICE',
+            'FAMILY MEDICINE',
+            'INTERNAL MEDICINE',
+            'PHYSICIAN/INTERNAL MEDICINE',
+            'GENERAL PRACTICE',
+            'PHYSICIAN/GENERAL PRACTICE',
+            'PEDIATRICS',
+            'PEDIATRIC MEDICINE',
+            'PHYSICIAN/PEDIATRIC MEDICINE',
+            'GERIATRIC MEDICINE',
+            'PCP',
+            'PCP OTHER'
+        ) THEN 'PCP'
+        WHEN UPPER(TRIM(l.PROVIDER_SPECIALTY_DESC)) IN (
+            'UNKNOWN',
+            'UNK',
+            'UNKNOWN PHYSICIAN SPECIALTY',
+            'UNKNOWN PROVIDER',
+            'MEDICAL DOCTOR',
+            'PHYSICIAN',
+            'PHYSICIAN/UNDEFINED PHYSICIAN TYPE',
+            'PHYSICIAN/UNDEFINED PHYSICIAN TYPE[6]',
+            'PHYSICIAN/UNDEFINED PHYSICAN TYPE'
+        ) THEN 'UNKNOWN'
+        ELSE 'SPECIALIST_OR_OTHER'
+    END AS PROVIDER_CLASS
 FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
 JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
     ON p.PROVIDER_ID = s.PROVIDER_ID
 LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
     ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
 WHERE p.ACTIVE_FLAG = 1
-  AND s.ACTIVE_FLAG = 1
-LIMIT 100;
-
-If this returns rows, then your provider-specialty setup is working.
-
-How to identify specialist using this
-
-You now have 2 possible ways:
-
-Option 1: Use PCP_IND
-
-If PCP_IND is reliable:
-
-PCP = PCP_IND = 'Y'
-Specialist = not PCP
-
-Example:
-
-WHERE NVL(p.PCP_IND, 'N') <> 'Y'
-Option 2: Use specialty type / description
-
-If lookup table has:
-
-PROVIDER_SPECIALTY_TYPE
-PROVIDER_SPECIALTY_DESC
-
-then you can identify:
-
-Family Practice
-Internal Medicine
-General Practice
-as PCP
-
-and everything else as specialist.
-
-Even better: use both
-
-Best practice is often:
-
-use PCP_IND
-validate with specialty description/type
-
-Example:
-
-if PCP_IND = 'Y', definitely PCP
-if specialty description says cardiology/dermatology/etc., specialist
-Stronger query for review
-SELECT DISTINCT
-    p.PROVIDER_ID,
-    p.PROVIDER_FULL_NAME,
-    p.NPI_ID,
-    p.PCP_IND,
-    s.PROVIDER_SPECIALTY_CODE,
-    l.PROVIDER_SPECIALTY_DESC,
-    l.PROVIDER_SPECIALTY_TYPE
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
-JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
-    ON p.PROVIDER_ID = s.PROVIDER_ID
-LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
-    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
-WHERE p.ACTIVE_FLAG = 1
-  AND s.ACTIVE_FLAG = 1
-ORDER BY p.PROVIDER_ID
-LIMIT 200;
-What this means for your specialist-visit logic
-
-Now your likely logic is:
-
-find visit CPT/HCPCS codes
-join claims to DIM_PROVIDER using claim provider id
-join DIM_PROVIDER to DIM_PROVIDER_SPECIALTY
-join to specialty lookup
-exclude PCP providers or include only specialists
-Important thing to confirm next
-
-Now the next question is:
-
-Does your claims table use this same BI_ANALYSIS.DIM_PROVIDER.PROVIDER_ID?
-
-If yes, then you are in great shape.
-
-If the claim table has provider-related columns like:
-
-rendering provider id
-billing provider id
-servicing provider id
-
-and one of those equals DIM_PROVIDER.PROVIDER_ID, then you can build the final specialist visit query.
-
-Short answer
-
-Yes — DIM_PROVIDER has both provider name and NPI_ID, and it is much more likely to join correctly with DIM_PROVIDER_SPECIALTY because both use the same numeric PROVIDER_ID.
-
-Next queries I’d run
-
-First:
-
-SELECT
-    COUNT(*) AS CNT
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
-JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
-    ON p.PROVIDER_ID = s.PROVIDER_ID;
-
-Then:
-
-SELECT
-    PCP_IND,
-    COUNT(*) AS CNT
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER
-GROUP BY PCP_IND
-ORDER BY PCP_IND;
-
-Then:
-
-SELECT
-    p.PROVIDER_ID,
-    p.PROVIDER_FULL_NAME,
-    p.NPI_ID,
-    p.PCP_IND,
-    s.PROVIDER_SPECIALTY_CODE,
-    l.PROVIDER_SPECIALTY_DESC,
-    l.PROVIDER_SPECIALTY_TYPE
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER p
-JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY s
-    ON p.PROVIDER_ID = s.PROVIDER_ID
-LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER_SPECIALTY_LKP l
-    ON s.PROVIDER_SPECIALTY_CODE = l.PROVIDER_SPECIALTY_CODE
-WHERE p.ACTIVE_FLAG = 1
-  AND s.ACTIVE_FLAG = 1
-LIMIT 100;
-
-If you share the claim table DDL next, especially the provider columns, I can help you build the exact final specialist-visit query.
+  AND s.ACTIVE_FLAG = 1;
