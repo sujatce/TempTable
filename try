@@ -1,87 +1,19 @@
-
-AUDITDATE_PHN
-Varchar
-Date indicating when phone record was last updated (derived from source update date).
-—
-3
-AUDITSYSTEM_PHN
-Varchar
-System of change.
-—
-4
-ENTITY_ID
-Varchar
-This is a unique number used by the enterprise to identify an individual/member across multiple sources.
-—
-1
-ISPRIMARY_PHN
-Varchar
-An indicator to represent the primary telephone to use for communication when multiple telephone numbers exists for a consumer.
-—
-7
-PHONE_USETYPE
-Varchar
-Identifies the different types of communication options. Examples: Mobile Telephone, Additional Telephone, Home Telephone
-—
-2
-TELEPHONENUMBER
-Varchar
-A set of digits that represent the entire telephone number. The number of digits varies by country. This could be derived from the individual attributes of the telephone number parts contained in this entity.
-—
-5
-TELEPHONENUMBER_ENRICHED
-Varchar
-Contains the standardized phone number derived from the original TELEPHONENUMBER column by applying normalization rules. All non-numeric characters (such as spaces, and country codes) are removed, and the last 10 digits of the cleaned number are retained to ensure consistency with U.S. phone number format.
-—
-6
-UPDATEDATE
-Date
-EPMP update date
-—
-8
-
-this is the base table 
-
-I want to get this base table data by joinin with other tables in out database and this is the query 
-
-
-use secondary roles all;
-create or replace view ASQN_PRD_MIGRATION_DB.DBO.VW_WM_MEMBER_PHONE(
-	REPORT_MONTH,
-	ENTITY_ID,
-	MBI,
-	MEMBER_ID,
-	GMPI_ID,
-	MEMBER_LAST_NAME,
-	MEMBER_FIRST_NAME,
-    PRIMARY_PHONE_INDICATOR,
-    PHONE_TYPE,
+SELECT
+    ENTITY_ID,
     MEMBER_PHONE,
-    PHONE_UPDATE_DATE
-) as
-select DISTINCT 
-  MRM.REPORT_MONTH
-  ,EP.ENTITY_ID
-    ,DM.MEMBER_MBI AS MBI
-    ,DM.MEMBER_ID
-    ,DM.GMPI_ID
-    ,MRM.MEMBER_LAST_NAME
-    ,MRM.MEMBER_FIRST_NAME
-    ,EP.ISPRIMARY_PHN AS PRIMARY_PHONE_INDICATOR
-    ,EP.PHONE_USETYPE AS PHONE_TYPE
-    ,EP.TELEPHONENUMBER_ENRICHED AS MEMBER_PHONE
-    ,EP.UPDATEDATE AS PHONE_UPDATE_DATE
-FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_PHONE EP
-    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
-        ON EP.ENTITY_ID = ED.ENTITY_ID
-    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
-        ON ED.MBI = DM.MEMBER_MBI
-    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
-        ON DM.MEMBER_ID = MRM.MEMBER_ID
-    AND MRM.REPORT_MONTH IN (SELECT MAX(REPORT_MONTH) FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH);
-
-Now i \want to check everthing loaded correctly 
-
-is there any duplicates
-
-I need to find all these details and give it to my manager
+    PHONE_TYPE,
+    PRIMARY_PHONE_INDICATOR,
+    COUNT(*) AS ROW_COUNT,
+    COUNT(DISTINCT PHONE_UPDATE_DATE) AS DISTINCT_UPDATE_DATES,
+    MIN(PHONE_UPDATE_DATE) AS MIN_UPDATE_DATE,
+    MAX(PHONE_UPDATE_DATE) AS MAX_UPDATE_DATE
+FROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_MEMBER_PHONE
+GROUP BY
+    ENTITY_ID,
+    MEMBER_PHONE,
+    PHONE_TYPE,
+    PRIMARY_PHONE_INDICATOR
+HAVING 
+    COUNT(*) > 1
+    AND COUNT(DISTINCT PHONE_UPDATE_DATE) > 1
+ORDER BY ROW_COUNT DESC;
