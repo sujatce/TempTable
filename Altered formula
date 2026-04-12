@@ -1,0 +1,6 @@
+IF UpperCase(Trim(ToString([_CurrentField_]))) IN ("Y","TRUE")
+THEN "Y"
+ELSEIF UpperCase(Trim(ToString([_CurrentField_]))) IN ("N","FALSE")
+THEN "N"
+ELSE ToString([_CurrentField_])
+ENDIF
