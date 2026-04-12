@@ -44,4 +44,55 @@ select DISTINCT
         ON ED.MBI = DM.MEMBER_MBI
     INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
         ON DM.MEMBER_ID = MRM.MEMBER_ID
-    WHERE MRM.REPORT_MONTH IN (SELECT MAX(REPORT_MONTH) FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH);
+    WHERE MRM.REPORT_MONTH IN (SELECT MAX(REPORT_MONTH) FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH)
+
+
+🔍 If you want more detail (VERY useful)
+👉 To actually see the duplicate rows:
+SELECT *
+FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_ADDRESS EA
+WHERE (EA.ENTITY_ID, EA.ADDRESS_USETYPE) IN (
+    SELECT
+        ENTITY_ID,
+        ADDRESS_USETYPE
+    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_ADDRESS
+    GROUP BY
+        ENTITY_ID,
+        ADDRESS_USETYPE
+    HAVING COUNT(*) > 1
+)
+ORDER BY ENTITY_ID, ADDRESS_USETYPE;
+⚠️ Important Insight (from your view)
+In your view, you used:
+SELECT DISTINCT
+👉 That may be hiding duplicates, not fixing them
+So this check is critical before relying on the view
+🚀 Advanced (Best Practice)
+If you want to check duplicates based on latest address only, then:
+SELECT
+    ENTITY_ID,
+    ADDRESS_USETYPE,
+    COUNT(*) AS ROW_COUNT
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY ENTITY_ID, ADDRESS_USETYPE
+               ORDER BY UPDATEDATE DESC
+           ) AS RN
+    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_ADDRESS
+)
+GROUP BY ENTITY_ID, ADDRESS_USETYPE
+HAVING COUNT(*) > 1;
+💡 Pro Tip (for your use case)
+Since this feeds:
+👉 Member Address View
+You should decide:
+Do you want latest address only? → use ROW_NUMBER()
+Or allow multiple addresses? → keep as is
+🎯 Final Summary
+Use GROUP BY + HAVING COUNT > 1 → detect duplicates
+Use subquery → inspect duplicates
+Avoid relying only on DISTINCT
+If you want, I can help you fix your view to always pick the correct address (latest / primary) — that’s usually the next step 👍
+
+
