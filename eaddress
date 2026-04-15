@@ -1,203 +1,36 @@
-Check 2: Are duplicates coming from same member having multiple emails on same update date?
-
-This is very important.
-
-SELECT
-    ED.MBI,
+create or replace view ASQN_PRD_MIGRATION_DB.DBO.VW_WM_MBR_OKTO_EMAIL_RPT(
+	REPORT_MONTH,
+	ENTITY_ID,
+	MBI,
+	MEMBER_ID,
+	GMPI_ID,
+	MEMBER_LAST_NAME,
+	MEMBER_FIRST_NAME,
+	MEMBER_EMAIL,
+	EMAIL_UPDATE_DATE
+) as
+SELECT DISTINCT 
+    MRM.REPORT_MONTH,
     EE.ENTITY_ID,
-    EE.UPDATEDATE,
-    COUNT(*) AS ROW_COUNT,
-    COUNT(DISTINCT EE.EMAILADDRESS) AS DISTINCT_EMAIL_COUNT
+    DM.MEMBER_MBI AS MBI,
+    DM.MEMBER_ID,
+    DM.GMPI_ID,
+    MRM.MEMBER_LAST_NAME,
+    MRM.MEMBER_FIRST_NAME,
+    EE.EMAILADDRESS AS MEMBER_EMAIL,
+    EE.UPDATEDATE AS EMAIL_UPDATE_DATE
 FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
 INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
     ON EE.ENTITY_ID = ED.ENTITY_ID
-GROUP BY
-    ED.MBI,
-    EE.ENTITY_ID,
-    EE.UPDATEDATE
-HAVING COUNT(*) > 1
-ORDER BY ROW_COUNT DESC;
-
-This tells you whether the same member/entity has multiple rows with the same update date.
-
-Check 3: Are there multiple rows in the max-update helper view for same MBI?
-
-You want to validate the helper view itself.
-
-SELECT
-    MBI,
-    COUNT(*) AS ROW_COUNT
-FROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_MEMBER_EMAIL_MBI_MAXUPDATE
-GROUP BY MBI
-HAVING COUNT(*) > 1
-ORDER BY ROW_COUNT DESC;
-
-If this returns rows, that is a red flag.
-
-Check 4: Does MEMBER_REPORT_MONTH have more than one row for the same member in max report month?
-SELECT
-    MEMBER_ID,
-    REPORT_MONTH,
-    COUNT(*) AS ROW_COUNT
-FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
-WHERE REPORT_MONTH = (
-    SELECT MAX(REPORT_MONTH)
-    FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
-)
-GROUP BY MEMBER_ID, REPORT_MONTH
-HAVING COUNT(*) > 1
-ORDER BY ROW_COUNT DESC;
-Check 5: Is DISTINCT actually removing rows?
-
-This is a very good review check.
-
-Run the query without DISTINCT and compare counts.
-
-With DISTINCT
-SELECT COUNT(*) AS CNT
-FROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_MEMBER_EMAIL;
-Without DISTINCT
-
-Use your select logic as a subquery, but remove DISTINCT:
-
-SELECT COUNT(*) AS CNT
-FROM (
-    select
-      MRM.REPORT_MONTH
-      ,EE.ENTITY_ID
-      ,DM.MEMBER_MBI AS MBI
-      ,DM.MEMBER_ID
-      ,DM.GMPI_ID
-      ,MRM.MEMBER_LAST_NAME
-      ,MRM.MEMBER_FIRST_NAME
-      ,EE.EMAILADDRESS AS MEMBER_EMAIL
-      ,EE.UPDATEDATE AS EMAIL_UPDATE_DATE
-    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
-        INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
-            ON EE.ENTITY_ID = ED.ENTITY_ID
-        INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
-            ON ED.MBI = DM.MEMBER_MBI
-        INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
-            ON DM.MEMBER_ID = MRM.MEMBER_ID
-        INNER JOIN ASQN_PRD_MIGRATION_DB.DBO.VW_WM_MEMBER_EMAIL_MBI_MAXUPDATE MU
-            ON MU.MBI = ED.MBI
-            AND MU.MAX_UPDATE_DATE = EE.UPDATEDATE
-    where UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'
-      AND MRM.REPORT_MONTH IN (
-            SELECT MAX(REPORT_MONTH)
-            FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
-      )
-      and EE.ENTITY_ID NOT IN (
-            SELECT DISTINCT ENTITY_ID
-            FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONSENT_DNC DNE
-            WHERE UPPER(DNE.PREF_CODE) = 'DO_NOT_EMAIL'
-              AND UPPER(SELECTED) = 'Y'
-      )
-) X;
-
-If counts differ, then DISTINCT is masking duplicates.
-
-Best detailed duplicate check
-
-This is the most useful one to show your director:
-
-SELECT
-    MBI,
-    MEMBER_ID,
-    ENTITY_ID,
-    COUNT(*) AS ROW_COUNT,
-    COUNT(DISTINCT MEMBER_EMAIL) AS DISTINCT_EMAILS,
-    MIN(EMAIL_UPDATE_DATE) AS MIN_UPDATE_DATE,
-    MAX(EMAIL_UPDATE_DATE) AS MAX_UPDATE_DATE
-FROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_MEMBER_EMAIL
-GROUP BY
-    MBI,
-    MEMBER_ID,
-    ENTITY_ID
-HAVING COUNT(*) > 1
-ORDER BY ROW_COUNT DESC;
-
-This tells you:
-
-which members duplicate
-whether they have different emails
-whether update dates differ
-Smart things to tell your director
-
-You can say something like this:
-
-I validated the view for duplicate behavior at the MBI, MEMBER_ID, and ENTITY_ID levels.
-I specifically checked whether the join to the max-update helper view could still return multiple email rows when more than one email shares the same latest update date.
-I also compared row counts with and without DISTINCT to confirm whether DISTINCT is only precautionary or hiding join multiplication.
-In addition, I verified whether MEMBER_REPORT_MONTH contains only one row per member for the latest report month.
-
-That sounds strong and review-ready.
-
-One important improvement you may want to mention
-
-Right now, your logic can still return multiple rows if a member has:
-
-multiple valid email addresses
-same max UPDATEDATE
-
-A cleaner approach is often to use ROW_NUMBER() and explicitly pick one row.
-
-Example pattern:
-
-QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY ED.MBI
-    ORDER BY EE.UPDATEDATE DESC, EE.EMAILADDRESS
-) = 1
-
-This is better than relying on MAX_UPDATE_DATE + DISTINCT.
-
-Your director may like that.
-
-One more thing to review: NOT IN
-
-This part:
-
-EE.ENTITY_ID NOT IN (
-    SELECT DISTINCT ENTITY_ID
-    FROM ...TBL_CONSENT_DNC
-    ...
-)
-
-can behave unexpectedly if the subquery contains NULL.
-
-Safer version is usually NOT EXISTS.
-
-Example:
-
-AND NOT EXISTS (
-    SELECT 1
-    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONSENT_DNC DNE
-    WHERE DNE.ENTITY_ID = EE.ENTITY_ID
-      AND UPPER(DNE.PREF_CODE) = 'DO_NOT_EMAIL'
-      AND UPPER(DNE.SELECTED) = 'Y'
-)
-
-That is another good review point.
-
-Minimum checks I recommend you run now
-
-Run these 5:
-
-Duplicate by MBI
-Duplicate by MEMBER_ID
-Duplicate by ENTITY_ID
-Row count with and without DISTINCT
-Check members with multiple emails on same latest update date
-Simple summary you can say in meeting
-
-I checked whether the view is returning one row per member as expected.
-I validated duplicates by MBI, MEMBER_ID, and ENTITY_ID.
-I checked whether DISTINCT is masking duplicate rows from joins.
-I also reviewed the latest-email logic because multiple email records can share the same max update date.
-Finally, I reviewed the do-not-email exclusion logic and noted that NOT EXISTS would be safer than NOT IN.
-
-If you want, I can also give you:
-
-a director-ready review checklist
-a cleaner rewritten version of this view using QUALIFY ROW_NUMBER()
-a short speaking script for your code review
+INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
+    ON ED.MBI = DM.MEMBER_MBI
+INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
+    ON DM.MEMBER_ID = MRM.MEMBER_ID
+WHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'
+  AND MRM.REPORT_MONTH = (SELECT MAX(REPORT_MONTH) FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH)
+  AND EE.ENTITY_ID NOT IN (
+      SELECT DISTINCT ENTITY_ID 
+      FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONSENT_DNC
+      WHERE UPPER(PREF_CODE) = 'DO_NOT_EMAIL' AND UPPER(SELECTED) = 'Y'
+  )
+QUALIFY ROW_NUMBER() OVER (PARTITION BY ED.MBI ORDER BY EE.UPDATEDATE DESC) = 1;
