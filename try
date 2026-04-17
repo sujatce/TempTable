@@ -1,8 +1,240 @@
-CREATE OR REPLACE SEQUENCE my_sequence_name 
-  START = 1 
-  INCREMENT = 1;
+create or replace TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.EPMP_OUTBOUND_DNC (
+	EPMP_OUTBOUND_DNC_ID NUMBER(38,0) NOT NULL DEFAULT ASQN_DEV_ORCHESTRATION_DB.DBO.EPMP_OUTBOUND_DNC_SEQ.NEXTVAL,
+	MEMBER_FIRST_NAME VARCHAR(50) COMMENT 'First name of the member enrolled in the health plan',
+	MEMBER_MIDDLE_INITIAL VARCHAR(1),
+	MEMBER_LAST_NAME VARCHAR(60) COMMENT 'Last name of the member enrolled in the health plan',
+	MEMBER_SUFFIX VARCHAR(15),
+	ADDRESS_LINE_1 VARCHAR(55),
+	ADDRESS_LINE_2 VARCHAR(55),
+	ADDRESS_CITY VARCHAR(30),
+	ADDRESS_STATE VARCHAR(2),
+	ADDRESS_ZIP VARCHAR(15),
+	EMAIL_ADDRESS VARCHAR(75),
+	MEMBER_PHONE VARCHAR(50),
+	BIRTH_DATE DATE,
+	MEMBER_GENDER VARCHAR(10),
+	DECEASED VARCHAR(1),
+	MEMBER_LANGUAGE VARCHAR(15),
+	MARITAL_STATUS VARCHAR(1),
+	PREFERRED_METHOD_OF_CONTACT VARCHAR(1),
+	OK_TO_CALL VARCHAR(1),
+	OK_TO_EMAIL VARCHAR(1),
+	OK_TO_MAIL VARCHAR(1),
+	INTERATION_DATE DATE,
+	CELL_ID VARCHAR(10),
+	DISPOSITION_CODE VARCHAR(10),
+	CHANNEL_CODE VARCHAR(32),
+	PRODUCT VARCHAR(4),
+	PROSPECT_SOURCE_CODE VARCHAR(10),
+	SOURCE_CODE VARCHAR(2),
+	SOURCE_SYSTEM_INDIVIDUAL_ID VARCHAR(20),
+	FILLER1_ENTERPRISE_ID VARCHAR(13),
+	MISSING_MEDICARE_PART_A_OR_PART_B VARCHAR(1),
+	ESRD_INDICATOR VARCHAR(1),
+	HOSPICE_INDICATOR VARCHAR(1),
+	INBOUND_PHONE_NUMBER VARCHAR(55),
+	SELF_REPORTED_MEDICAID_FLAG VARCHAR(1),
+	PREVIOUSLY_SSN_PROVIDED_FLAG VARCHAR(1),
+	PREVIOUSLY_SHOPPING_OTHER_PLANS_FLAG VARCHAR(1),
+	INTERNET_ACCESS_FLAG VARCHAR(1),
+	PREVIOUSLY_PHARMACY_NETWORK VARCHAR(15),
+	PREVIOUSLY_LOW_INCOME_FLAG VARCHAR(1),
+	CAREGIVER_CALLING_FLAG VARCHAR(1),
+	MILITARY_COVERAGE_FLAG VARCHAR(1),
+	EMPLOYER_COVERAGE_FLAG VARCHAR(1),
+	PLAN_TYPE_VIEWED VARCHAR(10),
+	INTERACTION_TIME TIME(9),
+	PDP_COMPETITIOR_COVERAGE_FLAG VARCHAR(1),
+	ELIGIBILITY_GPS_GROUP_NUMBER VARCHAR(20),
+	PLAN_EFFECTIVE_DATE DATE,
+	APPLICATION_ID VARCHAR(15),
+	APPLICATION_STATUS VARCHAR(20),
+	PLAN_LINE_OF_BUSINESS_ID VARCHAR(25),
+	APPLICATION_SOURCE_CODE VARCHAR(5),
+	APPLICATION_SOURCE_DESC VARCHAR(25),
+	APPLICATION_RECEIPT_DATE DATE,
+	GPS_PLAN_CODE VARCHAR(3),
+	BROKER_ID VARCHAR(20),
+	CMS_CONTRACT_NUMBER VARCHAR(5),
+	PBP VARCHAR(3),
+	SALES_INITIATIVE VARCHAR(50),
+	APPLICATION_STATUS_DATE DATE,
+	APPLICATION_STATUS_CODE VARCHAR(1),
+	APPLIACTION_STATUS_DESCRIPTION VARCHAR(10),
+	SOURCE_SYSTEM_GENERATED_ID VARCHAR(20),
+	MAILING_ADDRESS_LINE_1 VARCHAR(55),
+	MAILING_ADDRESS_LINE_2 VARCHAR(55),
+	MAILING_CITY VARCHAR(30),
+	MAILING_STATE VARCHAR(2),
+	MIALING_ZIP_CODE VARCHAR(9),
+	OTHER_PHONE VARCHAR(10),
+	PARTY_ID VARCHAR(6),
+	MEDICARE_NUMBER VARCHAR(11),
+	STARS_MEASURE_YEAR VARCHAR(4),
+	STARS_MEASURE_CODE VARCHAR(10),
+	OPPORTUNITY_CREATE_DATE DATE,
+	MEETING_DATE DATE,
+	FUTURE_EFFECTIVE_DATE DATE,
+	GOOGLE_CLICK_IDENTIFIER VARCHAR(100),
+	ADOBE_VISITOR_IDENTIFIER VARCHAR(100),
+	HEALTHPLAN VARCHAR(10),
+	MEDICAID_ID VARCHAR(20),
+	CS_MEASURE_ID VARCHAR(5),
+	CS_SUBMEASURE VARCHAR(100),
+	LOCATION_OF_SERVICE VARCHAR(50),
+	PROVIDER VARCHAR(100),
+	PROVIDER_PHONE_NUMBER VARCHAR(10),
+	PROVIDER_ADDRESS VARCHAR(75),
+	DATE_OF_SERVICE DATE,
+	PHARMACY VARCHAR(50),
+	PHARMACY_PHONE_NUMBER VARCHAR(10),
+	PHARMACY_ADDRESS VARCHAR(75),
+	MEDICATIONS VARCHAR(255),
+	PROCEDURE_TYPE VARCHAR(255),
+	SMS_TEXT VARCHAR(255),
+	INTAKE_ID VARCHAR(10),
+	CMS_SEGMENT_NUMBER VARCHAR(3),
+	SOURCE_SYSTEM_HOUSEHOLD_ID VARCHAR(20),
+	MEDICARE_ELIGIBLE VARCHAR(1),
+	MEDICAID_ELIGIBLE VARCHAR(1),
+	MDP_INDIVIDUAL_ID VARCHAR(38),
+	PROSPECT_PARTIAL_ID_FLAG VARCHAR(1),
+	ADOBE_PARENT_NODE_ID VARCHAR(255),
+	ADOBE_JOURNEY_ID VARCHAR(255),
+	ENTERPRISE_ID VARCHAR(13),
+	ADOBE_INSTANCE_ID VARCHAR(255),
+	CAMPAIGN_EXECUTION_DATE DATE,
+	OBC_PRIOR_EXPRESSED_CONSENT VARCHAR(1),
+	SMS_CONTENT VARCHAR(1),
+	USER_STORY VARCHAR(25),
+	FILE_NAME VARCHAR(250) NOT NULL,
+	FILE_CREATION_DATE DATE NOT NULL,
+	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	constraint PK_EPMP_OUTBOUND_DNC_PRIMARYKEY primary key (EPMP_OUTBOUND_DNC_ID)
+)COMMENT='This table is used to load files from the Omni Archive that are marked as DNC and sent to EPMP.\nIt is created to store  and track the outbound DNC files sent to EPMP.'
+;
+
+Field #	Field Name	Length	"MDP
+Required?"	Edit Rule
+1	First Name	20	Required	
+2	Middle Initial	1	Optional	
+3	Last Name	20	Required	
+4	Suffix	15	Optional	
+5	Address Line 1 (Primary)	40	Required	
+6	Address Line 2 (Primary)	40	Conditional	
+7	City (Primary)	20	Required	
+8	State (Primary)	2	Required	
+9	Zip 5 (Primary)	5	Required	
+10	Email Address	75	Optional	
+11	Phone Number	10	Optional	
+12	Birth Date	8	Required	Must be a valid date in YYYYMMDD format. 
+13	Gender	1	Optional	
+14	Deceased	1	Optional	"D=Deceased
+Y=Deceased
+"
+15	Language	1	Optional	
+16	Marital Status	1	Optional	"D=Divorced, M=Married, O=Other, S=Single, W=Widowed
+"
+17	Preferred Method Of Contact	1	Optional	E=Email, M=Mail, P=Phone
+18	OK to Call	1	Optional	Y/N/null
+19	OK to Email	1	Optional	Y/N/null
+20	OK to Mail	1	Optional	Y/N/null
+21	Interaction Date	8	Required	Must be a valid date in YYYYMMDD format. 
+22	Cell ID	10	Optional	
+23	Disposition Code	10	Required	
+24	Channel Code	32	Required 	Phone = 01 or Web = 82 or SMS Text = 87 or Mail = 84 or Email = 83 or IVR = 34
+25	Product 	4	Required	Default value of M0 (M-zero) = MA-PD
+26	Prospect Source Code	10	Conditional	MNR2865400
+27	Source Code	2	Required	
+28	Source System Individual ID	20	Optional	
+29	Filler 1 - EnterpriseID	13	Optional	
+30	Missing Medicare Part A or Part B	1	Optional	Y/N/U/blank
+31	ESRD Indicator	1	Optional	Y/N/U/blank
+32	Hospice Indicator	1	Optional	Y/N/U/blank
+33	Inbound Phone Number	10	Optional	
+34	Self Reported Medicaid Flag	1	Optional	Y/N/U/blank 
+35	Filler (previously SSN Provided Flag)	1	Optional	
+36	"Filler
+(Previously Shopping Other Plans Flag)"	1	Optional	
+37	Internet Access Flag	1	Optional	Y/N/U/blank
+38	Filler (previously Pharmacy Network)	15	Optional	
+39	"Filler
+(Previously Low Income Flag)"	1	Optional	
+40	Caregiver Calling Flag	1	Optional	Y/N/U/blank
+41	Military Coverage Flag	1	Optional	Y/N/U/blank
+42	Employer Coverage Flag	1	Optional	Y/N/U/blank
+43	Plan Type Viewed	10	Optional	
+44	Interaction Time	8	Required	"Must be a valid time in HH:MM:SS format (where HH is based on a 24 hour clock).  00:00:00 is a valid time.  Interaction Date and Time must be <= sysdate + 26 hours.  For Oracle Use <= sysdate + interval '26'
+1) For Example if sysdate is Feb 13, 2020 02:00pm the rule is Interaction Date Time must be <= Feb 14, 2020 04:00pm 
+
+"
+45	PDP Competitor Coverage Flag	1	Optional	Y/N/U/blank
+46	Eligibility (GPS) Group Number	20	Optional	
+47	Plan Effective Date	8	Optional	
+48	Application ID	15	Optional	
+49	Application Status	20	Optional	
+50	Plan Line of Business ID	25	Optional	
+51	Application Source Code	5	Optional	
+52	Application Source Desc	25	Optional	
+53	Application Receipt Date	8	Optional	
+54	GPS Plan Code	3	Optional	
+55	Broker ID	20	Optional	
+56	CMS Contract Number	5	Conditional	"Value must have a length of 5.
+Must report CMS Contract Number/PBP/CMS Segment Number"
+57	PBP	3	Conditional	"Value must have a length of 3 numeric digits
+Must report CMS Contract Number/PBP/CMS Segment Number"
+58	Sales Initiative	50	Optional	
+59	Application Status Date	8	Optional	
+60	Adjudication Status Code	1	Optional	
+61	Adjudication Status Description	10	Optional	
+62	Source System Generated ID	20	Optional	
+63	Mailing Address Line 1	55	Optional	
+64	Mailing Address Line 2	55	Optional	
+65	Mailing City	30	Optional	
+66	Mailing State	2	Optional	
+67	Mailing Zip Code	9	Optional	
+68	Other Phone	10	Optional	
+69	Party ID	6	Optional	
+70	Medicare Number	12	Optional	
+71	STARS Measure Year	4	Optional	
+72	STARS Measure Code	10	Optional	
+73	Opportunity Create Date	8	Optional	
+74	Meeting Date	8	Optional	
+75	Future Effective Date	8	Optional	
+76	Google Click Identifier	100	Optional	
+77	Adobe Visitor Identifier	100	Optional	
+78	HealthPlan	10	Optional	
+79	MedicaidID	20	Optional	
+80	CS MeasureID	5	Optional	If present, must be 3 numeric digits. CMS Segment Number, CMS Contract Number and PBP number must all be present.
+81	CS SubMeasure	100	Optional	
+82	Location of Service	50	Optional	
+83	Provider	100	Optional	
+84	Provider Phone Number	10	Optional	
+85	Provider Address	75	Optional	
+86	Date of Service	8	Optional	
+87	Pharmacy	50	Optional	
+88	Pharmacy Phone Number	10	Optional	
+89	Pharmacy Address	75	Optional	
+90	Medications	255	Optional	
+91	Procedure Type	255	Optional	
+92	SMS Text	255	Optional	
+93	Intake ID	10	Conditional	
+94	CMS Segment Number	3	Conditional	If present, must be 3 numeric digits. CMS Segment Number, CMS Contract Number and PBP number must all be present.
+95	Source System Household Id	20	Optional	
+96	Medicare Eligible 	1	Optional	
+97	Medicaid Eligible	1	Optional	
+98	MDP Individual ID	38	Optional	"May contain a full mdp_indvdl_id with 36 characters 
+or partial_indvdl_id at 38 characters. "
+99	Prospect Partial ID Flag	1	Optional	May contain values 'Y', 'N', OR NULL
+100	Adobe Parent Node ID 	255	Optional	
+101	Adobe Journey ID	255	Optional	
+102	EnterpriseID	13	Optional	
+103	Adobe Instance ID	255	Optional	
+104	Campaign Execution Date	10	Optional	Must be a valid date in YYYY-MM-DD format
+105	OBC Prior Expressed Consent	1	Optional	Y,N,Null
+106	SMS Consent	1	Optional	Y,N,Null
 
 
-ALTER TABLE my_table 
-  ALTER COLUMN my_id_column 
-  SET DEFAULT my_sequence_name.NEXTVAL;
