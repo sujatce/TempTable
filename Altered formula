@@ -1,118 +1,33 @@
-duplicate MBIs in final view
-SELECT    MBI,    COUNT(*) AS ROW_COUNTFROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAILGROUP BY MBIHAVING COUNT(*) > 1ORDER BY ROW_COUNT DESC, MBI;
-Test 1B: duplicate ENTITY_ID in final view
-SELECT    ENTITY_ID,    COUNT(*) AS ROW_COUNTFROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAILGROUP BY ENTITY_IDHAVING COUNT(*) > 1ORDER BY ROW_COUNT DESC, ENTITY_ID;
-Test 1C: duplicate MEMBER_ID in final view
-SELECT    MEMBER_ID,    COUNT(*) AS ROW_COUNTFROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAILGROUP BY MEMBER_IDHAVING COUNT(*) > 1ORDER BY ROW_COUNT DESC, MEMBER_ID;
-That will tell you whether the final output is truly one row per member or whether duplicates are still sneaking in through joins.
-
-2) Check source-level duplicates before QUALIFY
-This is important because sometimes duplicates are expected in source tables, but your logic should reduce them correctly.
-Test 2A: same MBI with multiple email rows in source
-SELECT    ED.MBI,    COUNT(*) AS ROW_COUNTFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EEINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON EE.ENTITY_ID = ED.ENTITY_IDWHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'GROUP BY ED.MBIHAVING COUNT(*) > 1ORDER BY ROW_COUNT DESC, ED.MBI;
-Test 2B: inspect actual duplicate email rows
-SELECT    ED.MBI,    EE.ENTITY_ID,    EE.EMAILADDRESS,    EE.UPDATEDATE,    EE.EMAIL_INVALID_INDFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EEINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON EE.ENTITY_ID = ED.ENTITY_IDWHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'  AND ED.MBI IN (      SELECT ED2.MBI      FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE2      INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED2          ON EE2.ENTITY_ID = ED2.ENTITY_ID      WHERE UPPER(EE2.EMAIL_INVALID_IND) != 'INVALID'      GROUP BY ED2.MBI      HAVING COUNT(*) > 1  )ORDER BY ED.MBI, EE.UPDATEDATE DESC;
-This helps you prove that your ROW_NUMBER() is resolving those multiple rows correctly.
-
-3) Validate row counts at each stage
-This is one of the best ways to test whether records are being dropped unexpectedly.
-Test 3A: count raw email rows
-SELECT COUNT(*) AS RAW_EMAIL_ROWSFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL;
-Test 3B: count after invalid email filter
-SELECT COUNT(*) AS VALID_EMAIL_ROWSFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAILWHERE UPPER(EMAIL_INVALID_IND) != 'INVALID';
-Test 3C: count after joining demographic
-SELECT COUNT(*) AS AFTER_DEMOGRAPHIC_JOINFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EEINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON EE.ENTITY_ID = ED.ENTITY_IDWHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID';
-Test 3D: count after joining DIM_MEMBER
-SELECT COUNT(*) AS AFTER_DIM_MEMBER_JOINFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EEINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON EE.ENTITY_ID = ED.ENTITY_IDINNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM    ON ED.MBI = DM.MEMBER_MBIWHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID';
-Test 3E: count after joining latest report month
-SELECT COUNT(*) AS AFTER_MRM_JOINFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EEINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON EE.ENTITY_ID = ED.ENTITY_IDINNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM    ON ED.MBI = DM.MEMBER_MBIINNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM    ON DM.MEMBER_ID = MRM.MEMBER_IDWHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'  AND MRM.REPORT_MONTH = (      SELECT MAX(REPORT_MONTH)      FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH  );
-Test 3F: final count from view
-SELECT COUNT(*) AS FINAL_VIEW_COUNTFROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAIL;
-This tells you where records are being reduced.
-
-4) Check whether intended records are missing
-You want to know whether valid source records failed to appear in the view.
-Test 4A: valid source records not making it to the final view
-SELECT    ED.MBI,    EE.ENTITY_ID,    EE.EMAILADDRESS,    EE.UPDATEDATEFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EEINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON EE.ENTITY_ID = ED.ENTITY_IDINNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM    ON ED.MBI = DM.MEMBER_MBIINNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM    ON DM.MEMBER_ID = MRM.MEMBER_IDWHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'  AND MRM.REPORT_MONTH = (      SELECT MAX(REPORT_MONTH)      FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH  )  AND NOT EXISTS (      SELECT 1      FROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAIL V      WHERE V.MBI = ED.MBI  )ORDER BY ED.MBI;
-If this returns rows, then something expected did not make it into the view.
-
-5) Check whether the “latest updated email” was actually chosen
-Because your business rule is: keep the most recent email per MBI.
-Test 5A: compare final view email date to source max update date
-SELECT    V.MBI,    V.MEMBER_EMAIL,    V.EMAIL_UPDATE_DATE,    S.MAX_UPDATE_DATEFROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAIL VINNER JOIN (    SELECT        ED.MBI,        MAX(EE.UPDATEDATE) AS MAX_UPDATE_DATE    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED        ON EE.ENTITY_ID = ED.ENTITY_ID    WHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'    GROUP BY ED.MBI) S    ON V.MBI = S.MBIWHERE V.EMAIL_UPDATE_DATE != S.MAX_UPDATE_DATEORDER BY V.MBI;
-If rows come back, then your selected record may not be the most recent one.
-
-6) Check for nulls in key columns
-These columns should likely not be null in final output.
-SELECT    SUM(CASE WHEN REPORT_MONTH IS NULL THEN 1 ELSE 0 END) AS NULL_REPORT_MONTH,    SUM(CASE WHEN ENTITY_ID IS NULL THEN 1 ELSE 0 END) AS NULL_ENTITY_ID,    SUM(CASE WHEN MBI IS NULL THEN 1 ELSE 0 END) AS NULL_MBI,    SUM(CASE WHEN MEMBER_ID IS NULL THEN 1 ELSE 0 END) AS NULL_MEMBER_ID,    SUM(CASE WHEN GMPI_ID IS NULL THEN 1 ELSE 0 END) AS NULL_GMPI_ID,    SUM(CASE WHEN MEMBER_EMAIL IS NULL THEN 1 ELSE 0 END) AS NULL_MEMBER_EMAIL,    SUM(CASE WHEN EMAIL_UPDATE_DATE IS NULL THEN 1 ELSE 0 END) AS NULL_EMAIL_UPDATE_DATEFROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAIL;
-
-7) Check whether emails marked invalid accidentally came through
-SELECT    V.*FROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAIL VINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON V.MBI = ED.MBIINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE    ON ED.ENTITY_ID = EE.ENTITY_ID   AND V.MEMBER_EMAIL = EE.EMAILADDRESSWHERE UPPER(EE.EMAIL_INVALID_IND) = 'INVALID';
-This should ideally return 0 rows.
-
-8) Important thing to review in your query
-Right now your ROW_NUMBER() is partitioned by:
-PARTITION BY ED.MBI
-That means you are keeping one row per MBI.
-That is okay only if business wants one email per MBI.
-But if business wants:
-
-
-one email per ENTITY_ID, or
-
-
-one email per MEMBER_ID, or
-
-
-all valid emails per member,
-
-
-then this logic may be too aggressive.
-So one validation question is:
-Test 8A: members having multiple distinct valid emails
-SELECT    ED.MBI,    COUNT(DISTINCT EE.EMAILADDRESS) AS DISTINCT_EMAIL_COUNTFROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EEINNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED    ON EE.ENTITY_ID = ED.ENTITY_IDWHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'GROUP BY ED.MBIHAVING COUNT(DISTINCT EE.EMAILADDRESS) > 1ORDER BY DISTINCT_EMAIL_COUNT DESC, ED.MBI;
-If this returns rows, then you should confirm whether keeping only the latest one is correct.
-
-Best simple testing order
-If you want a clean testing sequence, do this:
-Step 1
-Run final count:
-SELECT COUNT(*) FROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAIL;
-Step 2
-Run duplicate test on MBI:
-SELECT MBI, COUNT(*)FROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAILGROUP BY MBIHAVING COUNT(*) > 1;
-Step 3
-Run null check.
-Step 4
-Run source-vs-view count comparison.
-Step 5
-Run “latest update chosen” test.
-Step 6
-Inspect 10–20 sample members manually.
-Example:
-SELECT *FROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_EMAILORDER BY EMAIL_UPDATE_DATE DESCLIMIT 20;
-
-One more thing: your query wording vs filter
-Your view comment says:
-
-member has not requested a Do Not Email flag be set
-
-But your SQL currently only filters:
-UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'
-I do not see any DO_NOT_EMAIL filter in the query.
-So during testing, you should verify whether:
-
-
-this is intentional, or
-
-
-you still need to add that suppression condition.
-
-
-That is a very important mismatch to review.
-
-Here is a short note you can tell your teammate or manager:
-
-I created the view and now I’m validating it by checking for duplicates in the final output, comparing row counts across each join stage, verifying nulls in key columns, and confirming that the latest valid email per MBI is the one retained. I also want to confirm whether the Do Not Email suppression needs to be included, since the current SQL only filters invalid emails.
-
-I can also give you a single full SQL test script with all these validations in one place, neatly organized section by section.
+create or replace view ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAIL(
+	REPORT_MONTH COMMENT 'Month of the member empanelment in BI Analysis MRM stored in YYYY-MM-DD format',
+	ENTITY_ID COMMENT 'A unique number used by the enterprise to identify an individual person',
+	MBI COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
+	MEMBER_ID COMMENT 'WellMed BI Analysis DIM_MEMBER unique MEMBER_ID',
+	GMPI_ID COMMENT 'WellMed unique member identifier',
+	MEMBER_LAST_NAME COMMENT 'Last name of the member enrolled in the health plan',
+	MEMBER_FIRST_NAME COMMENT 'First name of the member enrolled in the health plan',
+	MEMBER_EMAIL COMMENT 'Member Email Address',
+    EMAIL_STATUS COMMENT 'Member Email Status which says Valid or Invalid'
+	EMAIL_UPDATE_DATE COMMENT 'Date recording when the email address was last updated'
+) COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences.  This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements.  This view is limited to South Region WellMed membership with a valid email address where the member has not requested a Do Not Email flag be set, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.'
+as
+SELECT DISTINCT 
+    MRM.REPORT_MONTH,
+    EE.ENTITY_ID,
+    DM.MEMBER_MBI AS MBI,
+    DM.MEMBER_ID,
+    DM.GMPI_ID,
+    MRM.MEMBER_LAST_NAME,
+    MRM.MEMBER_FIRST_NAME,
+    EE.EMAILADDRESS AS MEMBER_EMAIL,
+    EE.UPDATEDATE AS EMAIL_UPDATE_DATE
+FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
+INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
+    ON EE.ENTITY_ID = ED.ENTITY_ID
+INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
+    ON ED.MBI = DM.MEMBER_MBI
+INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
+    ON DM.MEMBER_ID = MRM.MEMBER_ID
+WHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'
+  AND MRM.REPORT_MONTH = (SELECT MAX(REPORT_MONTH) FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH)
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY ED.MBI ORDER BY EE.UPDATEDATE DESC) = 1;
