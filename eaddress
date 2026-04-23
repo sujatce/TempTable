@@ -1,36 +1,15 @@
-create or replace view ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAIL(
-	REPORT_MONTH COMMENT 'Month of the member empanelment in BI Analysis MRM stored in YYYY-MM-DD format',
-	ENTITY_ID COMMENT 'A unique number used by the enterprise to identify an individual person',
-	MBI COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
-	MEMBER_ID COMMENT 'WellMed BI Analysis DIM_MEMBER unique MEMBER_ID',
-	GMPI_ID COMMENT 'WellMed unique member identifier',
-	MEMBER_LAST_NAME COMMENT 'Last name of the member enrolled in the health plan',
-	MEMBER_FIRST_NAME COMMENT 'First name of the member enrolled in the health plan',
-	MEMBER_EMAIL COMMENT 'Member Email Address',
-    EMAIL_STATUS COMMENT 'Member Email Status shows validity of the member email address(VALID or INVALID)',
-	EMAIL_UPDATE_DATE COMMENT 'Date recording when the email address was last updated'
-) COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences.  This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements.  This view is limited to South Region WellMed membership with a valid email address where the member has not requested a Do Not Email flag be set, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.'
-as
-SELECT DISTINCT 
-    MRM.REPORT_MONTH,
-    EE.ENTITY_ID,
-    DM.MEMBER_MBI AS MBI,
-    DM.MEMBER_ID,
-    DM.GMPI_ID,
-    MRM.MEMBER_LAST_NAME,
-    MRM.MEMBER_FIRST_NAME,
-    EE.EMAILADDRESS AS MEMBER_EMAIL,
-    CASE 
-        WHEN UPPER(EE.EMAIL_INVALID_IND)='INVALID' THEN 'INVALID'
-        ELSE UPPER(EE.EMAIL_INVALID_IND)='VALID' THEN 'VALID'
-    END AS EMAIL_STATUS,
-    EE.UPDATEDATE AS EMAIL_UPDATE_DATE
-FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
-INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
-    ON EE.ENTITY_ID = ED.ENTITY_ID
-INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
-    ON ED.MBI = DM.MEMBER_MBI
-INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
-    ON DM.MEMBER_ID = MRM.MEMBER_ID
-WHERE MRM.REPORT_MONTH = (SELECT MAX(REPORT_MONTH) FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH)
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY ED.MBI ORDER BY EE.UPDATEDATE DESC) = 1;
+select [ORCHESTRATION].[dbo].[SMS_OPT_IN].[SMS_OPT_IN_RAW_ID],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[GMPI_ID],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_LAST_NAME],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_FIRST_NAME],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MBI],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_ADDRESS_1],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_CITY],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_STATE],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_ZIP],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_PHONE],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[MEMBER_EMAIL],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[SMS_CONSENT],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[SMS_CONSENT_DATE],
+	[ORCHESTRATION].[dbo].[SMS_OPT_IN].[CONSENT_TERMS] 
+from [ORCHESTRATION].[dbo].[SMS_OPT_IN]
