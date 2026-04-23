@@ -1,131 +1,36 @@
-First thing to check
+Next check: compare row counts first
+Run these two:
+SELECT COUNT(*) AS VIEW_COUNTFROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAIL;
+SELECT COUNT(*) AS EXPECTED_COUNTFROM (    SELECT        ED.MBI,        CASE            WHEN UPPER(EE.EMAIL_INVALID_IND) = 'INVALID' THEN 'INVALID'            ELSE 'VALID'        END AS EMAIL_STATUS,        ROW_NUMBER() OVER (            PARTITION BY ED.MBI            ORDER BY EE.UPDATEDATE DESC        ) AS RN    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED        ON EE.ENTITY_ID = ED.ENTITY_ID    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM        ON ED.MBI = DM.MEMBER_MBI    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM        ON DM.MEMBER_ID = MRM.MEMBER_ID    WHERE MRM.REPORT_MONTH = (        SELECT MAX(REPORT_MONTH)        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH    )    QUALIFY ROW_NUMBER() OVER (        PARTITION BY ED.MBI        ORDER BY EE.UPDATEDATE DESC    ) = 1) X;
+If total counts are the same, then it is a classification issue somewhere subtle.
+If total counts differ, then it is definitely a missing/extra row issue.
+Better comparison: FULL OUTER JOIN
+This will show if one side has an extra row or missing row.
+WITH EXPECTED AS (    SELECT        ED.MBI,        CASE            WHEN UPPER(EE.EMAIL_INVALID_IND) = 'INVALID' THEN 'INVALID'            ELSE 'VALID'        END AS EMAIL_STATUS    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED        ON EE.ENTITY_ID = ED.ENTITY_ID    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM        ON ED.MBI = DM.MEMBER_MBI    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM        ON DM.MEMBER_ID = MRM.MEMBER_ID    WHERE MRM.REPORT_MONTH = (        SELECT MAX(REPORT_MONTH)        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH    )    QUALIFY ROW_NUMBER() OVER (        PARTITION BY ED.MBI        ORDER BY EE.UPDATEDATE DESC    ) = 1)SELECT    COALESCE(E.MBI, V.MBI) AS MBI,    E.EMAIL_STATUS AS EXPECTED_STATUS,    V.EMAIL_STATUS AS VIEW_STATUS,    CASE        WHEN E.MBI IS NULL THEN 'ONLY_IN_VIEW'        WHEN V.MBI IS NULL THEN 'ONLY_IN_EXPECTED'        WHEN E.EMAIL_STATUS <> V.EMAIL_STATUS THEN 'STATUS_MISMATCH'        ELSE 'MATCH'    END AS COMPARISON_RESULTFROM EXPECTED EFULL OUTER JOIN ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAIL V    ON E.MBI = V.MBIWHERE E.MBI IS NULL   OR V.MBI IS NULL   OR E.EMAIL_STATUS <> V.EMAIL_STATUS;
+This is the most important next query.
+Also check duplicates in the new view
+Since the view changed, re-check duplicates on the current version:
+SELECT    MBI,    COUNT(*) AS ROW_COUNTFROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAILGROUP BY MBIHAVING COUNT(*) > 1;
+And also:
+SELECT    EMAIL_STATUS,    COUNT(*) AS ROW_COUNTFROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAILGROUP BY EMAIL_STATUS;
+Check for NULL MBI
+This is another possible cause, because PARTITION BY ED.MBI groups all NULL MBIs together.
+SELECT COUNT(*) AS NULL_MBI_COUNTFROM ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAILWHERE MBI IS NULL;
+And in expected:
+SELECT COUNT(*) AS NULL_MBI_COUNTFROM (    SELECT        ED.MBI,        CASE            WHEN UPPER(EE.EMAIL_INVALID_IND) = 'INVALID' THEN 'INVALID'            ELSE 'VALID'        END AS EMAIL_STATUS    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED        ON EE.ENTITY_ID = ED.ENTITY_ID    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM        ON ED.MBI = DM.MEMBER_MBI    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM        ON DM.MEMBER_ID = MRM.MEMBER_ID    WHERE MRM.REPORT_MONTH = (        SELECT MAX(REPORT_MONTH)        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH    )    QUALIFY ROW_NUMBER() OVER (        PARTITION BY ED.MBI        ORDER BY EE.UPDATEDATE DESC    ) = 1) XWHERE MBI IS NULL;
+One more thing I notice in your view DDL
+In your earlier view SQL, you had:
+SELECT DISTINCT ...QUALIFY ROW_NUMBER() OVER (...) = 1
+DISTINCT is usually unnecessary here. It may not be the cause, but for clean validation I would remove DISTINCT and rely only on QUALIFY ROW_NUMBER().
+What I think is most likely
+Because the mismatch-by-MBI query returned nothing, the most likely scenario is:
 
-Run this to find MBIs where multiple rows share the same latest update date:
 
-WITH BASE AS (
-    SELECT
-        ED.MBI,
-        EE.EMAILADDRESS,
-        UPPER(EE.EMAIL_INVALID_IND) AS EMAIL_INVALID_IND,
-        EE.UPDATEDATE
-    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
-    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
-        ON EE.ENTITY_ID = ED.ENTITY_ID
-    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
-        ON ED.MBI = DM.MEMBER_MBI
-    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
-        ON DM.MEMBER_ID = MRM.MEMBER_ID
-    WHERE MRM.REPORT_MONTH = (
-        SELECT MAX(REPORT_MONTH)
-        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
-    )
-),
-MAX_DATES AS (
-    SELECT
-        MBI,
-        MAX(UPDATEDATE) AS MAX_UPDATEDATE
-    FROM BASE
-    GROUP BY MBI
-)
-SELECT
-    B.MBI,
-    B.UPDATEDATE,
-    COUNT(*) AS ROW_COUNT,
-    COUNT(DISTINCT B.EMAIL_INVALID_IND) AS DISTINCT_STATUS_COUNT
-FROM BASE B
-INNER JOIN MAX_DATES M
-    ON B.MBI = M.MBI
-   AND B.UPDATEDATE = M.MAX_UPDATEDATE
-GROUP BY B.MBI, B.UPDATEDATE
-HAVING COUNT(*) > 1
-ORDER BY ROW_COUNT DESC, B.MBI;
+one MBI exists only in the view or only in expected
 
-If this returns rows, then you have tied latest records.
 
-Next, find the specific MBI that is causing the 1-row mismatch
+not a status mismatch for the same MBI
 
-Run this:
 
-WITH EXPECTED AS (
-    SELECT
-        ED.MBI,
-        CASE
-            WHEN UPPER(EE.EMAIL_INVALID_IND) = 'INVALID' THEN 'INVALID'
-            ELSE 'VALID'
-        END AS EMAIL_STATUS,
-        ROW_NUMBER() OVER (
-            PARTITION BY ED.MBI
-            ORDER BY EE.UPDATEDATE DESC
-        ) AS RN
-    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
-    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
-        ON EE.ENTITY_ID = ED.ENTITY_ID
-    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
-        ON ED.MBI = DM.MEMBER_MBI
-    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
-        ON DM.MEMBER_ID = MRM.MEMBER_ID
-    WHERE MRM.REPORT_MONTH = (
-        SELECT MAX(REPORT_MONTH)
-        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
-    )
-)
-SELECT
-    E.MBI,
-    E.EMAIL_STATUS AS EXPECTED_STATUS,
-    V.EMAIL_STATUS AS VIEW_STATUS
-FROM EXPECTED E
-INNER JOIN ASQN_PRD_MIGRATION_DB.DBO.VW_WM_UHC_MBR_EMAIL V
-    ON E.MBI = V.MBI
-WHERE E.RN = 1
-  AND E.EMAIL_STATUS <> V.EMAIL_STATUS;
-
-This should ideally show the one mismatched MBI.
-
-Then inspect that MBI fully
-
-After you get the MBI, run:
-
-SELECT
-    ED.MBI,
-    EE.ENTITY_ID,
-    EE.EMAILADDRESS,
-    UPPER(EE.EMAIL_INVALID_IND) AS EMAIL_INVALID_IND,
-    EE.UPDATEDATE
-FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
-INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
-    ON EE.ENTITY_ID = ED.ENTITY_ID
-WHERE ED.MBI = '<PUT_MBI_HERE>'
-ORDER BY EE.UPDATEDATE DESC, EE.EMAILADDRESS;
-Best fix
-
-Make the row selection deterministic by adding a tie-breaker in both the view and the validation query.
-
-For example:
-
-ROW_NUMBER() OVER (
-    PARTITION BY ED.MBI
-    ORDER BY 
-        EE.UPDATEDATE DESC,
-        CASE WHEN UPPER(EE.EMAIL_INVALID_IND) = 'INVALID' THEN 1 ELSE 0 END ASC,
-        EE.EMAILADDRESS
-)
-
-That does this:
-
-latest update date first
-if tied, prefer VALID over INVALID
-if still tied, sort by email address
-
-If you want to prefer INVALID instead, flip that CASE ordering.
-
-Important note about your view
-
-Your view has SELECT DISTINCT plus ROW_NUMBER(). Usually DISTINCT is not needed here, because ROW_NUMBER() ... QUALIFY = 1 already keeps one row per partition. It usually does not cause this exact issue, but removing unnecessary DISTINCT can make debugging easier.
-
-What to tell your manager
-
-You can say:
-
-I validated the view against the source logic and found only a 1-record status difference. It looks like there is a tie on the latest update date for one member, so Snowflake is picking different rows unless we add a tie-breaker in the row_number ordering. I’m checking that member now and can make the selection deterministic.
-
-Send me the mismatch query result if you want, and I’ll help you write the exact final ROW_NUMBER() logic.
+So the FULL OUTER JOIN query above should find it.
+After you run that, paste the result, and I’ll tell you exactly what the issue is.
