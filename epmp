@@ -1,0 +1,354 @@
+import asyncio
+import aiohttp
+import json
+import os
+import logging
+import argparse
+from tqdm import tqdm
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from colorlog import ColoredFormatter
+import time
+import csv  # For writing summary CSV
+import math
+
+
+
+# === PRODUCTION Config ===
+API_URL = "https://gateway.optum.com/api/cel/epmp/preferences/v2/search"
+INPUT_FILE = "MBI_20260424.txt"
+OUTPUT_DIR = "output_chunks"
+CHUNK_SIZE = 100000
+MAX_CONCURRENT_REQUESTS = 21
+RETRY_LIMIT = 3
+OAUTH_TOKEN_URL = "https://gateway.optum.com/auth/oauth2/cached/token"                                                                                            
+CLIENT_ID = "rLP24MaePG4AQ3dzfQsM1CDAh6zEoFDK" 
+CLIENT_SECRET = "YaBV32hxFnkrUlQDK4HbpMJWasxIC0y24Uw"
+CHECKPOINT_FILE = "checkpoint.json"  # Checkpoint file to track progress
+
+
+# === Logging Setup ===
+
+os.makedirs("logs", exist_ok=True)
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+log_filename = f"logs/run_{timestamp}.log"
+
+log_formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+color_formatter = ColoredFormatter(
+    "%(log_color)s%(asctime)s [%(levelname)s] %(message)s",
+    log_colors={
+        "DEBUG": "cyan",
+        "INFO": "green",
+        "WARNING": "yellow",
+        "ERROR": "red",
+        "CRITICAL": "bold_red"
+    }
+)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+file_handler = RotatingFileHandler(log_filename, maxBytes=5 * 1024 * 1024, backupCount=3)
+file_handler.setFormatter(log_formatter)
+logger.addHandler(file_handler)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(color_formatter)
+logger.addHandler(console_handler)
+
+# === Ensure output directory exists ===
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+# === CSV Summary Writer ===
+def write_epmp_summary_log_csv(
+    total_input, success_count, error_404_count, other_error_count,
+    start_time, end_time, processing_time_sec, input_file=INPUT_FILE
+):
+    import os
+    import csv
+    from datetime import datetime
+
+    # 🚫 Don't log if nothing was processed
+    if success_count + error_404_count + other_error_count == 0:
+        return
+
+    total_errors = error_404_count + other_error_count
+    total_processed = success_count + total_errors
+
+    input_filename = os.path.basename(input_file)
+    run_timestamp = "'" + start_time.strftime("%Y-%m-%d %H:%M:%S.000")
+
+    run_type = "Error Run" if "error" in input_filename.lower() else "Full Run"
+
+    current_date = start_time.strftime('%Y%m%d')
+    output_path = f"EPMP_LOG_{current_date}.csv"
+    file_name = os.path.basename(output_path)
+    file_creation_date = "'" + start_time.strftime("%Y-%m-%d")
+
+    row = {
+        "RUN_INPUT_FILE_NAME": input_filename,
+        "RUN_TIMESTAMP": run_timestamp,
+        "RUN_TYPE": run_type,
+        "INPUT_MBI": total_input,
+        "SUCCESS_RECORDS": success_count,
+        "ERROR_RECORDS": total_errors,
+        "RECORDS_404_ERRORS": error_404_count,
+        "RECORDS_OTHER_ERRORS": other_error_count,
+        "RECORDS_PROCESSED": total_processed,
+        "PROCESSING_TIME_SEC": processing_time_sec,
+        "FILE_NAME": file_name,
+        "FILE_CREATION_DATE": file_creation_date
+    }
+
+    row_upper = {
+        k: (v.upper() if isinstance(v, str) and k not in ["RUN_INPUT_FILE_NAME", "FILE_NAME"] else v)
+        for k, v in row.items()
+    }
+
+    headers = list(row_upper.keys())
+    file_exists = os.path.isfile(output_path)
+    write_header = not file_exists or os.stat(output_path).st_size == 0
+
+    with open(output_path, mode='a', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=headers, delimiter=',')
+        if write_header:
+            writer.writeheader()
+        writer.writerow(row_upper)
+
+
+
+
+# === Get access token ===
+
+async def get_access_token():
+    async with aiohttp.ClientSession() as session:
+        payload = {
+            "grant_type": "client_credentials",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+        }
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        async with session.post(OAUTH_TOKEN_URL, data=payload, headers=headers) as resp:
+            if resp.status == 200:
+                token_data = await resp.json()
+                return token_data["access_token"]
+            else:
+                raise Exception(f"Failed to get token: {resp.status}, {await resp.text()}")
+
+class TokenManager:
+    def __init__(self):
+        self._token = None
+        self._lock = asyncio.Lock()
+
+    async def get_token(self):
+        async with self._lock:
+            if not self._token:
+                self._token = await get_access_token()
+            return self._token
+
+    async def refresh_token(self):
+        async with self._lock:
+            self._token = await get_access_token()
+            return self._token
+
+    async def __call__(self):
+        return await self.get_token()
+
+# === Async fetch function ===
+
+async def fetch_data(session, sem, id_, token_getter, chunk_index):
+    url = API_URL
+    payload = {
+        "idType": "MBI",
+        "idvalue": id_,
+        "preferenceCategory": "Do_Not_FamilyOfPreferences"
+    }
+
+    async with sem:
+        for attempt in range(RETRY_LIMIT + 1):
+            token = await token_getter()
+            headers = {
+                "Content-Type": "application/json",
+                "Actor": "WELL_MED",
+                "userID": "WELL_MED",
+                "Authorization": f"Bearer {token}",
+                "userType": "Application",
+                "includeContact": "True"
+            }
+
+            try:
+                async with session.post(url, headers=headers, json=payload, timeout=10) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return {"id": id_, "data": data}
+                    elif resp.status == 404:
+                        error_file = os.path.join(OUTPUT_DIR, f"output_{chunk_index}_404.json")
+                        with open(error_file, "a") as f:
+                            json.dump({"id": id_, "response": await resp.json()}, f, indent=2)
+                            f.write("\n")
+                        return {"id": id_, "error": "404 Not Found"}
+                    elif resp.status == 401 and attempt < RETRY_LIMIT:
+                        error_response = await resp.json()
+                        if error_response.get("error") == "invalid_token":
+                            logger.warning(f"[{id_}] Unauthorized, refreshing token...")
+                            await token_getter.refresh_token()
+                            continue
+                        else:
+                            text = await resp.text()
+                            error_file = os.path.join(OUTPUT_DIR, f"output_{chunk_index}_otherErrors.json")
+                            with open(error_file, "a") as f:
+                                json.dump({"id": id_, "response": await resp.json()}, f, indent=2)
+                                f.write("\n")
+                            logger.error(f"[{id_}] HTTP {resp.status} - {text}")
+                        break
+                    else:
+                        text = await resp.text()
+                        error_file = os.path.join(OUTPUT_DIR, f"output_{chunk_index}_otherErrors.json")
+                        with open(error_file, "a") as f:
+                            json.dump({"id": id_, "response": await resp.json()}, f, indent=2)
+                            f.write("\n")
+                        logger.error(f"[{id_}] HTTP {resp.status} - {text}")
+                        break
+            except Exception as e:
+                logger.error(f"[{id_}] Error on attempt {attempt + 1}: {e}")
+            await asyncio.sleep(1)
+
+        return {"id": id_, "error": "Failed after retries"}
+
+# === Process a chunk ===
+
+async def process_chunk(ids, chunk_index, token_getter, metrics):
+    start_time = time.time()
+    sem = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_data(session, sem, id_, token_getter, chunk_index) for id_ in ids]
+        results = []
+        for future in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc=f"Chunk {chunk_index}"):
+            result = await future
+            results.append(result)
+
+    output_file = os.path.join(OUTPUT_DIR, f"output_{chunk_index}.json")
+    success = [r for r in results if "data" in r]
+    if success:
+        with open(output_file, "w") as f:
+            json.dump(success, f, indent=2)
+        logger.info(f"[Chunk {chunk_index}] Saved {len(success)} results to {output_file}")
+    metrics['total_success'] += len(success)
+
+    errors = [r for r in results if "error" in r]
+    if errors:
+        error_file = os.path.join(OUTPUT_DIR, f"errors_{chunk_index}.json")
+        with open(error_file, "w") as f:
+            json.dump(errors, f, indent=2)
+        logger.warning(f"[Chunk {chunk_index}] {len(errors)} failed results saved to {error_file}")
+    metrics['total_errors'] += len(errors)
+
+    for err in errors:
+        if err['error'] == '404 Not Found':
+            metrics['total_404'] += 1
+        elif err['error'] == 'Failed after retries':
+            metrics['total_other_errors'] += 1
+
+    errored_ids = [r["id"] for r in errors]
+    if errored_ids:
+        error_records_file = os.path.join(OUTPUT_DIR, f"error_records_{chunk_index}.json")
+        with open(error_records_file, "a") as f:
+            json.dump(errored_ids, f)
+            f.write("\n")
+        logger.warning(f"[Chunk {chunk_index}] {len(errored_ids)} failed records saved to {error_records_file}")
+    metrics['total_errored_ids'] += len(errored_ids)
+
+    end_time = time.time()
+    chunk_time = end_time - start_time
+    logger.info(f"[Chunk {chunk_index}] Processing time: {chunk_time:.2f} seconds")
+
+    return chunk_time
+
+# === Load IDs from file ===
+
+def load_ids(file_path):
+    with open(file_path, "r") as f:
+        return [line.strip() for line in f if line.strip()]
+
+# === Load Checkpoint ===
+
+def load_checkpoint():
+    if os.path.exists(CHECKPOINT_FILE):
+        with open(CHECKPOINT_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+# === Save Checkpoint ===
+
+def save_checkpoint(last_processed_chunk):
+    with open(CHECKPOINT_FILE, "w") as f:
+        json.dump({"last_processed_chunk": last_processed_chunk}, f)
+
+# === Main processing function ===
+
+async def main(force=False):
+    start_time = datetime.now()
+
+    all_ids = load_ids(INPUT_FILE)
+    total_records = len(all_ids)
+    total_chunks = (total_records + CHUNK_SIZE - 1) // CHUNK_SIZE
+    checkpoint = load_checkpoint()
+    last_processed_chunk = checkpoint.get("last_processed_chunk", -1)
+
+    token_manager = TokenManager()
+    await token_manager.refresh_token()
+
+    total_time = 0
+
+    metrics = {
+        'total_success': 0,
+        'total_404': 0,
+        'total_other_errors': 0,
+        'total_errors': 0,
+        'total_errored_ids': 0,
+    }
+
+    for i in range(last_processed_chunk + 1, total_chunks):
+        output_file = os.path.join(OUTPUT_DIR, f"output_{i + 1}.json")
+        if not force and os.path.exists(output_file):
+            logger.info(f"[Chunk {i + 1}] Skipped (already exists)")
+            continue
+
+        chunk = all_ids[i * CHUNK_SIZE: (i + 1) * CHUNK_SIZE]
+        logger.info(f"[Chunk {i + 1}] Processing {len(chunk)} records...")
+        chunk_time = await process_chunk(chunk, i + 1, token_manager, metrics)
+        total_time += chunk_time
+        save_checkpoint(i)
+        await asyncio.sleep(2)
+    end_time = datetime.now()
+
+    logger.info("=== Processing Summary ===")
+    logger.info(f"Total input records              : {total_records}")
+    logger.info(f"Total successful responses       : {metrics['total_success']}")
+    logger.info(f"Total 404 errors                 : {metrics['total_404']}")
+    logger.info(f"Total other errors               : {metrics['total_other_errors']}")
+    logger.info(f"Total errored records            : {metrics['total_errored_ids']}")
+    logger.info(f"Total processed (success+errors) : {metrics['total_success'] + metrics['total_errors']}")
+    logger.info(f"Total processing time            : {total_time:.2f} seconds")
+
+    processing_time_sec = math.ceil(total_time)
+
+    write_epmp_summary_log_csv(
+        total_input=total_records,
+        success_count=metrics['total_success'],
+        error_404_count=metrics['total_404'],
+        other_error_count=metrics['total_other_errors'],
+        start_time=start_time,
+        end_time=end_time,
+        processing_time_sec=processing_time_sec
+    )
+# === Entry point ===
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process MBI chunks with API calls.")
+    parser.add_argument("--force", action="store_true", help="Force reprocessing of all chunks")
+    args = parser.parse_args()
+
+    asyncio.run(main(force=args.force))
