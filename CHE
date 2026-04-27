@@ -43,3 +43,7 @@ WHERE mrm.REPORT_MONTH = '2025-01-01'   -- January
   -- phone match (cleaned)
   AND REGEXP_REPLACE(i.MEMBER_PHONE, '[^0-9]', '') =
       REGEXP_REPLACE(dma.MEMBER_PHONE, '[^0-9]', '');
+
+
+
+can you print the report month with this 
