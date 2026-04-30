@@ -1,21 +1,8 @@
-1. Add this right after:
-st.title(":orange[Cfg View Control]")
-st.subheader(":blue[Search for Program or View]")
+IF NOTHING WAS CHANGED AND I CLICK THE UPDATE BUTTON WHY I GET THESE MESSAGES
 
-Add:
 
-if "success_message" in st.session_state:
-    st.success(st.session_state["success_message"])
-    del st.session_state["success_message"]
-2. Replace this line:
-st.success(f"{result.rows_updated} record(s) successfully updated in CFG_VW_CONTROL table..")
+No rows were changed.
 
-With this:
+Error applying updates: name 'changed_df' is not defined
 
-st.session_state["success_message"] = f"{result.rows_updated} record(s) successfully updated in CFG_VW_CONTROL table."
-
-Keep this line as-is:
-
-st.rerun()
-
-That’s it. The success message will now show after rerun and stay visible.
+WHY THE ERROR APPLYING UPDATES COMES ?
