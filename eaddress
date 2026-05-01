@@ -1,16 +1,86 @@
+create or replace TABLE ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_REVOCATIONS (
+	REVOCATIONS_ID NUMBER(38,0) NOT NULL DEFAULT ASQN_PRD_ORCHESTRATION_DB.DBO.CAMPAIGN_REVOCATIONS_SEQ.NEXTVAL,
+	OMNI_RECORD_ID NUMBER(38,0) NOT NULL,
+	GMPI_ID NUMBER(38,0) NOT NULL,
+	OMNI_CONTACT_INFO NUMBER(38,0) NOT NULL,
+	MEMBER_FIRST_NAME VARCHAR(60),
+	MEMBER_LAST_NAME VARCHAR(50),
+	MEMBER_DATE_OF_BIRTH VARCHAR(10),
+	CALLING_LIST VARCHAR(255),
+	OMNI_CMPGN_DESC VARCHAR(255),
+	OMNI_CMPGN_DESC2 VARCHAR(255),
+	OMNI_CMPGN_DESC3 VARCHAR(255),
+	OMNI_LOAD_DATE TIMESTAMP_NTZ(7),
+	SOURCE_TABLE_NAME VARCHAR(255),
+	SOURCE_TABLE_ID VARCHAR(255),
+	REVOC_RSN VARCHAR(255),
+	RSN_STATUS_DATE DATE NOT NULL,
+	FILE_NAME VARCHAR(255) NOT NULL,
+	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	constraint PK_REVOCATIONS_ID_PRIMARYKEY primary key (REVOCATIONS_ID)
+);
+
+its a pretty simple view  created from campaign revocation table  
+ 
+it should have all columns except the insert user, date and update user  
+ 
+i added description that Elizabeth and Kaleigh provided  
+ 
+The table  has 22 rows and the view also has 22 rows  
+
+Please code review this view 
+
+
+create or replace secure view ASQN_DEV_ORCHESTRATION_DB.ACCESS.VW_CAMPAIGN_REVOCATIONS(
+	REVOCATIONS_ID COMMENT 'Table Primary Key.',
+	OMNI_RECORD_ID COMMENT 'Unique identifier assigned to the record within the vendor dialing system.',
+	GMPI_ID COMMENT 'WellMed unique member identifier.',
+	OMNI_CONTACT_INFO COMMENT 'Member Phone Number associated with the outreach.',
+	MEMBER_FIRST_NAME COMMENT 'First name of the member enrolled in the health plan.',
+	MEMBER_LAST_NAME COMMENT 'Last name of the member enrolled in the health plan.',
+	MEMBER_DATE_OF_BIRTH COMMENT 'Date of birth of the member enrolled in the health plan.',
+	CALLING_LIST COMMENT 'Name of the source outreach file or calling list provided to the vendor.',
+	OMNI_CMPGN_DESC COMMENT 'Description of the campaign associated with the outreach record.',
+	OMNI_CMPGN_DESC2 COMMENT 'Description of the dialer name associated with the outreach record.',
+	OMNI_CMPGN_DESC3 COMMENT 'Description of the program name and/or member type associated with the outreach record.',
+	OMNI_LOAD_DATE COMMENT 'Date the Campaign was provided with the member list.',
+	SOURCE_TABLE_NAME COMMENT 'Target layer table source of the data for traceability.',
+	SOURCE_TABLE_ID COMMENT 'Foreign key of the source for traceability.',
+	REVOC_RSN COMMENT 'Reason for revocation code.',
+	RSN_STATUS_DATE COMMENT 'Timestamp recording of revocation code.',
+	FILE_NAME COMMENT 'Name of the file tied to the record.',
+	UPDATE_DATE COMMENT 'Timestamp recording when the row was last updated.'
+) COMMENT='This view provides a history of South Region Campaign Revocation Files auto-generated on in-flight campaigns when compared to new member DNC preference requests under the TCPA (Telephone Consumer Protection Act). UHC requires outreach lists to be scrubbed for new DNCs a minimum of every 3-4 days.\n\nThe WellMed Central Quality Performance Analytics team manages campaign orchestration through sourcing and storing campaign data for reporting and suppression purposes, to reduce member abrasion, follow enterprise minimum use requirements, and maintain a historical record of member outreach.\n\nThe Telephone Consumer Protection Act (TCPA) was enacted in 1991 to protect consumers from unwanted telephone calls, text messages, and faxes. TCPA places several detailed restrictions such as consent, disclosure, identification, and/or opt-out requirements when initiating auto-dialed calls, artificial, prerecorded voice calls, AI-generated calls, text messages, informational and telemarketing calls and texts, unsolicited fax advertisements, and telephone solicitations. TCPA non-compliance risks penalties of $500-$1,500 per phone call/text (+ attorney fees) paid to the called party and/or civil forfeitures to the U.S. Government up to $10,000 per violation for illegal robocalls.\n\nNOTE: This view represents a historical record of files generated only. Manual processor intervention is required to share revocation files with the outreach vendor.\n'
+ as
 SELECT
-    SMS_OPT_IN_RAW_ID,
-    GMPI_ID,
+    REVOCATIONS_ID,
+	OMNI_RECORD_ID,
+	GMPI_ID,
+	OMNI_CONTACT_INFO,
+	MEMBER_FIRST_NAME,
     MEMBER_LAST_NAME,
-    MEMBER_FIRST_NAME,
-    MBI,
-    MEMBER_ADDRESS_1,
-    MEMBER_CITY,
-    MEMBER_STATE,
-    MEMBER_ZIP,
-    MEMBER_PHONE,
-    MEMBER_EMAIL,
-    SMS_CONSENT,
-    SMS_CONSENT_DATE,
-    CONSENT_TERMS
-FROM ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_IN;
+	MEMBER_DATE_OF_BIRTH,
+	CALLING_LIST,
+	OMNI_CMPGN_DESC,
+	OMNI_CMPGN_DESC2,
+	OMNI_CMPGN_DESC3,
+	OMNI_LOAD_DATE,
+	SOURCE_TABLE_NAME,
+	SOURCE_TABLE_ID,
+	REVOC_RSN,
+	RSN_STATUS_DATE,
+	FILE_NAME,
+	UPDATE_DATE 	
+FROM
+    ASQN_DEV_ORCHESTRATION_DB.DBO.CAMPAIGN_REVOCATIONS
+WHERE
+    UPDATE_DATE <= (SELECT MAX_DISPLAY_DATE
+        FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+        WHERE VIEW_NAME = 'VW_CAMPAIGN_REVOCATIONS')
+AND UPDATE_DATE >= (SELECT MIN_DISPLAY_DATE
+        FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+        WHERE VIEW_NAME = 'VW_CAMPAIGN_REVOCATIONS');
+ 
