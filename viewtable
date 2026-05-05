@@ -1,31 +1,23 @@
 create or replace TABLE ASQN_PRD_MIGRATION_DB.DBO.WM_UHC_MBR_OKTO_EMAIL (
 
     REPORT_MONTH DATE NOT NULL  COMMENT 'Month of the member empanelment in BI Analysis MRM stored in YYYY-MM-DD format',
-
-    ENTITY_ID VARCHAR(100) NOT NULL COMMENT 'A unique number used by the enterprise to identify an individual person',,
-
-    MBI VARCHAR(20) NOT NULL  COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',,
-
-    MEMBER_ID DECIMAL(15, 0) NULL COMMENT 'WellMed BI Analysis DIM_MEMBER unique MEMBER_ID',,
     
-	GMPI_ID NUMBER(38, 0) NULL  COMMENT 'WellMed unique member identifier',,
+    ENTITY_ID VARCHAR(100) NOT NULL COMMENT 'A unique number used by the enterprise to identify an individual person',
 
-    MEMBER_LAST_NAME VARCHAR(60) NULL COMMENT 'Last name of the member enrolled in the health plan',,
+    MBI VARCHAR(20) NOT NULL  COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
 
-    MEMBER_FIRST_NAME VARCHAR(50) NULL COMMENT 'First name of the member enrolled in the health plan',,
+    MEMBER_ID DECIMAL(15, 0) NULL COMMENT 'WellMed BI Analysis DIM_MEMBER unique MEMBER_ID',
+    
+	GMPI_ID NUMBER(38, 0) NULL  COMMENT 'WellMed unique member identifier',
 
-    MEMBER_EMAIL VARCHAR(250) NOT NULL COMMENT 'Member Email Address',,
+    MEMBER_LAST_NAME VARCHAR(60) NULL COMMENT 'Last name of the member enrolled in the health plan',
+
+    MEMBER_FIRST_NAME VARCHAR(50) NULL COMMENT 'First name of the member enrolled in the health plan',
+
+    MEMBER_EMAIL VARCHAR(250) NOT NULL COMMENT 'Member Email Address',
     
 	EMAIL_UPDATE_DATE DATE NOT NULL COMMENT 'Date recording when the email address was last updated',
 
-    REFRESH_DATE DATE NOT NULL,
+    REFRESH_DATE DATE NOT NULL  COMMENT 'System date when the table was last fully refreshed',
 
- )COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences.  This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements.  This view is limited to South Region WellMed membership with a valid email address where the member has not requested a Do Not Email flag be set, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.';
-
-.  Also is the table only going to have the latest data or is it going to have incremental data just like before . if yes, are we going to add the file_creation_date ? 
-  - The table will be refreshed daily since this will feed the view in the access layer. And since we want to keep it up to date for business/analyst users, we definitely
-want to refresh it daily, which means storing history will be too cumbersome and not needed. So, I think this should only latest data. @Elizabeth Chu, share your thoughts TRUNCATE AND REFRESH DAILY
-if you think otherwise.
-
-
-what comment should i give for refresh_date
+ ) COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences.  This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements.  This view is limited to South Region WellMed membership with a valid email address where the member has not requested a Do Not Email flag be set, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.';
