@@ -1,65 +1,97 @@
-I wanted to know how to create a stored procedure 
+ CREATE OR REPLACE PROCEDURE ASQN_PRD_ORCHESTRATION_DB.DBO.SP_LOAD_WM_UHC_MBR_OKTO_EMAIL()
+RETURNS VARCHAR
+LANGUAGE SQL
+EXECUTE AS CALLER
+AS
+$$
+DECLARE
+    V_ROWS_INSERTED NUMBER := 0;
+    V_MSG VARCHAR(255);
+BEGIN
+    BEGIN TRANSACTION;
 
-Create SP_LOAD_WM_UHC_MBR_OKTO_EMAIL() in the DBO layer of Orchestration
+    -- Log start
+    LET V_MSG = 'Procedure SP_LOAD_WM_UHC_MBR_OKTO_EMAIL started.';
+    CALL SYSTEM$LOG_INFO(V_MSG);
 
-FOr development and testing purpose,  I created the table WM_UHC_MBR_OKTO_EMAIL in PROD Migration Db 
-now my manager wants to create a stored procedure to load the table 
+    -- Truncate the target table
+    TRUNCATE TABLE ASQN_PRD_MIGRATION_DB.DBO.WM_UHC_MBR_OKTO_EMAIL;
 
-create or replace TABLE ASQN_PRD_MIGRATION_DB.DBO.WM_UHC_MBR_OKTO_EMAIL (
-	REPORT_MONTH DATE NOT NULL COMMENT 'Month of the member empanelment in BI Analysis MRM stored in YYYY-MM-DD format',
-	ENTITY_ID VARCHAR(100) NOT NULL COMMENT 'A unique number used by the enterprise to identify an individual person',
-	MBI VARCHAR(20) NOT NULL COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
-	MEMBER_ID NUMBER(15,0) COMMENT 'WellMed BI Analysis DIM_MEMBER unique MEMBER_ID',
-	GMPI_ID NUMBER(38,0) COMMENT 'WellMed unique member identifier',
-	MEMBER_LAST_NAME VARCHAR(60) COMMENT 'Last name of the member enrolled in the health plan',
-	MEMBER_FIRST_NAME VARCHAR(50) COMMENT 'First name of the member enrolled in the health plan',
-	MEMBER_EMAIL VARCHAR(250) NOT NULL COMMENT 'Member Email Address',
-	EMAIL_UPDATE_DATE DATE NOT NULL COMMENT 'Date recording when the email address was last updated',
-	REFRESH_DATE DATE NOT NULL COMMENT 'System date when the table was last fully refreshed stored in YYYY-MM-DD format'
-)COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences.  This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements.  This table is limited to South Region WellMed membership with a valid email address where the member has not requested a Do Not Email flag be set, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.'
-;
+    -- Log truncation
+    LET V_MSG = 'Target table truncated.';
+    CALL SYSTEM$LOG_INFO(V_MSG);
 
-to load this table I need to load through the SP SP_LOAD_WM_UHC_MBR_OKTO_EMAIL()
-I think this should be scheduled daily 
+    -- Insert new data
+    INSERT INTO ASQN_PRD_MIGRATION_DB.DBO.WM_UHC_MBR_OKTO_EMAIL
+    (
+        REPORT_MONTH,
+        ENTITY_ID,
+        MBI,
+        MEMBER_ID,
+        GMPI_ID,
+        MEMBER_LAST_NAME,
+        MEMBER_FIRST_NAME,
+        MEMBER_EMAIL,
+        EMAIL_UPDATE_DATE,
+        REFRESH_DATE
+    )
+    SELECT DISTINCT 
+        MRM.REPORT_MONTH,
+        EE.ENTITY_ID,
+        DM.MEMBER_MBI AS MBI,
+        DM.MEMBER_ID,
+        DM.GMPI_ID,
+        MRM.MEMBER_LAST_NAME,
+        MRM.MEMBER_FIRST_NAME,
+        EE.EMAILADDRESS AS MEMBER_EMAIL,
+        EE.AUDITDATE_EMAIL AS EMAIL_UPDATE_DATE,
+        CURRENT_DATE() AS REFRESH_DATE
+    FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
+    INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
+        ON EE.ENTITY_ID = ED.ENTITY_ID
+    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
+        ON ED.MBI = DM.MEMBER_MBI
+    INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
+        ON DM.MEMBER_ID = MRM.MEMBER_ID
+    WHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'
+      AND MRM.REPORT_MONTH = (
+          SELECT MAX(REPORT_MONTH) 
+          FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
+      )
+      AND EE.ENTITY_ID NOT IN (
+          SELECT DISTINCT ENTITY_ID 
+          FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONSENT_DNC
+          WHERE UPPER(PREF_CODE) = 'DO_NOT_EMAIL' 
+            AND UPPER(SELECTED) = 'Y'
+      )
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY ED.MBI 
+        ORDER BY EE.AUDITDATE_EMAIL DESC
+    ) = 1;
 
-for creating this stored procedure It should take the sql query from here 
+    -- Capture inserted row count
+    LET V_ROWS_INSERTED = SQLROWCOUNT;
 
-create or replace view ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_OKTO_EMAIL_RPT(
-	REPORT_MONTH COMMENT 'Month of the member empanelment in BI Analysis MRM stored in YYYY-MM-DD format',
-	ENTITY_ID COMMENT 'A unique number used by the enterprise to identify an individual person',
-	MBI COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
-	MEMBER_ID COMMENT 'WellMed BI Analysis DIM_MEMBER unique MEMBER_ID',
-	GMPI_ID COMMENT 'WellMed unique member identifier',
-	MEMBER_LAST_NAME COMMENT 'Last name of the member enrolled in the health plan',
-	MEMBER_FIRST_NAME COMMENT 'First name of the member enrolled in the health plan',
-	MEMBER_EMAIL COMMENT 'Member Email Address',
-	EMAIL_UPDATE_DATE COMMENT 'Date recording when the email address was last updated'
-) COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences.  This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements.  This view is limited to South Region WellMed membership with a valid email address where the member has not requested a Do Not Email flag be set, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.'
- as
-SELECT DISTINCT 
-    MRM.REPORT_MONTH,
-    EE.ENTITY_ID,
-    DM.MEMBER_MBI AS MBI,
-    DM.MEMBER_ID,
-    DM.GMPI_ID,
-    MRM.MEMBER_LAST_NAME,
-    MRM.MEMBER_FIRST_NAME,
-    EE.EMAILADDRESS AS MEMBER_EMAIL,
-    EE.UPDATEDATE AS EMAIL_UPDATE_DATE
-FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONTACT_EMAIL EE
-INNER JOIN LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_DEMOGRAPHIC ED
-    ON EE.ENTITY_ID = ED.ENTITY_ID
-INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
-    ON ED.MBI = DM.MEMBER_MBI
-INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
-    ON DM.MEMBER_ID = MRM.MEMBER_ID
-WHERE UPPER(EE.EMAIL_INVALID_IND) != 'INVALID'
-  AND MRM.REPORT_MONTH = (SELECT MAX(REPORT_MONTH) FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH)
-  AND EE.ENTITY_ID NOT IN (
-      SELECT DISTINCT ENTITY_ID 
-      FROM LIG_PRD_MRCS_OH_OUTREACH_SH_DB.MRCS_OH_OUTREACH.TBL_CONSENT_DNC
-      WHERE UPPER(PREF_CODE) = 'DO_NOT_EMAIL' AND UPPER(SELECTED) = 'Y'
-  )
-QUALIFY ROW_NUMBER() OVER (PARTITION BY ED.MBI ORDER BY EE.UPDATEDATE DESC) = 1;
+    -- Log insertion
+    LET V_MSG = 'Insert completed. Rows inserted: ' || V_ROWS_INSERTED;
+    CALL SYSTEM$LOG_INFO(V_MSG);
 
-use this query as a reference to create the STORED PROCEDURE, dont take data from the view use the query form where it takes 
+    -- Commit the transaction
+    COMMIT;
+
+    -- Return success message
+    RETURN 'SP_LOAD_WM_UHC_MBR_OKTO_EMAIL completed successfully. Rows inserted: ' || V_ROWS_INSERTED;
+
+EXCEPTION
+    WHEN OTHER THEN
+        -- Rollback on error
+        ROLLBACK;
+
+        -- Log the error
+        LET V_MSG = 'Error in SP_LOAD_WM_UHC_MBR_OKTO_EMAIL: ' || SQLERRM;
+        CALL SYSTEM$LOG_ERROR(V_MSG);
+
+        -- Return error message
+        RETURN V_MSG;
+END;
+$$;
