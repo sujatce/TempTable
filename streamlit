@@ -1,12 +1,11 @@
-EXISTING PROBLEM
+“Before implementing the Streamlit application, users had to manually update column values directly in backend tables.
 
-Users had to manually update column values directly in backend tables
-Changing minimum and maximum display date values required writing SQL queries
-Audit columns such as:
+For example, if someone wanted to change the minimum or maximum display date column values for a particular table, they needed to manually write and execute SQL update statements.
 
-UPDATE_DATE
-UPDATE_USER
-also needed to be updated correctly
-Process required technical knowledge
-Increased possibility of manual errors
-Manual process was time-consuming and less user-friendly
+In addition to updating the date values, audit columns such as UPDATE_DATE and UPDATE_USER also needed to be maintained correctly.
+
+This process required technical knowledge and increased the possibility of manual errors or inconsistent updates.
+
+To simplify this process, we introduced a Streamlit-based UI solution where users can update values directly through an interface without needing to manually write SQL queries.”
+
+please give slide bullets 
