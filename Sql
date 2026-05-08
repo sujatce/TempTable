@@ -1,0 +1,40 @@
+ased on your screenshot, the table appears to be:
+ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+and the column is:
+MAX_DISPLAY_DATE
+Example query to update the MAX_DISPLAY_DATE for a specific VIEW_NAME:
+UPDATE ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+SET 
+    MAX_DISPLAY_DATE = '2026-12-31',
+    UPDATE_DATE = CURRENT_TIMESTAMP(),
+    UPDATE_USER = 'YOUR_USER_ID'
+WHERE VIEW_NAME = 'VW_WM_FOCUS_SURVEY_MBR_SCORE_BIEDW';
+Example Based on Your Screenshot
+For this row:
+VW_WM_FOCUS_SURVEY_MBR_SCORE_BIEDW
+you can do:
+UPDATE ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+SET 
+    MAX_DISPLAY_DATE = '2026-12-31',
+    UPDATE_DATE = CURRENT_TIMESTAMP(),
+    UPDATE_USER = 'GANESH'
+WHERE VIEW_NAME = 'VW_WM_FOCUS_SURVEY_MBR_SCORE_BIEDW';
+BEFORE UPDATE (Good Practice)
+SELECT *
+FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+WHERE VIEW_NAME = 'VW_WM_FOCUS_SURVEY_MBR_SCORE_BIEDW';
+AFTER UPDATE VERIFY
+SELECT 
+    VIEW_NAME,
+    MAX_DISPLAY_DATE,
+    UPDATE_DATE,
+    UPDATE_USER
+FROM ASQN_DEV_CFG_DB.DBO.CFG_VW_CONTROL
+WHERE VIEW_NAME = 'VW_WM_FOCUS_SURVEY_MBR_SCORE_BIEDW';
+This is actually a PERFECT screenshot for your “Existing Problem” slide because it visually shows:
+backend table
+manual SQL
+technical process
+multiple columns
+audit columns
+which makes your Streamlit solution much easier for the audience to appreciate
