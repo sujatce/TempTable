@@ -1,0 +1,7 @@
+EXISTING PROBLEM
+
+Users had to manually update column values directly in backend tables
+Changing minimum and maximum display date values required writing SQL queries
+Process required technical knowledge
+Increased possibility of manual errors
+Manual process was time-consuming and less user-friendly
