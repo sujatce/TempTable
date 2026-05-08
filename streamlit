@@ -2,6 +2,11 @@ EXISTING PROBLEM
 
 Users had to manually update column values directly in backend tables
 Changing minimum and maximum display date values required writing SQL queries
+Audit columns such as:
+
+UPDATE_DATE
+UPDATE_USER
+also needed to be updated correctly
 Process required technical knowledge
 Increased possibility of manual errors
 Manual process was time-consuming and less user-friendly
