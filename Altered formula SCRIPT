@@ -1,0 +1,70 @@
+COMPLETE PRESENTATION SCRIPT
+
+SLIDE 1 SCRIPT
+“Good afternoon everyone.
+Today I’ll be presenting the Streamlit App Enhancement work that I implemented in the Snowflake environment.
+This enhancement focuses on automating audit column updates and improving the update process through a user-friendly Streamlit application.
+The goal of this work was to reduce manual effort, improve consistency, and simplify the process for users.”
+
+SLIDE 2 SCRIPT
+“Before implementing the Streamlit application, users had to manually update column values directly in backend tables.
+For example, if someone wanted to change the minimum or maximum display date column values for a particular table, they needed to manually write and execute SQL update statements.
+In addition to updating the date values, audit columns such as UPDATE_DATE and UPDATE_USER also needed to be maintained correctly.
+This process required technical knowledge and increased the possibility of manual errors.
+To simplify this process, a Streamlit-based UI solution was developed where users could update values directly through an interface without needing to manually write SQL queries.”
+
+SLIDE 3 SCRIPT
+“An initial version of the Streamlit application called ‘CFG CONTROL APP V2’ was developed by the team to simplify backend table updates through a UI interface.
+The application helped reduce manual SQL updates by allowing users to search and update display date values directly through the UI.
+During review and testing, a few enhancement opportunities were identified.
+For example, audit column updates needed additional automation, and some related backend updates were still being handled manually.
+These enhancement areas became the focus of the work I implemented.”
+
+SLIDE 4 SCRIPT
+“After reviewing the initial version of the application, I implemented several enhancements to improve automation, accuracy, and user experience.
+The main focus areas included automating audit column updates, improving update efficiency, handling Snowflake date edge cases, and enhancing the UI behavior after updates.
+These enhancements helped reduce manual intervention and made the application more reliable and user-friendly.”
+
+SLIDE 5 SCRIPT
+“One enhancement I implemented was automating the UPDATE_DATE audit column.
+Previously, users could manually edit this value, which could lead to inconsistencies.
+To improve audit reliability, I removed UPDATE_DATE from editable fields and automatically assigned the latest system timestamp using Snowflake’s current_timestamp() function.
+This ensures every update reflects the actual system update time automatically.”
+
+SLIDE 6 SCRIPT
+“Another enhancement was automating the UPDATE_USER column.
+Instead of users manually entering their name or email, the application now automatically captures the logged-in user information from the Streamlit session.
+This improves audit tracking accuracy and reduces manual input errors.”
+
+SLIDE 7 SCRIPT
+“To improve efficiency, I implemented logic to identify and update only the rows modified by the user.
+Instead of updating the full dataset, the application now processes only changed records.
+This reduces unnecessary database operations and improves overall performance.”
+
+SLIDE 8 SCRIPT
+“After deployment, an issue was identified with Snowflake’s maximum supported date value, which is 9999-12-31.
+While Snowflake supports this value, Pandas could not properly process the far-future date during conversion.
+This resulted in data type mismatch errors during updates.”
+
+SLIDE 9 SCRIPT
+“To resolve this issue, I implemented custom date normalization logic.
+The solution explicitly handles Snowflake edge-case dates such as 9999-12-31 and 1900-01-01 before Pandas conversion occurs.
+This prevented conversion failures and ensured compatibility between Streamlit, Pandas, and Snowflake.”
+
+SLIDE 10 SCRIPT
+“One additional UI enhancement involved improving the success message behavior.
+Previously, success messages disappeared immediately after the application refreshed.
+Using Streamlit session state, I implemented persistent success messaging so users can clearly see update confirmation messages after changes are applied.”
+
+SLIDE 11 SCRIPT
+“After successful testing and validation in the development environment, the enhancements were deployed to the production environment.
+The application now provides a more efficient and user-friendly process for maintaining configuration values and audit tracking.”
+
+SLIDE 12 SCRIPT
+“These enhancements significantly improved the reliability and usability of the application.
+The solution reduced manual backend updates, improved audit consistency, optimized processing, and provided a better overall user experience.”
+
+SLIDE 13 SCRIPT
+“To conclude, the enhancement work improved both the technical reliability and user experience of the existing Streamlit application.
+The automation of audit columns, optimization improvements, and issue resolution helped create a more stable and efficient solution.
+Thank you everyone. I’ll be happy to take any questions.”
