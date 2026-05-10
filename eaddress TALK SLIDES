@@ -634,14 +634,13 @@ Improved user feedback experience
 
 Code Snippet
 st.session_state["success_message"]
+
+
 SLIDE 11 — PROD DEPLOYMENT
 Title
 CFG CONTROL DEPLOYED IN PROD ENVIRONMENT
 
-Bullets
 Enhancements tested successfully in DEV
-
-Validated update functionality and audit automation
 
 Deployed to PROD environment
 
@@ -649,38 +648,4 @@ Application now supports streamlined configuration updates
 
 Reduced manual backend maintenance effort
 
-SLIDE 12 — BENEFITS & IMPACT
-Title
-BENEFITS & IMPACT
 
-Bullets
-Reduced manual SQL updates
-
-Improved audit consistency
-
-Reduced possibility of manual errors
-
-Improved update efficiency
-
-Better user experience
-
-Simplified maintenance process
-
-Increased reliability of configuration updates
-
-SLIDE 13 — CONCLUSION
-Title
-CONCLUSION
-
-Bullets
-Successfully enhanced existing Streamlit application
-
-Automated audit column management
-
-Improved system reliability and usability
-
-Resolved deployment-related edge cases
-
-Delivered a more efficient update process
-
-Bottom Text
