@@ -41,15 +41,21 @@ SLIDE 7 SCRIPT
 Instead of updating the full dataset, the application now processes only changed records.
 This reduces unnecessary database operations and improves overall performance.”
 
-SLIDE 8 SCRIPT
-“After deployment, an issue was identified with Snowflake’s maximum supported date value, which is 9999-12-31.
-While Snowflake supports this value, Pandas could not properly process the far-future date during conversion.
-This resulted in data type mismatch errors during updates.”
+SLIDE 8 SCRIPT (Simplified)
 
-SLIDE 9 SCRIPT
-“To resolve this issue, I implemented custom date normalization logic.
-The solution explicitly handles Snowflake edge-case dates such as 9999-12-31 and 1900-01-01 before Pandas conversion occurs.
-This prevented conversion failures and ensured compatibility between Streamlit, Pandas, and Snowflake.”
+“After deployment, we found an issue with one of the date values used in Snowflake, which was 9999-12-31.
+
+Snowflake was able to handle this date correctly, but Pandas could not process this large future date properly.
+
+Because of this, the application was failing during updates for those records.”
+
+SLIDE 9 SCRIPT (Simplified)
+
+“To fix this issue, I added custom logic to handle these special date values before Pandas processed them.
+
+The application now specifically checks for dates like 9999-12-31 and handles them safely.
+
+This fixed the update issue and allowed the application to work correctly with Snowflake date values.”
 
 SLIDE 10 SCRIPT
 “One additional UI enhancement involved improving the success message behavior.
@@ -58,13 +64,4 @@ Using Streamlit session state, I implemented persistent success messaging so use
 
 SLIDE 11 SCRIPT
 “After successful testing and validation in the development environment, the enhancements were deployed to the production environment.
-The application now provides a more efficient and user-friendly process for maintaining configuration values and audit tracking.”
-
-SLIDE 12 SCRIPT
-“These enhancements significantly improved the reliability and usability of the application.
-The solution reduced manual backend updates, improved audit consistency, optimized processing, and provided a better overall user experience.”
-
-SLIDE 13 SCRIPT
-“To conclude, the enhancement work improved both the technical reliability and user experience of the existing Streamlit application.
-The automation of audit columns, optimization improvements, and issue resolution helped create a more stable and efficient solution.
-Thank you everyone. I’ll be happy to take any questions.”
+The application now provides a more efficient  process for maintaining configuration TABLE values and audit tracking.”
