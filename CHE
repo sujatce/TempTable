@@ -148,6 +148,11 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
     # Button to apply updates to Snowflake table
     update_button = st.button("Update")
 
+    if "success_message" in st.session_state:
+        st.success(st.session_state["success_message"])
+        del st.session_state["success_message"]
+
+
     # --- Update logic ---
     if update_button:
         try:
@@ -169,13 +174,38 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
                 # Convert changed rows list to pandas DataFrame
                 changed_df = pd.DataFrame(changed_records)
 
-                # Normalize date columns so blank values become None and valid values stay as DATE
+               # Normalize date columns without breaking Snowflake max date 9999-12-31
+                from datetime import date, datetime
+
+                def normalize_snowflake_date(value):
+                      if value is None or pd.isna(value):
+                          return None
+
+                      if isinstance(value, datetime):
+                         return value.date()
+
+                      if isinstance(value, date):
+                         return value
+
+                      value = str(value).strip()
+
+                      if value == "":
+                         return None
+    
+                      # Important: handle Snowflake far-future date safely
+                      if value[:10] == "9999-12-31":
+                         return date(9999, 12, 31)
+
+                      if value[:10] == "1900-01-01":
+                          return date(1900, 1, 1)
+
+                      return datetime.strptime(value[:10], "%Y-%m-%d").date()
+
+
                 for date_col in ["MIN_DISPLAY_DATE", "MAX_DISPLAY_DATE"]:
                     if date_col in changed_df.columns:
-                        changed_df[date_col] = pd.to_datetime(
-                            changed_df[date_col], errors="coerce"
-                        ).apply(lambda x: x.date() if pd.notna(x) else None)
-
+                        changed_df[date_col] = changed_df[date_col].apply(normalize_snowflake_date)
+                
                 # Define the key column used to match source rows to target table rows
                 KEY_COLUMN = "CFG_VW_CONTROL_ID"
 
@@ -222,7 +252,8 @@ if "search_results" in st.session_state and st.session_state["search_results"] i
                 )
 
                 # Show success message with number of updated records
-                st.success(f"{result.rows_updated} record(s) successfully updated in CFG_VW_CONTROL table..")
+                st.session_state["success_message"] = f"{result.rows_updated} record(s) successfully updated in CFG_VW_CONTROL table."
+              #  st.success(f"{result.rows_updated} record(s) successfully updated in CFG_VW_CONTROL table..")
 
                 # Requery updated rows so latest UPDATE_DATE shows immediately in the editor
                 updated_ids = changed_df[KEY_COLUMN].tolist()
