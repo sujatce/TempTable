@@ -22,9 +22,7 @@ To simplify this process, a Streamlit-based UI solution was developed where user
 
 SLIDE 3 — INITIAL STREAMLIT APPLICATION
 
-“Here, this screenshot shows the initial version of the CFG_VW_CONTROL V2 Streamlit application.
-
-The application was developed by the team to simplify backend table updates through a user interface.
+“Here, this screenshot shows the initial version of the CFG_VW_CONTROL Streamlit application.
 
 The app connects to the CFG_VW_CONTROL table, which stores configuration details for reporting views.
 
@@ -50,23 +48,10 @@ These areas created opportunities to improve automation, optimize update process
 
 SLIDE 5 — ENHANCEMENT GOAL
 
-“The main goal of the enhancement work was to improve automation, reliability, and overall efficiency of the application.
-
 The enhancements focused on automatically handling UPDATE_DATE and UPDATE_USER values, restricting manual editing of audit columns, and ensuring that only modified rows were updated.
 
-These improvements helped reduce unnecessary updates and improved audit consistency.”
 
-SLIDE 6 — KEY ENHANCEMENT
-
-“One important enhancement involved improving how updates were processed within the application.
-
-The application now tracks edited rows using Streamlit data editor change tracking.
-
-Only modified rows are captured into a smaller dataset, and only those changed rows are updated in Snowflake.
-
-This improved efficiency and reduced unnecessary database updates.”
-
-SLIDE 7 — UPDATE_DATE ENHANCEMENT
+SLIDE 6 — UPDATE_DATE ENHANCEMENT
 
 “One enhancement I implemented was automating the UPDATE_DATE audit column.
 
@@ -76,7 +61,7 @@ To improve audit reliability, UPDATE_DATE was removed from editable fields and a
 
 This ensures that every update reflects the latest system timestamp automatically.”
 
-SLIDE 8 — UPDATE_USER ENHANCEMENT
+SLIDE 7 — UPDATE_USER ENHANCEMENT
 
 “Another enhancement involved automating the UPDATE_USER audit column.
 
@@ -84,9 +69,20 @@ Instead of manually entering user information, the application now automatically
 
 This improves audit tracking accuracy and reduces manual input errors.”
 
-SLIDE 9 — OPTIMIZED UPDATE PROCESSING
+SLIDE 8 — KEY ENHANCEMENT
 
-“To improve processing efficiency, the application was enhanced to identify and update only modified rows.
+“One of the key enhancement involved improving how updates were processed within the application.
+
+The application now tracks edited rows using Streamlit data editor change tracking.
+
+Only modified rows are captured into a smaller dataset, and only those changed rows are updated in Snowflake.
+
+This improved efficiency and reduced unnecessary database updates.”
+
+
+SLIDE 9 — Key Enhancement contd..
+
+“ the application was enhanced to identify and update only modified rows.
 
 Instead of updating the entire dataset, only rows changed by the user are processed.
 
