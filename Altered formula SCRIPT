@@ -22,15 +22,19 @@ To simplify this process, a Streamlit-based UI solution was developed where user
 
 SLIDE 3 — INITIAL STREAMLIT APPLICATION
 
-“An initial version of the Streamlit application called CFG CONTROL APP V2 was developed by the team to simplify backend table updates through a UI interface.
+“Here, this screenshot shows the initial version of the CFG_VW_CONTROL V2 Streamlit application.
 
-The application allowed users to search and update display date values directly through the UI, helping reduce manual SQL updates.
+The application was developed by the team to simplify backend table updates through a user interface.
 
-During review and testing, several enhancement opportunities were identified.
+The app connects to the CFG_VW_CONTROL table, which stores configuration details for reporting views.
 
-For example, audit column updates needed additional automation, and some backend update handling still required improvement.
+This table contains information such as PROGRAM_NAME, VIEW_NAME, MIN_DISPLAY_DATE, MAX_DISPLAY_DATE, USER_STORY, COMMENTS, and database and schema details.
 
-These enhancement areas became the focus of the work I implemented.”
+These values help control how data flows through reporting views based on configured display date ranges.
+
+Users could search records using Program Name or View Name and directly update display date values through the UI.
+
+This helped reduce dependency on manually writing SQL update statements.”
 
 SLIDE 4 — ENHANCEMENT OPPORTUNITIES IDENTIFIED
 
