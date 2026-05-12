@@ -1,0 +1,127 @@
+SLIDE 1 — INTRODUCTION
+
+“Good afternoon everyone.
+
+Today I’ll be presenting the Streamlit App Enhancement work that I implemented in the Snowflake environment.
+
+This enhancement focuses on automating audit column updates and improving the update process through a user-friendly Streamlit application.
+
+The goal of this work was to reduce manual effort, improve consistency, and simplify the overall update process for users.”
+
+SLIDE 2 — EXISTING PROBLEM
+
+“Before implementing the Streamlit application, users had to manually update column values directly in backend tables.
+
+For example, if someone wanted to change minimum or maximum display date values for a table, they needed to manually write and execute SQL update statements.
+
+In addition to updating the date values, audit columns such as UPDATE_DATE and UPDATE_USER also needed to be maintained correctly.
+
+This process required technical knowledge and increased the possibility of manual errors.
+
+To simplify this process, a Streamlit-based UI solution was developed where users could update values directly through an interface without manually writing SQL queries.”
+
+SLIDE 3 — INITIAL STREAMLIT APPLICATION
+
+“Here, this screenshot shows the initial version of the CFG_VW_CONTROL Streamlit application.
+
+The app connects to the CFG_VW_CONTROL table, which stores configuration details for reporting views.
+
+This table contains information such as PROGRAM_NAME, VIEW_NAME, MIN_DISPLAY_DATE, MAX_DISPLAY_DATE, USER_STORY, COMMENTS, DATABASE, and SCHEMA details.
+
+These values help control how data flows through reporting views based on configured display date ranges.
+
+Users could search records using Program Name or View Name and directly update display date values through the UI.
+
+The editable fields included values such as MIN_DISPLAY_DATE, MAX_DISPLAY_DATE, USER_STORY, and COMMENTS.
+
+This helped reduce dependency on manually writing SQL update statements and simplified backend table maintenance.”
+
+SLIDE 4 — AREAS IDENTIFIED FOR IMPROVEMENT
+
+“After reviewing the existing application, several areas for improvement were identified during testing and validation.
+
+One major area was improving audit column handling and update consistency.
+
+For example, UPDATE_DATE and UPDATE_USER columns were still editable, which could lead to inconsistencies.
+
+In addition, all rows were being updated even when values had not changed.
+
+These areas created opportunities to improve automation, optimize update processing, and strengthen audit reliability.”
+
+SLIDE 5 — ENHANCEMENT GOAL
+
+“The main goal of these enhancements was to improve automation, audit reliability, and update efficiency within the application.
+
+The enhancements focused on automatically handling UPDATE_DATE and UPDATE_USER values, restricting manual editing of audit columns, and ensuring that only modified rows were updated in Snowflake.”
+
+SLIDE 6 — UPDATE_DATE ENHANCEMENT
+
+“One enhancement I implemented was automating the UPDATE_DATE audit column.
+
+Previously, users could manually edit this value, which could lead to inconsistencies.
+
+To improve audit reliability, UPDATE_DATE was removed from editable fields and automatically assigned using Snowflake’s current_timestamp() function.
+
+This ensures that every update reflects the latest system timestamp automatically.”
+
+SLIDE 7 — UPDATE_USER ENHANCEMENT
+
+“Another enhancement involved automating the UPDATE_USER audit column.
+
+Instead of manually entering user information, the application now automatically captures the logged-in Streamlit user session information.
+
+This improves audit tracking accuracy and reduces manual input errors.”
+
+SLIDE 8 — KEY ENHANCEMENT
+
+“One of the key enhancements involved improving how updates were processed within the application.
+
+The application now tracks edited rows using Streamlit data editor change tracking.
+
+Only modified rows are captured into a smaller dataset, and only those changed rows are updated in Snowflake.
+
+This improved efficiency and reduced unnecessary database updates.”
+
+SLIDE 9 — KEY ENHANCEMENT CONTD..
+
+“In addition, the application was enhanced to identify and update only modified rows.
+
+Instead of updating the entire dataset, only rows changed by the user are processed.
+
+This prevents unnecessary database updates and improves overall application performance.”
+
+SLIDE 10 — ISSUE IDENTIFIED AFTER DEPLOYMENT
+
+“After deployment, an issue was identified related to Snowflake’s maximum supported date value, which is 9999-12-31.
+
+While Snowflake supports this value, Pandas had difficulty processing this far-future date value during conversion.
+
+This caused data type mismatch errors during the update process for those records.”
+
+SLIDE 11 — SOLUTION FOR DATE HANDLING
+
+“To resolve this issue, I implemented custom date normalization logic.
+
+The solution explicitly handles Snowflake edge-case dates such as 9999-12-31 and 1900-01-01 before Pandas conversion occurs.
+
+This prevented conversion failures and maintained compatibility between Streamlit, Pandas, and Snowflake.
+
+This enhancement improved overall application stability, compatibility, and reliability.”
+
+SLIDE 12 — DEPLOYMENT
+
+“After successful testing and validation in the development environment, the enhancements were deployed to the production environment.
+
+The updated application now provides a more efficient, reliable, and user-friendly process for managing backend table updates and audit tracking.
+
+These enhancements also improved update accuracy and reduced manual maintenance effort.”
+
+SLIDE 13 — DEMO TIME
+
+“At this point, I’ll provide a quick demonstration of the application and walk through the enhancement functionality.”
+
+SLIDE 14 — QUESTIONS
+
+“Thank you everyone for your time and attention.
+
+I’ll be happy to answer any questions.
