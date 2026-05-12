@@ -118,7 +118,78 @@ These enhancements also improved update accuracy and reduced manual maintenance 
 
 SLIDE 13 — DEMO TIME
 
-“At this point, I’ll provide a quick demonstration of the application and walk through the enhancement functionality.”
+
+“Now I’ll provide a quick demo of the CFG_VW_CONTROL Streamlit application in the development environment.
+
+I’ll share my screen.
+
+Currently I’m in the Snowflake non-production environment.
+From the home page, I’ll navigate to Projects, and under Projects I’ll select Streamlit Apps.
+Here we can see the list of available Streamlit applications developed by the team.
+I’ll open the CFG_VW_CONTROL App.
+Once the application opens, the app allows users to search records either by Program Name or by View Name.
+This helps users quickly identify the exact view configuration record they want to update.
+For this demo, I’ll search using the Program Name.
+I’ll enter the Program Name as ‘Focus Survey’ and click ‘Search for Program’.
+Now the application returns all records related to the Focus Survey program.
+Here we can see multiple views such as:
+
+
+VW_COMBINED_SURVEY
+
+
+VW_METRIC_RESPONSE
+
+
+VW_METRIC_TARGET
+and other related views.
+
+
+For this demo, I’ll select the view called VW_METRIC_TARGET_RPD.
+Here we can see the current configuration values stored in the CFG_VW_CONTROL table.
+The table includes columns such as:
+
+
+PROGRAM_NAME
+
+
+VIEW_NAME
+
+
+MIN_DISPLAY_DATE
+
+
+MAX_DISPLAY_DATE
+
+
+USER_STORY
+
+
+COMMENTS
+
+
+UPDATE_DATE
+
+
+UPDATE_USER
+
+
+These values control how data flows through the reporting views based on configured display date ranges.
+Currently, the MAX_DISPLAY_DATE is set to 2025-12-01.
+For this demonstration, I’ll update the MAX_DISPLAY_DATE value to 2030-12-31.
+I’ll select the date and make the update.
+Now I’ll click the Update button.
+At this point, the application processes only the modified row instead of updating the full dataset.
+The UPDATE_DATE column is automatically populated using the current Snowflake system timestamp.
+The UPDATE_USER column is also automatically populated using the logged-in Streamlit user session information.
+This removes manual audit handling and improves update consistency.
+Now we can see the success message confirming that the record was updated successfully.
+If we refresh or search again, we can verify that the updated MAX_DISPLAY_DATE value is now saved in Snowflake.
+This demonstrates how the Streamlit enhancement simplified backend table maintenance, improved audit tracking, and optimized the update process.”
+“One enhancement I implemented was automating the UPDATE_DATE audit column.
+Previously, users could manually edit this value, which could lead to inconsistencies.
+To improve audit reliability, I removed UPDATE_DATE from editable fields and automatically assigned the latest system timestamp using Snowflake’s current_timestamp() function.
+This ensures every update reflects the actual system update time automatically.”
 
 SLIDE 14 — QUESTIONS
 
