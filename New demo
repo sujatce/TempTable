@@ -1,0 +1,69 @@
+SLIDE 8 — UPDATE STREAMLIT APP DASHBOARD
+What to Say
+“This slide gives an overview of the CFG View Control Streamlit dashboard.
+The CFG View Control table is used to control and filter data that is exposed through reporting views and consumer layer data products.
+The application uses MIN_DISPLAY_DATE and MAX_DISPLAY_DATE to control when data should be visible to end users.
+This Streamlit application was created to simplify maintenance of the control table through a user interface instead of manual SQL updates.
+The application also tracks audit information such as update dates and update users automatically.”
+SLIDE 9 — STREAMLIT APPLICATION V1
+What to Say
+“This was the initial version of the CFG Control application.
+The application was connected directly to the CFG_VW_CONTROL table in Snowflake.
+The table stores configuration details such as program name, view name, minimum and maximum display dates, comments, database, and schema information.
+Users could search records using either Program Name or View Name and directly update display dates through the user interface.
+This helped reduce dependency on manual SQL updates and simplified operational support for reporting views.”
+SLIDE 10 — STREAMLIT ENHANCEMENTS
+What to Say
+“Several enhancements were later added to improve the application.
+First, UPDATE_DATE handling was automated by capturing the system timestamp automatically during updates.
+UPDATE_USER handling was also automated using the logged-in Streamlit user session information.
+Audit columns were restricted from manual editing to improve audit accuracy and consistency.
+Another important enhancement was updating only modified rows instead of processing the full dataset.”
+SLIDE 11 — KEY ENHANCEMENT
+What to Say
+“One of the key enhancements involved improving how updates were processed within the application.
+The application now uses Streamlit data editor change tracking to identify only the rows modified by the user.
+After capturing the edited rows, a smaller changed dataset is created.
+Only those modified rows are then updated back into Snowflake.
+This made the update process more efficient and reduced unnecessary database operations.”
+SLIDE 12 — KEY ENHANCEMENT CONTINUED
+What to Say
+“By updating only modified rows, the application avoids unnecessary table updates.
+This improves overall performance and processing efficiency.
+The code snippet shown here demonstrates how edited rows are captured from the Streamlit session state and stored into a smaller changed records dataset before performing the Snowflake update.”
+SLIDE 13 — DEMO STREAMLIT APP - SNOWSIGHT
+What to Say Before Demo
+“Next, I will provide a quick demo of the application and walk through the enhancement functionality implemented in the Snowflake development environment.”
+DEMO SCRIPT
+What to Say During Demo
+“I’ll now switch to the Snowflake non-production environment.
+From the Snowflake home page, I’ll navigate to Projects and then open the Streamlit section.
+Here we can see the list of available Streamlit applications developed by our team.
+I’ll open the CFG Control application.
+The application allows users to search records either by Program Name or View Name.
+For this demo, I’ll search using the Program Name ‘Focus Survey’.
+After clicking Search for Program, the application returns all matching records associated with that program.
+We can see multiple views such as View Combined Survey, View Metric Response, and View Metric Target.
+I’ll select one of the views and update the MAX_DISPLAY_DATE value.
+For example, I’ll change the MAX_DISPLAY_DATE to December 31, 2030.
+Once I click Update, only the modified row is captured and updated in Snowflake.
+The application also automatically updates the audit columns including UPDATE_DATE and UPDATE_USER using system timestamp and logged-in Streamlit session information.”
+SLIDE 14 — ISSUE IDENTIFIED AFTER DEPLOYMENT
+What to Say
+“After deployment, an issue was identified related to Snowflake’s supported maximum date values.
+Snowflake supports date values such as 9999-12-31 and 1900-01-01.
+However, Pandas could not properly process these edge-case date values during conversion.
+This caused data type mismatch issues during the update process.
+As a result, updates failed for records containing those dates.”
+SLIDE 15 — SOLUTION FOR DATE HANDLING
+What to Say
+“To resolve this issue, custom date normalization logic was implemented.
+Explicit handling was added for Snowflake edge-case dates such as 9999-12-31 and 1900-01-01.
+Instead of allowing Pandas to process those values normally, the application now safely handles them before conversion occurs.
+This prevented conversion failures and maintained compatibility between Streamlit, Pandas, and Snowflake date handling.
+Overall, the solution improved application stability and reliability.”
+SLIDE 16 — Q&A
+What to Say
+“That concludes the presentation.
+Thank you everyone for your time.
+I’ll now open it up for any questions or feedback.”
