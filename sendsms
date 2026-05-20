@@ -1,0 +1,364 @@
+import csv
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from urllib.parse import quote
+from datetime import datetime, timedelta, timezone
+import pandas as pd
+import time
+import re
+import math
+import logging
+import os
+import sys  # <-- for console progress bar
+from zoneinfo import ZoneInfo  # <-- Added for CST conversion
+
+# -------------------- Setup Logging --------------------
+logs_dir = "logs"
+os.makedirs(logs_dir, exist_ok=True)
+log_filename = f"Run_{datetime.now().strftime('%m%d%Y_%H%M%S')}.log"
+log_path = os.path.join(logs_dir, log_filename)
+
+logging.basicConfig(
+    filename=log_path,
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+console.setFormatter(formatter)
+logging.getLogger().addHandler(console)
+
+# -------------------- Setup requests session with retry --------------------
+session = requests.Session()
+retry_strategy = Retry(
+    total=5,
+    connect=5,
+    read=5,
+    backoff_factor=2,
+    status_forcelist=[],
+    allowed_methods=["HEAD", "GET", "OPTIONS", "POST"]
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+session.mount("https://", adapter)
+session.mount("http://", adapter)
+
+# -------------------- Classes --------------------
+class SMSTokenService:
+    def __init__(self, auth_url, client_id, client_secret, expire_in_seconds=1770):
+        self.auth_url = auth_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.expire_in = timedelta(seconds=expire_in_seconds)
+        self.token = None
+        self.expire_at = datetime.now(timezone.utc)
+
+    def token_valid(self):
+        return self.token is not None and datetime.now(timezone.utc) < self.expire_at
+
+    def renew_token(self):
+        if not self.token_valid():
+            logging.info("[AUTH] Requesting new access token...")
+            payload = {
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret
+            }
+            try:
+                response = session.post(self.auth_url, data=payload, timeout=20)
+                logging.info(f"[AUTH] Response Status: {response.status_code}")
+                if response.status_code == 200:
+                    token_data = response.json()
+                    self.token = token_data["access_token"]
+                    self.expire_at = datetime.now(timezone.utc) + self.expire_in
+                    logging.info("[AUTH] ✅ Access token received.")
+                else:
+                    raise Exception(f"[AUTH ERROR] {response.status_code}: {response.text}")
+            except requests.exceptions.RequestException as e:
+                raise Exception(f"[AUTH ERROR] Request failed: {str(e)}")
+
+    def get_token(self):
+        self.renew_token()
+        return self.token
+
+    def get_headers(self):
+        return {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.get_token()}"
+        }
+
+class SMSPhoneManager:
+    def __init__(self, api_base_url, token_service, program_id, template_id, output_csv="Created_Phones_Log.csv"):
+        self.api_base_url = api_base_url
+        self.token_service = token_service
+        self.program_id = program_id
+        self.template_id = template_id
+        self.output_csv = output_csv
+
+    def normalize_number(self, phone_number: str, country_code: str = "US") -> str:
+        phone_number = str(phone_number).strip()
+        if phone_number.endswith(".0"):
+            phone_number = phone_number[:-2]
+        if phone_number.startswith("+"):
+            return phone_number
+        digits = re.sub(r"\D", "", phone_number)
+        if country_code == "US" and len(digits) == 10:
+            return f"+1{digits}"
+        if len(digits) == 11 and digits.startswith("1"):
+            return f"+{digits}"
+        return phone_number
+
+    def phone_exists(self, phone_number: str, country_code: str = "US") -> (dict, str):
+        normalized = self.normalize_number(phone_number, country_code)
+        url = f"{self.api_base_url}/phones?number={quote(normalized)}"
+        logging.info(f"[LOOKUP] 🔍 Checking phone: {normalized}")
+        try:
+            response = session.get(url, headers=self.token_service.get_headers(), timeout=20)
+            logging.info(f"[LOOKUP] Status: {response.status_code}")
+            if response.status_code == 200:
+                phones = response.json().get("phone", [])
+                if phones:
+                    logging.info(f"[LOOKUP] ✅ Found phone: {phones[0]}\n")
+                    return phones[0], "Already Exists"
+                else:
+                    logging.info(f"[LOOKUP] ❌ Phone not found.\n")
+                    return None, "Not Found"
+            elif response.status_code == 404:
+                logging.info(f"[LOOKUP] ❌ 404 Not Found\n")
+                return None, "Not Found"
+            else:
+                logging.warning(f"[LOOKUP] ❗ Unexpected status: {response.status_code} - {response.text}\n")
+                return None, "Lookup Failed"
+        except requests.exceptions.RequestException as e:
+            logging.error(f"[LOOKUP ERROR] {str(e)} — skipping lookup\n")
+            return None, "Lookup Failed"
+
+    def create_phone(self, phone_number: str, country_code: str, gmpi_id: str, member_first_name: str = "", member_last_name: str = "") -> dict:
+        normalized = self.normalize_number(phone_number, country_code)
+        payload = {
+            "number": normalized,
+            "country-code": country_code,
+            "metadata": {
+                "gmpi_id": gmpi_id,
+                "member_first_name": member_first_name,
+                "member_last_name": member_last_name
+            }
+        }
+        url = f"{self.api_base_url}/phones"
+        logging.info(f"[CREATE] 🛠 Creating phone: {normalized}")
+        try:
+            response = session.post(url, headers=self.token_service.get_headers(), json=payload, timeout=20)
+        except requests.exceptions.RequestException as e:
+            logging.error(f"[CREATE ERROR] {str(e)} — skipping creation\n")
+            return None
+
+        logging.info(f"[CREATE] Status: {response.status_code}")
+        if response.status_code in [200, 201]:
+            phone_obj = response.json()
+            logging.info(f"[CREATE] ✅ Phone created: {phone_obj}\n")
+            return phone_obj
+        elif response.status_code in [409, 422]:
+            logging.warning(f"[CREATE] ⚠️ Conflict or Unprocessable Entity. Rechecking existence...\n")
+            phone_obj, _ = self.phone_exists(phone_number, country_code)
+            return phone_obj
+        else:
+            logging.error(f"[CREATE] ❌ Failed to create phone: {response.text}\n")
+            return None
+
+    def check_subscription(self, phone_number: str) -> str:
+        normalized = self.normalize_number(phone_number)
+        url = f"{self.api_base_url}/subscriptions?phone-number={quote(normalized)}&program-id={self.program_id}&status=subscribed"
+        logging.info(f"[SUBSCRIPTION] 🔍 Checking subscription for: {normalized}")
+        try:
+            response = session.get(url, headers=self.token_service.get_headers(), timeout=20)
+            logging.info(f"[SUBSCRIPTION] Status: {response.status_code}")
+            if response.status_code == 200:
+                subscriptions = response.json().get("subscription", [])
+                if subscriptions:
+                    logging.info(f"[SUBSCRIPTION] ✅ Already Subscribed: {subscriptions}\n")
+                    return "Already Subscribed"
+                else:
+                    return "Not Subscribed"
+            else:
+                logging.warning(f"[SUBSCRIPTION ERROR] {response.status_code}: {response.text}\n")
+                return f"Subscription Failed ({response.status_code})"
+        except requests.exceptions.RequestException as e:
+            logging.error(f"[SUBSCRIPTION ERROR] {str(e)} — skipping\n")
+            return "Subscription Failed (Exception)"
+
+    def subscribe_phone(self, phone_obj: dict, gmpi_id: str, member_first_name: str = "", member_last_name: str = "") -> (str, str):
+        phone_id = phone_obj["id"]
+        logging.info(f"[SUBSCRIBE] 📲 Subscribing phone ID: {phone_id}")
+        url = f"{self.api_base_url}/phones/{phone_id}/subscribe"
+        payload = {
+            "program-id": self.program_id,
+            "metadata": {
+                "gmpi_id": gmpi_id,
+                "member_first_name": member_first_name,
+                "member_last_name": member_last_name
+            }
+        }
+        try:
+            response = session.post(url, headers=self.token_service.get_headers(), json=payload, timeout=20)
+            logging.info(f"[SUBSCRIBE] Status: {response.status_code}")
+            try:
+                resp_json = response.json()
+            except Exception:
+                resp_json = response.text
+            logging.info(f"[SUBSCRIBE] Response: {resp_json}")
+
+            if response.status_code in [200, 201]:
+                if isinstance(resp_json, dict) and resp_json.get("status") == "subscribed":
+                    logging.info("[SUBSCRIBE] ✅ Subscription successful. Waiting 3 seconds before sending SMS...")
+                    time.sleep(3)
+                    sms_status = self.send_sms(phone_id)
+                    return "Newly Subscribed", sms_status
+                else:
+                    return "Subscription Response Unclear", "SMS Not Sent"
+            elif response.status_code == 422:
+                return "Unprocessable Entity", "SMS Not Sent"
+            else:
+                return f"Subscription Failed ({response.status_code})", "SMS Not Sent"
+        except requests.exceptions.RequestException as e:
+            logging.error(f"[SUBSCRIBE ERROR] {str(e)} — skipping\n")
+            return "Subscription Failed (Exception)", "SMS Not Sent"
+
+    def send_sms(self, phone_id):
+        url = f"{self.api_base_url}/programs/{self.program_id}/phones/{phone_id}/outbound-messages"
+        payload = {
+            "template-id": self.template_id
+        }
+        logging.info(f"[SMS] Sending SMS to Phone ID: {phone_id}")
+
+        try:
+            response = session.post(url, headers=self.token_service.get_headers(), json=payload, timeout=20)
+            try:
+                resp_json = response.json()
+            except Exception:
+                resp_json = response.text
+            logging.info(f"[SMS] Status Code: {response.status_code}, Response: {resp_json}\n")
+            if response.status_code in [200, 201] and isinstance(resp_json, dict):
+                return f"SMS Status: {resp_json.get('status', 'Unknown')}"
+            else:
+                return f"SMS Failed ({response.status_code})"
+        except requests.exceptions.RequestException as e:
+            logging.error(f"[SMS ERROR] {str(e)}\n")
+            return f"SMS Exception: {str(e)}"
+
+    def get_or_create_and_subscribe(self, phone_number: str, country_code: str, gmpi_id: str,
+                                    member_first_name: str = "", member_last_name: str = "") -> (str, str, str, dict):
+        logging.info(f"[PHONE BLOCK] GMPI_ID: {gmpi_id}, First Name: {member_first_name}, Last Name: {member_last_name}, Phone: {phone_number}")
+        phone_obj, creation_status = self.phone_exists(phone_number, country_code)
+        if creation_status == "Not Found":
+            phone_obj = self.create_phone(phone_number, country_code, gmpi_id, member_first_name, member_last_name)
+            creation_status = "Created" if phone_obj else "Creation Failed"
+            if not phone_obj:
+                return "Creation Failed", "Not Subscribed", "SMS Not Sent", {}
+
+        subscription_status = self.check_subscription(phone_number)
+        sms_status = "SMS Not Sent"
+
+        if phone_obj:
+            if subscription_status == "Not Subscribed":
+                subscription_status, sms_status = self.subscribe_phone(phone_obj, gmpi_id, member_first_name, member_last_name)
+            elif subscription_status == "Already Subscribed":
+                sms_status = self.send_sms(phone_obj["id"])
+
+        logging.info(
+            f"[RESULT] GMPI_ID: {gmpi_id}, First Name: {member_first_name}, Last Name: {member_last_name}, Phone: {phone_number}, "
+            f"Creation: {creation_status}, Subscription: {subscription_status}, SMS: {sms_status}"
+        )
+        return creation_status, subscription_status, sms_status, phone_obj
+
+    def process_csv(self, input_file: str):
+        df = pd.read_csv(input_file, encoding='utf-8-sig', dtype={"MEMBER_PHONE": str})
+        df.columns = df.columns.str.strip()
+        total_records = len(df)
+        logging.info(f"📄 Found columns in CSV: {df.columns.tolist()}")
+        logging.info(f"📊 Total records found: {total_records}\n")
+
+        with open(self.output_csv, 'w', newline='') as outfile:
+            writer = csv.DictWriter(outfile, fieldnames=[
+                "PHONE_ID", "GMPI_ID", "MEMBER_FIRST_NAME", "MEMBER_LAST_NAME", "PHONE_NUMBER", "COUNTRY_CODE",
+                "CREATION_STATUS", "SUBSCRIPTION_STATUS", "SMS_STATUS"
+            ])
+            writer.writeheader()
+
+            for index, row in df.iterrows():
+                current_num = index + 1
+                phone_number = str(row.get("MEMBER_PHONE", "")).strip()
+                gmpi_id = str(row.get("GMPI_ID", "")).strip()
+                member_first_name = str(row.get("MEMBER_FIRST_NAME", "")).strip() if "MEMBER_FIRST_NAME" in row else ""
+                member_last_name = str(row.get("MEMBER_LAST_NAME", "")).strip() if "MEMBER_LAST_NAME" in row else ""
+                country_code = row.get("COUNTRY_CODE")
+                if not country_code or (isinstance(country_code, float) and math.isnan(country_code)):
+                    country_code = "US"
+                country_code = str(country_code).strip().upper()
+                if not phone_number:
+                    continue
+
+                percent = (current_num / total_records) * 100
+                bar_length = 40
+                filled_length = int(bar_length * current_num // total_records)
+                bar = '█' * filled_length + '-' * (bar_length - filled_length)
+                sys.stdout.write(f"\rProgress: |{bar}| {percent:6.2f}% ({current_num}/{total_records})")
+                sys.stdout.flush()
+
+                creation_status, subscription_status, sms_status, phone_obj = self.get_or_create_and_subscribe(
+                    phone_number, country_code, gmpi_id, member_first_name, member_last_name
+                )
+
+                phone_id = phone_obj.get("id") if phone_obj else ""
+                metadata = phone_obj.get("metadata", {}) if phone_obj else {}
+                meta_gmpi_id = metadata.get("gmpi_id", gmpi_id)
+                meta_first = metadata.get("member_first_name", member_first_name)
+                meta_last = metadata.get("member_last_name", member_last_name)
+
+                writer.writerow({
+                    "PHONE_ID": phone_id,
+                    "GMPI_ID": meta_gmpi_id,
+                    "MEMBER_FIRST_NAME": meta_first,
+                    "MEMBER_LAST_NAME": meta_last,
+                    "PHONE_NUMBER": phone_number,
+                    "COUNTRY_CODE": country_code,
+                    "CREATION_STATUS": creation_status,
+                    "SUBSCRIPTION_STATUS": subscription_status,
+                    "SMS_STATUS": sms_status
+                })
+
+                logging.info("------------------------------------------------------------------------------------------")
+
+            sys.stdout.write("\n")
+
+# -------------------- Main --------------------
+if __name__ == "__main__":
+    AUTH_URL = "https://ocp.optum.com/oauth2/token"  # Replace with actual auth endpoint
+    CLIENT_ID = "e3588578-4c78-4266-95a9-c9c87db197fd"
+    CLIENT_SECRET = "70ee81df-c4c6-42b4-b7c4-4f46b5ff5821"
+    API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"  # Base API URL
+    PROGRAM_ID = "798365"
+    TEMPLATE_ID = "1788594" #May short code is 1788594
+    INPUT_CSV = "Member_Phone_List_20260506.csv"
+    OUTPUT_CSV = "Created_Subscribed_SentSMS_Log_20260506.csv"
+
+    logging.info("🚀 Starting SMS Manager phone creation & subscription sync...\n")
+
+    token_service = SMSTokenService(
+        auth_url=AUTH_URL,
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET
+    )
+
+    phone_manager = SMSPhoneManager(
+        api_base_url=API_BASE_URL,
+        token_service=token_service,
+        program_id=PROGRAM_ID,
+        template_id=TEMPLATE_ID,
+        output_csv=OUTPUT_CSV
+    )
+
+    phone_manager.process_csv(INPUT_CSV)
