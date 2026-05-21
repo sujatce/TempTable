@@ -363,7 +363,7 @@ if __name__ == "__main__":
         api_base_url=API_BASE_URL,
         token_service=token_service,
         program_id=PROGRAM_ID,
-        template_id=TEMPLATE_ID,
+        template_id="",
         output_csv=OUTPUT_CSV
     )
 
