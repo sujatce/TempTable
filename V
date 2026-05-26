@@ -31,7 +31,7 @@ create or replace view ASQN_PRD_ORCHESTRATION_DB.ACCESS.VW_WM_UHC_MBR_EMAIL(
 	EMAIL_UPDATE_DATE COMMENT 'Date recording when the email address was last updated',
 	REFRESH_DATE COMMENT 'System date when the table was last fully refreshed stored in YYYY-MM-DD format'
 ) COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences.  This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements. This View is limited to South Region WellMed membership and includes members with valid or invalid email addresses, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.'
-
+as
 SELECT DISTINCT
     REPORT_MONTH,
     ENTITY_ID,
@@ -46,3 +46,38 @@ SELECT DISTINCT
     REFRESH_DATE
 FROM
     ASQN_PRD_ORCHESTRATION_DB.DBO.WM_UHC_MBR_EMAIL;
+
+
+This is the view code I created please check if it is correct or not 
+
+
+one of the view code sample I can give here
+
+create or replace view ASQN_PRD_ORCHESTRATION_DB.ACCESS.VW_WM_UHC_MBR_OKTO_EMAIL(
+	REPORT_MONTH COMMENT 'Month of the member empanelment in BI Analysis MRM stored in YYYY-MM-DD format',
+	ENTITY_ID COMMENT 'A unique number used by the enterprise to identify an individual person',
+	MBI COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
+	MEMBER_ID COMMENT 'WellMed BI Analysis DIM_MEMBER unique MEMBER_ID',
+	GMPI_ID COMMENT 'WellMed unique member identifier',
+	MEMBER_LAST_NAME COMMENT 'Last name of the member enrolled in the health plan',
+	MEMBER_FIRST_NAME COMMENT 'First name of the member enrolled in the health plan',
+	MEMBER_EMAIL COMMENT 'Member Email Address',
+	EMAIL_UPDATE_DATE COMMENT 'Date recording when the email address was last updated',
+	REFRESH_DATE COMMENT 'System date when the table was last fully refreshed stored in YYYY-MM-DD format'
+) COMMENT='The WellMed Central Quality Performance Analytics team manages integration with UHC data sources for the purpose of sourcing member email address and email preferences. This data is used for campaign orchestration, reporting and suppression purposes, to reduce member abrasion, and to follow enterprise email outreach compliance requirements. This view is limited to South Region WellMed membership with a valid email address where the member has not requested a Do Not Email flag be set, per UHC. It is not inclusive of other Email Unsubscribe or Bounceback data sourced from Optum Health outreach initiatives.'
+ as
+
+SELECT DISTINCT
+    REPORT_MONTH,
+    ENTITY_ID,
+    MBI,
+    MEMBER_ID,
+    GMPI_ID,
+    MEMBER_LAST_NAME,
+    MEMBER_FIRST_NAME,
+    MEMBER_EMAIL,
+    EMAIL_UPDATE_DATE,
+    REFRESH_DATE
+FROM
+    ASQN_PRD_ORCHESTRATION_DB.DBO.WM_UHC_MBR_OKTO_EMAIL;
+
