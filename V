@@ -1,16 +1,20 @@
-select distinct [mrm].[GMPI_ID],
-	[mrm].[MEMBER_LAST_NAME],
-	[mrm].[MEMBER_FIRST_NAME],
-	[dma].[MEMBER_PHONE] as [MEMBER_PHONE],
-	[dm].[MEMBER_MBI] as [MBI] 
-from [BI_Analysis].[dbo].[MEMBER_REPORT_MONTH] [mrm] 
-	left join [BI_Analysis].[dbo].[DIM_MEMBER_ADDRESS] [dma] on [dma].[MEMBER_ID] = [mrm].[MEMBER_ID] and [dma].[ACTIVE_FLAG] = 1 
-	left join [BI_Analysis].[dbo].[DIM_MEMBER] [dm] on [dm].[MEMBER_ID] = [mrm].[MEMBER_ID] 
-where [mrm].[MEMBER_LAST_NAME] is not NULL 
-	and [mrm].[MEMBER_FIRST_NAME] is not NULL 
-	and [dma].[MEMBER_PHONE] is not NULL 
-  and [mrm].[DATA_ENTITY] in ('Wellmed') 
-	and [mrm].[REPORT_MONTH] = DateAdd(MONTH, DateDiff(MONTH, 0, GetDate()), 0) 
-	and LTrim(RTrim([mrm].[MEMBER_LAST_NAME])) <> '' 
-	and LTrim(RTrim([mrm].[MEMBER_FIRST_NAME])) <> '' 
-	and LTrim(RTrim([dma].[MEMBER_PHONE])) <> ''
+SELECT DISTINCT
+    mrm.GMPI_ID,
+    mrm.MEMBER_LAST_NAME,
+    mrm.MEMBER_FIRST_NAME,
+    dma.MEMBER_PHONE AS MEMBER_PHONE,
+    dm.MEMBER_MBI AS MBI
+FROM BI_ANALYSIS.DBO.MEMBER_REPORT_MONTH mrm
+LEFT JOIN BI_ANALYSIS.DBO.DIM_MEMBER_ADDRESS dma
+    ON dma.MEMBER_ID = mrm.MEMBER_ID
+    AND dma.ACTIVE_FLAG = 1
+LEFT JOIN BI_ANALYSIS.DBO.DIM_MEMBER dm
+    ON dm.MEMBER_ID = mrm.MEMBER_ID
+WHERE mrm.MEMBER_LAST_NAME IS NOT NULL
+  AND mrm.MEMBER_FIRST_NAME IS NOT NULL
+  AND dma.MEMBER_PHONE IS NOT NULL
+  AND mrm.DATA_ENTITY IN ('Wellmed')
+  AND mrm.REPORT_MONTH = DATE_TRUNC('MONTH', CURRENT_DATE())
+  AND TRIM(mrm.MEMBER_LAST_NAME) <> ''
+  AND TRIM(mrm.MEMBER_FIRST_NAME) <> ''
+  AND TRIM(dma.MEMBER_PHONE) <> '';
