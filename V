@@ -1,2 +1,13 @@
-DELETE FROM ASQN_PRD_ORCHESTRATION_DB.DBO.SMS_OPT_IN
-WHERE INSERT_DATE >= DATEADD(MINUTE,-10,CURRENT_TIMESTAMP());
+Option 4: If you know the Query ID of the INSERT (Best method)
+Snowflake lets you find the exact INSERT query.
+SELECT *
+FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY())
+WHERE QUERY_TEXT ILIKE '%INSERT INTO SMS_OPT_IN%'
+ORDER BY START_TIME DESC;
+Get the Query ID.
+Then see what rows were inserted:
+SELECT *
+FROM ASQN_PRD_ORCHESTRATION_DB.DBO.SMS_OPT_IN
+BEFORE(STATEMENT => '<insert_query_id>');
+Or compare before vs after and delete only those rows.
+For your SMS_OPT_IN table, if this was a one-time l
