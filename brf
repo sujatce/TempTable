@@ -1,54 +1,49 @@
-CREATE OR REPLACE SEQUENCE ASQN_DEV_QUALITY_DB.CLEANSED.EPIC_KELSEY_ROSTER_CLNSD_SEQ
-START = 1
-INCREMENT = 1;
+6/9  Dev: inserted row
 
-CREATE OR REPLACE TABLE ASQN_DEV_QUALITY_DB.CLEANSED.EPIC_KELSEY_ROSTER_CLNSD (
-    EPIC_KELSEY_ROSTER_CLNSD_ID NUMBER(38,0) NOT NULL
-        DEFAULT ASQN_DEV_QUALITY_DB.CLEANSED.EPIC_KELSEY_ROSTER_CLNSD_SEQ.NEXTVAL
-        COMMENT 'Cleansed table primary key',
 
-    EPIC_KELSEY_ROSTER_ID NUMBER(38,0) NOT NULL
-        COMMENT 'Foreign key to RAW.EPIC_KELSEY_ROSTER',
 
-    REPORT_MONTH DATE COMMENT 'Membership month from BI Analysis MRM stored in YYYY-MM-DD format',
-    GMPI_ID NUMBER(38,0) COMMENT 'WellMed unique member identifier',
-    MEMBER_NAME_FIRST VARCHAR(100) COMMENT 'Patient''s first name',
-    MEMBER_NAME_LAST VARCHAR(100) COMMENT 'Patient''s last name',
-    MEMBER_DATE_OF_BIRTH DATE COMMENT 'Patient''s date of birth',
-    MEMBER_LEGAL_SEX VARCHAR(30) COMMENT 'Patient''s legal sex standardized per Epic specification',
-    GROUP_ALTERNATE_ID VARCHAR(10) COMMENT 'Group alternate ID',
-    MEMBER_IDENTITY_ID VARCHAR(50) NOT NULL COMMENT 'Medicare Beneficiary Identifier',
-    RESIDENCE_ZIP VARCHAR(20) COMMENT 'Patient''s postal code',
-    RESIDENCE_STATE VARCHAR(60) COMMENT 'Patient''s state',
-    RESIDENCE_STREET_ADDRESS_LINE1 VARCHAR(100) COMMENT 'The first line of the patient''s street address',
-    RESIDENCE_STREET_ADDRESS_LINE2 VARCHAR(100) COMMENT 'The second line of the patient''s street address',
-    RESIDENCE_CITY VARCHAR(100) COMMENT 'Patient''s city',
-    UHC_ROSTER_IDENTIFIER NUMBER(38,0) COMMENT 'UHC Roster Identifier is the Provider TIN/Tax_ID',
-    USER_STORY VARCHAR(25) COMMENT 'User story ID associated with data ingestion or update',
+-- INSERT INTO ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA(
+--     VENDOR_NAME,
+--     TABLE_NAME,
+--     COLUMN_NAME_TABLE,
+--     COLUMN_NAME_FILE,
+--     PROGRAM_NAME,
+--     REQUIRED_FLAG,
+--     EXCLUDE_FLAG,
+--     USER_STORY)
+-- VALUES(
+--     'LGC',
+--     'VENDOR_RAW_RESPONSE_LGC',
+--     'LANGUAGE',
+--     'Language',
+--     'ALL',
+--     FALSE,
+--     FALSE,
+--     'US10632852' 
+--     );
 
-    INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL
-        DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7))
-        COMMENT 'Timestamp recording when the row was inserted',
+-- Number of rows inserted: 1
+-- Query ID: 01c4f1f0-0104-b873-0010-e20307f2ed82
+-- Query Link: https://app.snowflake.com/east-us-2.azure/hha43620/#/compute/history/queries/01c4f1f0-0104-b873-0010-e20307f2ed82/detail?autoRefreshInSeconds=0
 
-    INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER()
-        COMMENT 'USER ID that first inserted data in the row',
 
-    UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL
-        DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7))
-        COMMENT 'Timestamp recording when the row was last updated',
+select * from ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA
+except 
+select * from ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA BEFORE(STATEMENT => '01c4f1f0-0104-b873-0010-e20307f2ed82')
+except
+select * from ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA
 
-    UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER()
-        COMMENT 'USER ID that last updated data in the row',
 
-    LOAD_DATE DATE NOT NULL
-        DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS DATE)
-        COMMENT 'Date recording when the row was inserted',
 
-    CONSTRAINT PK_EK_ROSTER_CLNSD_PRIMARYKEY
-        PRIMARY KEY (EPIC_KELSEY_ROSTER_CLNSD_ID),
 
-    CONSTRAINT FK_EK_ROSTER_CLNSD_RAW
-        FOREIGN KEY (EPIC_KELSEY_ROSTER_ID)
-        REFERENCES ASQN_DEV_QUALITY_DB.RAW.EPIC_KELSEY_ROSTER(EPIC_KELSEY_ROSTER_ID)
-)
-COMMENT='This cleansed table contains information about all the patients included in the Epic Kelsey Roster. Each line represents a different person.';
+
+6/5 PDK Dev
+
+File layout has changed...
+
+New columns
+
+
+
+
+
