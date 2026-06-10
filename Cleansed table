@@ -12,10 +12,6 @@ Add a PK for cleansed table
 
 Use the raw table id as foreign key
 
-Make changes to data types as needed and required
-
-Example - If gender is F/M in raw and needs to be 1/0 in cleansed, make the data type change as needed
-
 now i have to create this cleansd table and above is the requirement and below is the raw table ddl 
 
 create or replace TABLE ASQN_DEV_QUALITY_DB.RAW.EPIC_KELSEY_ROSTER (
