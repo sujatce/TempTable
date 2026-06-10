@@ -1,21 +1,22 @@
- WITH latest_mrm AS (
+WITH latest_mrm AS
+(
     SELECT *
- 
- FROM (
-        SELECT 
-            mrm.*,
-            ROW_NUMBER() OVER (
-                PARTITION BY mrm.member_id
-                ORDER BY mrm.dw_update_date DESC
-            ) AS rn_mrm
-        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.member_report_month mrm
-        WHERE mrm.report_month = (
-            SELECT MAX(report_month)
-            FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.member_report_month mrm
-        )
-    ) b
-    WHERE b.rn_mrm = 1
+    FROM
+    (
+        SELECT
+            MRM.*,
+            ROW_NUMBER() OVER
+            (
+                PARTITION BY MRM.MEMBER_ID
+                ORDER BY MRM.DW_UPDATE_DATE DESC, MRM.GMPI_ID DESC
+            ) AS RN_MRM
+        FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
+        WHERE MRM.REPORT_MONTH = '2026-06-01'
+          AND MRM.ACTIVE_FLAG = 1
+    ) B
+    WHERE B.RN_MRM = 1
 )
+
 SELECT
     MRM.GMPI_ID,
     MRM.MEMBER_LAST_NAME,
@@ -73,7 +74,7 @@ SELECT
     'WELLMED' AS BUSINESS_SEGMENT,
     MRM.REPORT_MONTH AS MRM_REPORT_MONTH
 
-FROM  latest_mrm mrm
+FROM latest_mrm MRM
 
 LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_PROVIDER DP 
     ON MRM.PROVIDER_ID = DP.PROVIDER_ID
@@ -95,6 +96,7 @@ LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.HIER_MEMBER_OPER HMO
 
 LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM 
     ON MRM.GMPI_ID = DM.GMPI_ID 
+    AND DM.ACTIVE_FLAG = 1
 
 LEFT JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER_ADDRESS DMA 
     ON DMA.MEMBER_ID = MRM.MEMBER_ID 
@@ -118,13 +120,12 @@ WHERE
     )
     AND MRM.DATA_ENTITY = 'Wellmed'
     AND DM.MEMBER_LANGUAGE IN ('English', 'Spanish')
-    AND MRM.REPORT_MONTH = '2026-06-01'
     AND DP.PROVIDER_FIRST_NAME IS NOT NULL
-    AND MRM.ACTIVE_FLAG = 1
     AND MRM.IS_HOSPICE_FLAG = 0
     AND MRM.LTI_FLAG = 0
     AND MRM.ESRD_FLAG = 0
-    AND DM.ACTIVE_FLAG = 1
-    AND MRM.GMPI_ID = '12345678'
 
-ORDER BY MRM.GMPI_ID;biz
+    -- For testing only, use MEMBER_ID, not GMPI_ID
+    AND MRM.MEMBER_ID = '<member_id>'
+
+ORDER BY MRM.GMPI_ID;
