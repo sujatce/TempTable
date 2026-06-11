@@ -36,3 +36,32 @@ IS_PREFERRED_PHARMACY BOOLEAN COMMENT
 • 0 = Not a preferred pharmacy
 • 1 = Is a preferred pharmacy'
 One thing to note during your code review:
+
+
+
+PRESCRIBING_PROVIDER_PHONE_NUMBER VARCHAR(30) COMMENT
+'Prescribing provider''s phone number. All NANP-compliant formats are accepted:
+
+• 7-digit dial: NXX-XXXX
+• 10-digit dial: NPA-NXX-XXXX
+• 11-digit dial: T-NPA-NXX-XXXX
+
+Either Prescribing Provider Name or Prescribing Provider NPI must be provided if Prescribing Provider Phone Number is populated.'
+
+
+
+PHARMACY_PHONE_NUMBER VARCHAR(30) COMMENT
+'Pharmacy''s phone number. All NANP-compliant formats are accepted:
+
+• 7-digit dial: NXX-XXXX
+• 10-digit dial: NPA-NXX-XXXX
+• 11-digit dial: T-NPA-NXX-XXXX
+
+Either Pharmacy Name or Pharmacy NPI must be provided if Pharmacy Phone Number is populated.'
+
+
+
+
+
+
+
