@@ -1,0 +1,38 @@
+bsolutely. Based on the Epic specification shown in your screenshots, you can use these descriptions directly in your DDL comments.
+MEASUREMENT_PERIOD_PATTERN VARCHAR(30) COMMENT
+'Calculation period used for the measure. Describes the range of data included in the outcome. Allowed values:
+• 1 = Year to Date
+• 2 = Rolling 12 Months
+If not provided, "Year to Date" is used as the default value.'
+IS_IMPACTABLE BOOLEAN COMMENT
+'Indicates whether the patient can be made compliant in the measurement period. Allowed values:
+• 0 = Not impactable
+• 1 = Is impactable'
+IS_ON_FIRST_FILL BOOLEAN COMMENT
+'Indicates whether the medication has been filled only once. Allowed values:
+• 0 = Not on first fill
+• 1 = Is on first fill'
+IS_LOW_INCOME_SUBSIDY BOOLEAN COMMENT
+'Indicates whether the patient is eligible for Medicare Part D Low Income Subsidy (LIS). Allowed values:
+• 0 = Not eligible for LIS
+• 1 = Is eligible for LIS'
+LOW_INCOME_SUBSIDY_COPAYMENT_LEVEL VARCHAR(100) COMMENT
+'Patient''s copayment level for Medicare Part D Low Income Subsidy (LIS). Allowed values:
+• 0 = None
+• 1 = Level 1
+• 2 = Level 2
+• 3 = Level 3'
+ELIGIBLE_FOR_EXTENDED_DAYS_SUPPLY VARCHAR(100) COMMENT
+'Indicates whether the patient is eligible for a greater days supply of the medication. Allowed values:
+• 0 = No
+• 1 = Yes - 90 Day Supply
+• 2 = Yes - 100 Day Supply'
+PHARMACY_DISTRIBUTION_METHOD VARCHAR(50) COMMENT
+'The method by which the patient received the medication from the pharmacy. Allowed values:
+• Retail
+• Mail'
+IS_PREFERRED_PHARMACY BOOLEAN COMMENT
+'Indicates whether the pharmacy that dispensed the medication is a preferred pharmacy for the payer. Allowed values:
+• 0 = Not a preferred pharmacy
+• 1 = Is a preferred pharmacy'
+One thing to note during your code review:
