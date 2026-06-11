@@ -60,7 +60,12 @@ PHARMACY_PHONE_NUMBER VARCHAR(30) COMMENT
 Either Pharmacy Name or Pharmacy NPI must be provided if Pharmacy Phone Number is populated.'
 
 
-
+COMMENT 'Patient''s legal sex. Allowed Values:
+1 = Female
+2 = Male
+3 = Other. The value ''Other'' is not intended to be used as a catch-all or unknown.
+4 = X
+5 = Nonbinary.'
 
 
 
