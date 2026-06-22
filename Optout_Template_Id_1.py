@@ -257,8 +257,8 @@ class BulkUnsubscribeFetcher:
 if __name__ == "__main__":
 
     AUTH_URL = "https://ocp.optum.com/oauth2/token"  # Replace with actual auth endpoint
-    CLIENT_ID = "e3588578-4c78-4266-95a9-c9c87db197fd"
-    CLIENT_SECRET = "70ee81df-c4c6-42b4-b7c4-4f46b5ff5821"
+    CLIENT_ID = " "
+    CLIENT_SECRET = " "
     API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"  # Base API URL
     PROGRAM_ID = "798365"
     INPUT_CSV = "Member_Phone_List_20260622.csv"
