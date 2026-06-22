@@ -1,0 +1,42 @@
+data = response.json()
+messages = data.get("outbound-message") or []
+replace with this:
+data = response.json()
+
+logging.info(f"[OUTBOUND DEBUG] Response for phone-id={phone_id}:\n{json.dumps(data, indent=2)}")
+
+messages = (
+    data.get("outbound-message")
+    or data.get("outbound-messages")
+    or data.get("outboundMessages")
+    or data.get("messages")
+    or []
+)
+
+logging.info(f"[OUTBOUND DEBUG] Message count for phone-id={phone_id}: {len(messages)}")
+Also temporarily change this part:
+for msg in messages:
+    if msg.get("status") == "sent":
+to this:
+for msg in messages:
+    logging.info(f"[OUTBOUND DEBUG] Message record:\n{json.dumps(msg, indent=2)}")
+
+    return {
+        "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
+        "LAST_TEMPLATE_ID": msg.get("template-id"),
+        "LAST_MESSAGE_STATUS": msg.get("status"),
+        "LAST_MESSAGE_CREATED_AT": msg.get("created-at"),
+        "LAST_MESSAGE_UPDATED_AT": msg.get("updated-at")
+    }
+This will pick the first latest message regardless of status.
+Why your fields are blank now
+Your code currently says:
+if msg.get("status") == "sent":
+But the API may return status as:
+processed
+delivered
+queued
+created
+completed
+or it may not return status at all.
+So the loop does not return anything, and your report gets blanks
