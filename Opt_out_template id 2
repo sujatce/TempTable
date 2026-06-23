@@ -1,0 +1,71 @@
+    def fetch_last_sent_template(self, phone_id, program_id):
+        """Fetch last sent outbound message template for a phone/program."""
+        empty_result = {
+            "LAST_OUTBOUND_MESSAGE_ID": None,
+            "LAST_TEMPLATE_ID": None,
+            "LAST_MESSAGE_STATUS": None,
+            "LAST_MESSAGE_CREATED_AT": None,
+            "LAST_MESSAGE_UPDATED_AT": None
+        }
+
+        if not phone_id or not program_id:
+            return empty_result
+
+        endpoints = [
+            "outbound-messages",
+            "outbound-messages-archive"
+        ]
+
+        for endpoint in endpoints:
+            url = (
+                f"{self.api_base_url}/{endpoint}?"
+                f"phone-id={phone_id}"
+                f"&program-id={program_id}"
+                f"&page=1"
+                f"&per-page=50"
+                f"&sort-by=created-at"
+                f"&sort-order=desc"
+            )
+
+            try:
+                response = session.get(url, headers=self.token_service.get_headers(), timeout=30)
+                logging.info(f"[{endpoint.upper()}] Phone ID {phone_id} Status Code: {response.status_code}")
+
+                if response.status_code == 401:
+                    self.token_service.renew_token()
+                    response = session.get(url, headers=self.token_service.get_headers(), timeout=30)
+
+                if response.status_code != 200:
+                    logging.warning(f"[{endpoint.upper()}] Unable to fetch messages for phone-id={phone_id}")
+                    continue
+
+                data = response.json()
+
+                messages = (
+                    data.get("outbound-message")
+                    or data.get("outbound-messages")
+                    or data.get("outboundMessages")
+                    or data.get("messages")
+                    or []
+                )
+
+                logging.info(f"[{endpoint.upper()}] Message count for phone-id={phone_id}: {len(messages)}")
+
+                for msg in messages:
+                    generated_body = (msg.get("generated-body") or "").lower()
+
+                    if "unsubscribed" in generated_body:
+                        continue
+
+                    return {
+                        "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
+                        "LAST_TEMPLATE_ID": msg.get("template-id"),
+                        "LAST_MESSAGE_STATUS": msg.get("status"),
+                        "LAST_MESSAGE_CREATED_AT": msg.get("created-at"),
+                        "LAST_MESSAGE_UPDATED_AT": msg.get("updated-at")
+                    }
+
+            except requests.exceptions.RequestException as e:
+                logging.error(f"[{endpoint.upper()} ERROR] {str(e)}")
+
+        return empty_result
