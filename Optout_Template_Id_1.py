@@ -119,7 +119,7 @@ class BulkUnsubscribeFetcher:
             f"phone-id={phone_id}"
             f"&program-id={program_id}"
             f"&page=1"
-            f"&per-page=10"
+            f"&per-page=50"
             f"&sort-by=created-at"
             f"&sort-order=desc"
         )
@@ -158,6 +158,11 @@ class BulkUnsubscribeFetcher:
 
             for msg in messages:
                 logging.info(f"[OUTBOUND DEBUG] Message record:\n{json.dumps(msg, indent=2)}")
+
+                generated_body = (msg.get("generated-body") or "").lower()
+
+                if "unsubscribed" in generated_body:
+                    continue
 
                 return {
                     "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
