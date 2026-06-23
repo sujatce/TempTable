@@ -104,7 +104,7 @@ class BulkUnsubscribeFetcher:
         self.token_service = token_service
 
     def fetch_last_sent_template(self, phone_id, program_id):
-         """Fetch last sent outbound message template for a phone/program."""
+        """Fetch last sent outbound message template for a phone/program."""
         empty_result = {
             "LAST_OUTBOUND_MESSAGE_ID": None,
             "LAST_TEMPLATE_ID": None,
