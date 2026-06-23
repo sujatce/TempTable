@@ -147,24 +147,36 @@ class BulkUnsubscribeFetcher:
             logging.info(f"[OUTBOUND DEBUG] Response for phone-id={phone_id}:\n{json.dumps(data, indent=2)}")
 
             messages = (
-                 data.get("outbound-message")
-                 or data.get("outbound-messages")
-                 or data.get("outboundMessages")
-                 or data.get("messages")
-                 or [])
+                data.get("outbound-message")
+                or data.get("outbound-messages")
+                or data.get("outboundMessages")
+                or data.get("messages")
+                or []
+            )
 
             logging.info(f"[OUTBOUND DEBUG] Message count for phone-id={phone_id}: {len(messages)}")
 
             for msg in messages:
-                    logging.info(f"[OUTBOUND DEBUG] Message record:\n{json.dumps(msg, indent=2)}")
+                logging.info(f"[OUTBOUND DEBUG] Message record:\n{json.dumps(msg, indent=2)}")
 
-            return {
-              "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
-              "LAST_TEMPLATE_ID": msg.get("template-id"),
-              "LAST_MESSAGE_STATUS": msg.get("status"),
-              "LAST_MESSAGE_CREATED_AT": msg.get("created-at"),
-               "LAST_MESSAGE_UPDATED_AT": msg.get("updated-at")
-            }
+                return {
+                    "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
+                    "LAST_TEMPLATE_ID": msg.get("template-id"),
+                    "LAST_MESSAGE_STATUS": msg.get("status"),
+                    "LAST_MESSAGE_CREATED_AT": msg.get("created-at"),
+                    "LAST_MESSAGE_UPDATED_AT": msg.get("updated-at")
+                }
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"[OUTBOUND ERROR] {str(e)}")
+
+        return {
+            "LAST_OUTBOUND_MESSAGE_ID": None,
+            "LAST_TEMPLATE_ID": None,
+            "LAST_MESSAGE_STATUS": None,
+            "LAST_MESSAGE_CREATED_AT": None,
+            "LAST_MESSAGE_UPDATED_AT": None
+        }
 
     def fetch_all_unsubscribed(self):
         """Fetch all unsubscribed phone records for the given program ID."""
@@ -172,7 +184,6 @@ class BulkUnsubscribeFetcher:
         page = 1
         per_page = 1000
 
-        # ✅ Generate report timestamp in UTC (ISO format, same as other date columns)
         report_generated_date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         while True:
@@ -256,10 +267,10 @@ class BulkUnsubscribeFetcher:
 
 if __name__ == "__main__":
 
-    AUTH_URL = "https://ocp.optum.com/oauth2/token"  # Replace with actual auth endpoint
-    CLIENT_ID = " "
-    CLIENT_SECRET = " "
-    API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"  # Base API URL
+    AUTH_URL = "https://ocp.optum.com/oauth2/token"
+    CLIENT_ID = ""
+    CLIENT_SECRET = ""
+    API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"
     PROGRAM_ID = "798365"
     INPUT_CSV = "Member_Phone_List_20260622.csv"
     OUTPUT_CSV = f"Unsubscribed_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
@@ -275,7 +286,6 @@ if __name__ == "__main__":
         logging.info("No unsubscribed records found.")
         sys.exit(0)
 
-    # === Read input file ===
     df_input = pd.read_csv(INPUT_CSV, encoding="utf-8-sig", dtype=str)
     total_records = len(df_input)
 
@@ -284,11 +294,9 @@ if __name__ == "__main__":
         if col not in df_input.columns:
             raise ValueError(f"Input CSV must contain a column named '{col}'")
 
-    # === Merge unsubscribed list with input ===
     df_unsub_all = pd.DataFrame(unsubscribed_data)
     df_final = pd.merge(df_input, df_unsub_all, how="inner", on="GMPI_ID")
 
-    # === Select columns for report ===
     df_final = df_final[
         [
             "GMPI_ID",
@@ -310,6 +318,7 @@ if __name__ == "__main__":
             "LAST_MESSAGE_UPDATED_AT"
         ]
     ]
+
     df_final.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
 
     matched_count = len(df_final)
