@@ -149,8 +149,10 @@ class BulkUnsubscribeFetcher:
                 messages = (
                     data.get("outbound-message")
                     or data.get("outbound-message-archive")
+                    or data.get("outbound-message-archives")
                     or data.get("outbound-messages")
                     or data.get("outbound-messages-archive")
+                    or data.get("outbound-messages-archives")
                     or data.get("outboundMessages")
                     or data.get("messages")
                     or []
@@ -273,8 +275,8 @@ class BulkUnsubscribeFetcher:
 if __name__ == "__main__":
 
     AUTH_URL = "https://ocp.optum.com/oauth2/token"
-    CLIENT_ID = ""
-    CLIENT_SECRET = ""
+    CLIENT_ID = " "
+    CLIENT_SECRET = " "
     API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"
     PROGRAM_ID = "798365"
     INPUT_CSV = "Member_Phone_List_20260622.csv"
