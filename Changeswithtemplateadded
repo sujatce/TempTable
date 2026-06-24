@@ -54,10 +54,16 @@
                 logging.info(f"[{endpoint.upper()}] Message count for phone-id={phone_id}: {len(messages)}")
 
                 for msg in messages:
-                    generated_body = (msg.get("generated-body") or "").lower()
+                    logging.info(f"[{endpoint.upper()} DEBUG] Message record:\n{json.dumps(msg, indent=2)}")
 
-                    if "unsubscribed" in generated_body:
+                    generated_body = (msg.get("generated-body") or "").lower()
+                    service_response = (msg.get("service-response") or "").lower()
+
+                    if "unsubscribed" in generated_body or "unsubscribed" in service_response:
+                        logging.info(f"[{endpoint.upper()}] Skipping unsubscribe confirmation template-id={msg.get('template-id')}")
                         continue
+
+                    logging.info(f"[{endpoint.upper()}] Selected template-id={msg.get('template-id')}")
 
                     return {
                         "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
