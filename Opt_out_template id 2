@@ -148,7 +148,9 @@ class BulkUnsubscribeFetcher:
 
                 messages = (
                     data.get("outbound-message")
+                    or data.get("outbound-message-archive")
                     or data.get("outbound-messages")
+                    or data.get("outbound-message-archive")
                     or data.get("outboundMessages")
                     or data.get("messages")
                     or []
@@ -173,7 +175,7 @@ class BulkUnsubscribeFetcher:
             except requests.exceptions.RequestException as e:
                 logging.error(f"[{endpoint.upper()} ERROR] {str(e)}")
 
-            return empty_result
+        return empty_result
 
     def fetch_all_unsubscribed(self):
         """Fetch all unsubscribed phone records for the given program ID."""
