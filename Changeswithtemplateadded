@@ -1,42 +1,73 @@
-data = response.json()
-messages = data.get("outbound-message") or []
-replace with this:
-data = response.json()
+    def fetch_last_sent_template(self, phone_id, program_id):
+        """Fetch last sent outbound message template for a phone/program."""
+        empty_result = {
+            "LAST_OUTBOUND_MESSAGE_ID": None,
+            "LAST_TEMPLATE_ID": None,
+            "LAST_MESSAGE_STATUS": None,
+            "LAST_MESSAGE_CREATED_AT": None,
+            "LAST_MESSAGE_UPDATED_AT": None
+        }
 
-logging.info(f"[OUTBOUND DEBUG] Response for phone-id={phone_id}:\n{json.dumps(data, indent=2)}")
+        if not phone_id or not program_id:
+            return empty_result
 
-messages = (
-    data.get("outbound-message")
-    or data.get("outbound-messages")
-    or data.get("outboundMessages")
-    or data.get("messages")
-    or []
-)
+        endpoints = [
+            "outbound-messages",
+            "outbound-messages-archive"
+        ]
 
-logging.info(f"[OUTBOUND DEBUG] Message count for phone-id={phone_id}: {len(messages)}")
-Also temporarily change this part:
-for msg in messages:
-    if msg.get("status") == "sent":
-to this:
-for msg in messages:
-    logging.info(f"[OUTBOUND DEBUG] Message record:\n{json.dumps(msg, indent=2)}")
+        for endpoint in endpoints:
+            url = (
+                f"{self.api_base_url}/{endpoint}?"
+                f"phone-id={phone_id}"
+                f"&program-id={program_id}"
+                f"&page=1"
+                f"&per-page=50"
+                f"&sort-by=created-at"
+                f"&sort-order=desc"
+            )
 
-    return {
-        "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
-        "LAST_TEMPLATE_ID": msg.get("template-id"),
-        "LAST_MESSAGE_STATUS": msg.get("status"),
-        "LAST_MESSAGE_CREATED_AT": msg.get("created-at"),
-        "LAST_MESSAGE_UPDATED_AT": msg.get("updated-at")
-    }
-This will pick the first latest message regardless of status.
-Why your fields are blank now
-Your code currently says:
-if msg.get("status") == "sent":
-But the API may return status as:
-processed
-delivered
-queued
-created
-completed
-or it may not return status at all.
-So the loop does not return anything, and your report gets blanks
+            try:
+                response = session.get(url, headers=self.token_service.get_headers(), timeout=30)
+                logging.info(f"[{endpoint.upper()}] Phone ID {phone_id} Status Code: {response.status_code}")
+
+                if response.status_code == 401:
+                    self.token_service.renew_token()
+                    response = session.get(url, headers=self.token_service.get_headers(), timeout=30)
+
+                if response.status_code != 200:
+                    logging.warning(f"[{endpoint.upper()}] Unable to fetch messages for phone-id={phone_id}")
+                    continue
+
+                data = response.json()
+
+                messages = (
+                    data.get("outbound-message")
+                    or data.get("outbound-message-archive")
+                    or data.get("outbound-messages")
+                    or data.get("outbound-messages-archive")
+                    or data.get("outboundMessages")
+                    or data.get("messages")
+                    or []
+                )
+
+                logging.info(f"[{endpoint.upper()}] Message count for phone-id={phone_id}: {len(messages)}")
+
+                for msg in messages:
+                    generated_body = (msg.get("generated-body") or "").lower()
+
+                    if "unsubscribed" in generated_body:
+                        continue
+
+                    return {
+                        "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
+                        "LAST_TEMPLATE_ID": msg.get("template-id"),
+                        "LAST_MESSAGE_STATUS": msg.get("status"),
+                        "LAST_MESSAGE_CREATED_AT": msg.get("created-at"),
+                        "LAST_MESSAGE_UPDATED_AT": msg.get("updated-at")
+                    }
+
+            except requests.exceptions.RequestException as e:
+                logging.error(f"[{endpoint.upper()} ERROR] {str(e)}")
+
+        return empty_result
