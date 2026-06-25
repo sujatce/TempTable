@@ -170,6 +170,10 @@ class BulkUnsubscribeFetcher:
                         logging.info(f"[{endpoint.upper()}] Skipping unsubscribe confirmation template-id={msg.get('template-id')}")
                         continue
 
+                    if "welcome to wellmed cares" in generated_body or "welcome to wellmed cares" in service_response:
+                        logging.info(f"[{endpoint.upper()}] Skipping welcome message template-id={msg.get('template-id')}")
+                        continue
+
                     logging.info(f"[{endpoint.upper()}] Selected template-id={msg.get('template-id')}")
 
                     return {
