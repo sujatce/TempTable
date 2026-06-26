@@ -1,49 +1,47 @@
-6/9  Dev: inserted row
+CHANGE 1
 
+Find this line inside fetch_last_sent_template():
 
+template_id = msg.get("template-id")
 
--- INSERT INTO ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA(
---     VENDOR_NAME,
---     TABLE_NAME,
---     COLUMN_NAME_TABLE,
---     COLUMN_NAME_FILE,
---     PROGRAM_NAME,
---     REQUIRED_FLAG,
---     EXCLUDE_FLAG,
---     USER_STORY)
--- VALUES(
---     'LGC',
---     'VENDOR_RAW_RESPONSE_LGC',
---     'LANGUAGE',
---     'Language',
---     'ALL',
---     FALSE,
---     FALSE,
---     'US10632852' 
---     );
+Replace it with:
 
--- Number of rows inserted: 1
--- Query ID: 01c4f1f0-0104-b873-0010-e20307f2ed82
--- Query Link: https://app.snowflake.com/east-us-2.azure/hha43620/#/compute/history/queries/01c4f1f0-0104-b873-0010-e20307f2ed82/detail?autoRefreshInSeconds=0
+template_id = str(msg.get("template-id") or "").replace(".0", "")
+✅ CHANGE 2
 
+Find this block:
 
-select * from ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA
-except 
-select * from ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA BEFORE(STATEMENT => '01c4f1f0-0104-b873-0010-e20307f2ed82')
-except
-select * from ASQN_DEV_VENDOR_DB.DBO.VENDOR_SCHEMA
+return {
+    "LAST_TEMPLATE_ID": msg.get("template-id"),
+}
 
+Replace it with:
 
+return {
+    "LAST_TEMPLATE_ID": template_id,
+}
+✅ CHANGE 3
 
+Find this line near the bottom:
 
+df_final.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
 
-6/5 PDK Dev
+Immediately before it, add:
 
-File layout has changed...
+df_final["LAST_TEMPLATE_ID"] = (
+    df_final["LAST_TEMPLATE_ID"]
+    .fillna("")
+    .astype(str)
+    .str.replace(".0", "", regex=False)
+)
 
-New columns
+So it becomes:
 
+df_final["LAST_TEMPLATE_ID"] = (
+    df_final["LAST_TEMPLATE_ID"]
+    .fillna("")
+    .astype(str)
+    .str.replace(".0", "", regex=False)
+)
 
-
-
-
+df_final.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
