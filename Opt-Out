@@ -284,9 +284,9 @@ class BulkUnsubscribeFetcher:
 
 if __name__ == "__main__":
 
-    AUTH_URL = "https://ocp.optum.com/oauth2/token"
+    AUTH_URL = " "
     CLIENT_ID = " "
-    CLIENT_SECRET = " "
+    CLIENT_SECRET = "70ee81df-c4c6-42b4-b7c4-4f46b5ff5821"
     API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"
     PROGRAM_ID = "798365"
     INPUT_CSV = "Member_Phone_List_20260622.csv"
@@ -336,11 +336,18 @@ if __name__ == "__main__":
         ]
     ]
 
+    df_final = df_final.sort_values(
+    by="UNSUBSCRIBE_PERFORMED_DATE",
+    ascending=True
+)
+
     df_final["LAST_TEMPLATE_ID"] = (
     df_final["LAST_TEMPLATE_ID"]
     .fillna("")
     .astype(str)
     .str.replace(".0", "", regex=False)
+
+    
 )
 
     df_final.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
