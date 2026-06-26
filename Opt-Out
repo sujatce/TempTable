@@ -1,4 +1,4 @@
-\import os
+import os
 import csv
 import sys
 import time
@@ -165,7 +165,8 @@ class BulkUnsubscribeFetcher:
 
                     generated_body = (msg.get("generated-body") or "").lower()
                     service_response = (msg.get("service-response") or "").lower()
-                    template_id = msg.get("template-id")
+                  # template_id = msg.get("template-id")
+                    template_id = str(msg.get("template-id") or "").replace(".0", "")
 
                     if "unsubscribed" in generated_body or "unsubscribed" in service_response:
                         logging.info(f"[{endpoint.upper()}] Skipping unsubscribe confirmation template-id={msg.get('template-id')}")
@@ -183,7 +184,7 @@ class BulkUnsubscribeFetcher:
 
                     return {
                     #    "LAST_OUTBOUND_MESSAGE_ID": msg.get("id"),
-                        "LAST_TEMPLATE_ID": msg.get("template-id"),
+                         "LAST_TEMPLATE_ID": template_id,
                     #    "LAST_MESSAGE_STATUS": msg.get("status"),
                     #    "LAST_MESSAGE_CREATED_AT": msg.get("created-at"),
                     #    "LAST_MESSAGE_UPDATED_AT": msg.get("updated-at")
@@ -284,8 +285,8 @@ class BulkUnsubscribeFetcher:
 if __name__ == "__main__":
 
     AUTH_URL = "https://ocp.optum.com/oauth2/token"
-    CLIENT_ID = ""
-    CLIENT_SECRET = ""
+    CLIENT_ID = " "
+    CLIENT_SECRET = " "
     API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"
     PROGRAM_ID = "798365"
     INPUT_CSV = "Member_Phone_List_20260622.csv"
@@ -334,6 +335,13 @@ if __name__ == "__main__":
         #    "LAST_MESSAGE_UPDATED_AT"
         ]
     ]
+
+    df_final["LAST_TEMPLATE_ID"] = (
+    df_final["LAST_TEMPLATE_ID"]
+    .fillna("")
+    .astype(str)
+    .str.replace(".0", "", regex=False)
+)
 
     df_final.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
 
