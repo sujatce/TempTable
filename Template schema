@@ -1,0 +1,106 @@
+sed on your overall data model, I think SMS_TEMPLATE is a very good idea. Right now you're storing the TEMPLATE_ID in both SMS_RESPONSE and SMS_OPT_OUT, but the actual template text is repeated only in documentation. Having a master table makes the design much cleaner.
+The overall flow I understand is:
+SMS_OPT_IN_RAW
+        │
+        ▼
+SMS_OPT_IN
+        │
+        │ (Apply suppressions)
+        │   - SMS Opt Out
+        │   - Other business suppressions
+        ▼
+Campaign Member List
+        │
+        │ Uses
+        ▼
+SMS_TEMPLATE
+        │
+        ▼
+SMS Manager API
+        │
+        ▼
+SMS_RESPONSE
+        │
+        └── Members replying STOP
+                │
+                ▼
+           SMS_OPT_OUT
+This makes SMS_TEMPLATE the master reference table for every campaign template.
+Recommended Table
+CREATE TABLE SMS_TEMPLATE
+Column	Data Type	Nullable	Description
+SMS_TEMPLATE_ID	NUMBER	No	Surrogate primary key generated from a sequence.
+TEMPLATE_ID	NUMBER	No	Business-defined Template Identifier provided by the SMS Manager system. Referenced by SMS_RESPONSE and SMS_OPT_OUT.
+PROGRAM_ID	NUMBER	Yes	Business-defined SMS Program associated with the template.
+PROGRAM_NAME	VARCHAR(255)	Yes	Name of the SMS campaign program.
+CAMPAIGN_MONTH	DATE	No	Calendar month for which this SMS template is active (first day of the month).
+CAMPAIGN_NAME	VARCHAR(100)	No	Friendly campaign name (Annual Care, Bladder Health, Fall Prevention, etc.).
+TEMPLATE_TITLE	VARCHAR(150)	Yes	Short descriptive title for reporting purposes.
+SMS_MESSAGE	VARCHAR(2000)	No	Complete SMS message content approved by the business team.
+LANDING_PAGE_URL	VARCHAR(500)	Yes	URL embedded within the SMS message directing members to campaign content.
+STOP_HELP_TEXT	VARCHAR(100)	Yes	Standard opt-out/help instruction (Reply STOP to stop; HELP to help.).
+EFFECTIVE_START_DATE	DATE	No	Date when this template becomes active.
+EFFECTIVE_END_DATE	DATE	Yes	Date when the template expires or is replaced.
+ACTIVE_IND	VARCHAR(1)	No	Indicates whether the template is currently active (Y/N).
+FILE_NAME	VARCHAR(250)	Yes	Source file containing the template information, if applicable.
+FILE_CREATION_DATE	DATE	Yes	Date the source file was created.
+USER_STORY	VARCHAR(25)	Yes	User story associated with implementation of the template.
+INSERT_DATE	TIMESTAMP	No	Timestamp when the record was inserted.
+INSERT_USER	VARCHAR(75)	No	User or process that inserted the record.
+UPDATE_DATE	TIMESTAMP	No	Timestamp when the record was last updated.
+UPDATE_USER	VARCHAR(75)	No	User or process that last updated the record.
+Table Description
+I would make it consistent with your other tables.
+The WellMed Central Quality Reporting team maintains the SMS_TEMPLATE table to store the approved SMS campaign message templates used for UHC membership outreach. Each record represents a business-approved SMS message associated with a campaign month and Template ID. The table serves as the master reference for SMS content sent to eligible members and is used by campaign generation processes as well as reporting of outbound SMS communications.
+Column Descriptions
+SMS_TEMPLATE_ID
+System-generated unique identifier for each SMS Template record populated using a Snowflake Sequence.
+TEMPLATE_ID
+Business-defined identifier representing the approved SMS message template used for campaign communications. This value is referenced by SMS_RESPONSE and SMS_OPT_OUT.
+PROGRAM_ID
+Business-defined identifier representing the SMS program under which the template is used.
+PROGRAM_NAME
+Name of the SMS campaign program associated with the template.
+CAMPAIGN_MONTH
+Calendar month and year for which this SMS template is intended to be used.
+CAMPAIGN_NAME
+Business-friendly name describing the purpose of the campaign.
+Examples:
+Get Care
+Bladder Health
+Annual Care
+Fall Prevention
+Flu Shot
+Mental Health
+First Appointment
+TEMPLATE_TITLE
+Short descriptive title of the SMS template for reporting and administrative purposes.
+SMS_MESSAGE
+Complete SMS message content approved by the business team and delivered to eligible members during the campaign.
+LANDING_PAGE_URL
+Hyperlink embedded within the SMS message directing members to campaign-specific educational resources or healthcare information.
+STOP_HELP_TEXT
+Standard SMS compliance statement informing members how to opt out or request help.
+Example
+Reply STOP to stop; HELP to help.
+EFFECTIVE_START_DATE
+Date on which the SMS template becomes available for campaign use.
+EFFECTIVE_END_DATE
+Date after which the SMS template should no longer be used.
+ACTIVE_IND
+Indicates whether the template is currently active (Y = Active, N = Inactive).
+Sample Data
+TEMPLATE_ID	CAMPAIGN_MONTH	CAMPAIGN_NAME	URL
+1788409	2026-06-01	Get Care	https://wellmed.care/getcare
+1790461	2026-07-01	Bladder Health	https://wellmed.care/bladder_control
+1789223	2026-08-01	Annual Care	https://wellmed.care/AnnualCare
+1790462	2026-09-01	Fall Prevention	https://wellmed.care/fall_prevention
+1788593	2026-10-01	Flu & Pneumococcal Vaccines	https://wellmed.care/flushot
+1788594	2026-11-01	Mental & Physical Health	https://wellmed.care/Phandhm
+1788595	2026-12-01	First Appointment	https://wellmed.care/firstappointment
+One suggestion to simplify the schema
+Since every TEMPLATE_ID uniquely identifies a specific SMS message, you could avoid storing redundant text by making SMS_TEMPLATE the authoritative source for message content. Then:
+SMS_RESPONSE stores only TEMPLATE_ID (already present).
+SMS_OPT_OUT stores only TEMPLATE_ID (already present).
+Reports join to SMS_TEMPLATE to retrieve the campaign name, message text, URL, and campaign month.
+This keeps the SMS content in a single place and avoids duplication if message wording or metadata ever needs to be corrected. It's a clean dimensional design where SMS_TEMPLATE functions as a lookup/master table for all SMS campaigns
