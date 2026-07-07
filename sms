@@ -1,0 +1,198 @@
+create or replace TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_OUT (
+	SMS_OPT_OUT_ID NUMBER(38,0) NOT NULL DEFAULT ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_OUT_SEQ.NEXTVAL COMMENT 'Primary key generated using SMS_OPT_OUT_SEQ sequence',
+	GMPI_ID NUMBER(38,0) NOT NULL COMMENT 'GMPI identifier of the member',
+	MBI VARCHAR(20) COMMENT 'Member Beneficiary Identifier of the member',
+	PHONE_ID NUMBER(38,0) NOT NULL COMMENT 'Unique identifier assigned by the SMS Manager system to represent a specific phone number associated with a member',
+	TEMPLATE_ID NUMBER(38,0) NOT NULL COMMENT 'Business-defined Identifier represent the SMS Message Template approved and provided by the business team for campaign communications. Template id changes for every month run.',
+	PROGRAM_ID NUMBER(38,0) NOT NULL COMMENT 'Business-defined identifier representing an SMS program for which the phone is subscribed, which may include one or more associated SMS message templates',
+	PROGRAM_NAME VARCHAR(255) NOT NULL COMMENT 'Name of the campaign program',
+	MEMBER_LAST_NAME VARCHAR(60) NOT NULL COMMENT 'Last name of the member',
+	MEMBER_FIRST_NAME VARCHAR(50) NOT NULL COMMENT 'First name of the member',
+	MEMBER_BIRTH_DATE DATE COMMENT 'Date of birth of the member',
+	MEMBER_PHONE VARCHAR(15) NOT NULL COMMENT 'Mobile phone number of the member',
+	STATUS VARCHAR(75) NOT NULL COMMENT 'Subscription status of the phone number',
+	SOURCE VARCHAR(75) NOT NULL COMMENT 'Source through which the unsubscribe was triggered',
+	OPT_OUT_START_DATE TIMESTAMP_NTZ(7) NOT NULL COMMENT 'Timestamp when the phone number was unsubscribed',
+	PHONE_CREATED_DATE TIMESTAMP_NTZ(7) NOT NULL COMMENT 'Timestamp when the phone number was set up for the member in SMS Manager',
+	PHONE_UPDATED_DATE TIMESTAMP_NTZ(7) NOT NULL COMMENT 'Timestamp when a new member phone status is received in SMS Manager; in this dataset it will always match OPT_OUT_START_DATE',
+	CONTRACT_ID VARCHAR(50) COMMENT 'Unique identifier assigned to a specific contract',
+	CONTRACT_PBP VARCHAR(50) COMMENT 'Benefit plan or plan code specifying what benefits are included under the contract',
+	MBR_ELIG_INSURANCE_COMPANY VARCHAR(50) COMMENT 'Member insurance company',
+	END_DATE DATE COMMENT 'End date of the unsubscribe record (reserved for future use)',
+	FILE_NAME VARCHAR(250) NOT NULL COMMENT 'Name of the CSV file generated from the API JSON response',
+	FILE_CREATION_DATE DATE NOT NULL COMMENT 'Creation date of the source file',
+	USER_STORY VARCHAR(25) COMMENT 'User story or work item associated with data ingestion or enhancement',
+	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)) COMMENT 'Timestamp when the row was first inserted into the table',
+	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER() COMMENT 'User or system that inserted the record',
+	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)) COMMENT 'Timestamp when the row was last updated',
+	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER() COMMENT 'User or system that last updated the record',
+	REPORT_MONTH DATE COMMENT 'The calendar month and year for which the report data applies',
+	constraint PK_SMS_OPT_OUT_PRIMARYKEY primary key (SMS_OPT_OUT_ID)
+)COMMENT='The Wellmed Central Quality Reporting team sources member consent data related to receiving SMS text messages for UHC membership campaign outreach. Members who choose not to receive SMS messages may opt out at any time. All SMS opt-out (unsubscribe) events are captured and stored in the SMS_OPT_OUT table.'
+;
+
+this is sms opt out table 
+
+
+create or replace TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_IN (
+	SMS_OPT_IN_ID NUMBER(38,0) NOT NULL DEFAULT ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_OPT_IN_SEQ.NEXTVAL,
+	SMS_OPT_IN_RAW_ID NUMBER(38,0) NOT NULL,
+	GMPI_ID NUMBER(38,0) NOT NULL,
+	MBI VARCHAR(20) NOT NULL,
+	MEMBER_LAST_NAME VARCHAR(60) NOT NULL COMMENT 'Last name of the member enrolled in the health plan',
+	MEMBER_FIRST_NAME VARCHAR(50) NOT NULL COMMENT 'First name of the member enrolled in the health plan',
+	MEMBER_ADDRESS_1 VARCHAR(55),
+	MEMBER_CITY VARCHAR(75),
+	MEMBER_STATE VARCHAR(25),
+	MEMBER_ZIP VARCHAR(15),
+	MEMBER_PHONE VARCHAR(50) NOT NULL,
+	MEMBER_EMAIL VARCHAR(250) NOT NULL,
+	SMS_CONSENT VARCHAR(1),
+	SMS_CONSENT_DATE TIMESTAMP_NTZ(7) NOT NULL,
+	CONSENT_TERMS VARCHAR(1) NOT NULL,
+	FILE_NAME VARCHAR(250) NOT NULL,
+	FILE_CREATION_DATE DATE NOT NULL,
+	USER_STORY VARCHAR(25),
+	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)),
+	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER(),
+	CONSENT_VERBATIM VARCHAR(750),
+	SMS_CONSENT_VERBATIM VARCHAR(750),
+	constraint PK_SMS_OPT_IN primary key (GMPI_ID, MEMBER_PHONE)
+)COMMENT='{ \"origin\": \"sf_sc\", \"name\": \"snowconvert\", \"version\": {  \"major\": 1,  \"minor\": 15,  \"patch\": \"1.0\" }, \"attributes\": {  \"component\": \"transact\",  \"convertedOn\": \"09/23/2025\",  \"domain\": \"optum\" }}'
+;
+this is sms opt in table
+
+create or replace TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_RESPONSE (
+	SMS_RESPONSE_ID NUMBER(38,0) NOT NULL DEFAULT ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_RESPONSE_SEQ.NEXTVAL COMMENT 'System-generated unique identifier for each SMS Response record, populated using a Snowflake Sequence',
+	CAMPAIGN_TARGET_ID NUMBER(38,0) COMMENT 'Foreign key used to link SMS Response records to CAMPAIGN_TARGET (reserved for future use)',
+	GMPI_ID NUMBER(38,0) NOT NULL COMMENT 'WellMed unique member identifier',
+	MBI VARCHAR(20) COMMENT 'Member Beneficiary Identifier issued by CMS to identify Medicare beneficiaries',
+	PHONE_ID NUMBER(38,0) NOT NULL COMMENT 'Unique identifier assigned by the SMS Manager system to represent a specific phone number associated with a member',
+	TEMPLATE_ID NUMBER(38,0) NOT NULL COMMENT 'Business-defined identifier representing the SMS message template approved for campaign communications',
+	PROGRAM_ID NUMBER(38,0) NOT NULL COMMENT 'Business-defined identifier representing an SMS program under which the message was sent',
+	PROGRAM_NAME VARCHAR(255) NOT NULL COMMENT 'Name of the campaign program',
+	MEMBER_LAST_NAME VARCHAR(60) NOT NULL COMMENT 'Last name of the member enrolled in the health plan',
+	MEMBER_FIRST_NAME VARCHAR(50) NOT NULL COMMENT 'First name of the member enrolled in the health plan',
+	MEMBER_BIRTH_DATE DATE COMMENT 'Date of birth of the member enrolled in the health plan',
+	MEMBER_PHONE VARCHAR(15) NOT NULL COMMENT 'Mobile phone number of the member',
+	OPTUM_SMS_MANAGER_STATUS VARCHAR(50) NOT NULL COMMENT 'SMS Manager internal processing status indicating whether the outbound message request was accepted or failed at the API layer',
+	CARRIER_RESPONSE_STATUS VARCHAR(50) NOT NULL COMMENT 'Delivery status returned by the SMS provider/carrier (DELIVERED, FAILED, QUEUED_ON_CHANNEL)',
+	SOURCE VARCHAR(75) COMMENT 'Source through which the message was triggered; represents an outbound SMS sent from the system to a recipient',
+	CAMPAIGN_START_DATE DATE COMMENT 'Start date of the campaign, if known',
+	CAMPAIGN_MONTH DATE COMMENT 'Business month in which the SMS campaign was executed',
+	SMS_CREATED_DATE TIMESTAMP_NTZ(7) NOT NULL COMMENT 'Timestamp when the outbound message record was created in the SMS Manager system',
+	SMS_DELIVER_DATE TIMESTAMP_NTZ(7) NOT NULL COMMENT 'Timestamp when the message was scheduled or released for delivery',
+	SMS_EXPIRE_DATE TIMESTAMP_NTZ(7) NOT NULL COMMENT 'Timestamp after which the message should no longer be delivered',
+	SMS_UPDATED_DATE TIMESTAMP_NTZ(7) NOT NULL COMMENT 'Timestamp when the SMS message record was last updated in the SMS Manager system',
+	CONTRACT_ID VARCHAR(50) COMMENT 'Unique identifier assigned to a specific contract',
+	CONTRACT_PBP VARCHAR(50) COMMENT 'Benefit Plan or Plan code specifying benefits included under the contract',
+	MBR_ELIG_INSURANCE_COMPANY VARCHAR(50) COMMENT 'Member insurance company',
+	FILE_NAME VARCHAR(250) NOT NULL COMMENT 'Name of the file tied to the record',
+	FILE_CREATION_DATE DATE NOT NULL COMMENT 'Date the file was created',
+	USER_STORY VARCHAR(25) COMMENT 'User story ID associated with data ingestion or update',
+	INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)) COMMENT 'Timestamp recording when the row was first inserted into the table',
+	INSERT_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER() COMMENT 'User or system that inserted the row',
+	UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7)) COMMENT 'Timestamp recording when the row was last updated',
+	UPDATE_USER VARCHAR(75) NOT NULL DEFAULT CURRENT_USER() COMMENT 'User or system that last updated the row',
+	constraint PK_SMS_RESPONSE_PRIMARYKEY primary key (SMS_RESPONSE_ID)
+)COMMENT='The Wellmed Central Quality Reporting team tracks outbound SMS message delivery response data for every SMS sent for the UHC membership campaign SMS outreach program. SMS messages are sent to eligible members based on consent preferences and campaign criteria. Delivery and processing details for each outbound SMS message are captured and stored in the SMS_RESPONSE table.'
+;
+
+this is sms response table 
+
+and now we are going to create another table called SMS_template 
+
+SMS_TEMPLATE table
+
+need to figure out the columns for this table, descriptions and overall table description
+
+
+
+June
+
+From WellMed: 
+
+Get the right care at the right time, discover how we are here for you https://wellmed.care/getcare
+
+Reply STOP to stop; HELP to help.
+
+
+
+1788409
+
+July
+
+(New)
+
+From WellMed: 
+
+Visit https://wellmed.care/bladder_control to learn more about bladder health.
+
+Reply STOP to stop; HELP to help.
+
+
+
+1790461
+
+August
+
+From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare
+
+Reply STOP to stop; HELP to help
+
+1789223
+
+Sept
+
+(New)
+
+From WellMed: 
+
+Get the facts on falls prevention here https://wellmed.care/fall_prevention
+
+Reply STOP to stop; HELP to help.
+
+
+
+1790462
+
+Oct
+
+From WellMed: Reduce your risk of respiratory infections – learn more about the flu and pneumococcal vaccines https://wellmed.care/flushot
+
+Reply STOP to stop; HELP to help.
+
+
+
+1788593
+
+Nov
+
+From WellMed: Explore how mental and physical health are connected here https://wellmed.care/Phandhm
+
+Reply STOP to stop; HELP to help.
+
+
+
+1788594
+
+Dec
+
+From WellMed: Reminders on how to stay involved in your care for the best outcomes https://wellmed.care/firstappointment
+
+Reply STOP to stop; HELP to help. 
+
+
+
+1788595
+
+what do you think the columns needed for this table , what ios the description and wha tis the overal tablke description 
+
+The sms text campagin works like this 
+
+the raw file is loaded into sms opt in raw table and from that it is done little bit of cleansing and added to sms opt in table 
+
+from sms opt in table i will generate the member list applying few suppressions like sms opt out members and i will send those membners the campaignn message template message and then the message level details are stored in sms response 
+
