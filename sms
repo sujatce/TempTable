@@ -196,3 +196,31 @@ the raw file is loaded into sms opt in raw table and from that it is done little
 
 from sms opt in table i will generate the member list applying few suppressions like sms opt out members and i will send those membners the campaignn message template message and then the message level details are stored in sms response 
 
+sms template table columns below 
+
+SMS_TEMPLATE_ID	System-generated unique identifier for each SMS Template record populated using a Snowflake Sequence.
+TEMPLATE_ID	Business-defined Identifier represent the SMS Message Template approved and provided by the business team for campaign communications
+PROGRAM_ID	Business-defined Identifier represent an SMS program for which the phone is subscribed, which may include one or more associated SMS message templates.
+PROGRAM_NAME	Name of the campaign program
+CAMPAIGN_START_DATE	Start date of the campaign.
+CAMPAIGN_END_DATE	End date of the campaign.
+CAMPAIGN_MONTH	Represents the month in which the SMS Campaign was excecuted.
+CAMPAIGN_YEAR	Represents the year in which the SMS Campaign was executed.
+TEMPLATE_TITLE	Short descriptive title of the SMS template
+SMS_MESSAGE	Complete SMS message content approved by the business team and delivered to eligible members during the campaign.
+LANDING_PAGE_URL	Hyperlink embedded within the SMS message directing members to campaign-specific educational resources or healthcare information.
+USER_STORY	User Story ID associated with data ingestion or update
+INSERT_DATE	Timestamp recording when the row was first inserted into the table
+INSERT_USER	User or system that inserted the row
+UPDATE_DATE	Timestamp recording when the row was last updated
+UPDATE_USER	User or system that last updated the row
+
+
+Please check if this is correct and this should be compliant witht the opt out and response tables 
+
+and based on other tables give the datatype and it should be compkliant with toehr tables and null or not null condition 
+
+
+
+
+
