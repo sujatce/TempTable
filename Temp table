@@ -1,0 +1,60 @@
+CREATE OR REPLACE TABLE ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_TEMPLATE
+(
+    SMS_TEMPLATE_ID NUMBER(38,0) NOT NULL
+        DEFAULT ASQN_DEV_ORCHESTRATION_DB.DBO.SMS_TEMPLATE_SEQ.NEXTVAL
+        COMMENT 'System-generated unique identifier for each SMS Template record, populated using the SMS_TEMPLATE_SEQ sequence.',
+
+    TEMPLATE_ID NUMBER(38,0) NOT NULL
+        COMMENT 'Business-defined identifier representing the SMS Message Template approved and provided by the business team for campaign communications.',
+
+    TEMPLATE_TITLE VARCHAR(150)
+        COMMENT 'Short descriptive title of the SMS template.',
+
+    SMS_MESSAGE VARCHAR(2000) NOT NULL
+        COMMENT 'Complete SMS message content approved by the business team and delivered to eligible members during the campaign.',
+
+    LANDING_PAGE_URL VARCHAR(500)
+        COMMENT 'Hyperlink embedded within the SMS message directing members to campaign-specific educational resources or healthcare information.',
+
+    PROGRAM_ID NUMBER(38,0) NOT NULL
+        COMMENT 'Business-defined identifier representing an SMS program for which the phone is subscribed, which may include one or more associated SMS message templates.',
+
+    PROGRAM_NAME VARCHAR(255) NOT NULL
+        COMMENT 'Name of the campaign program.',
+
+    CAMPAIGN_START_DATE DATE
+        COMMENT 'Start date of the campaign.',
+
+    CAMPAIGN_END_DATE DATE
+        COMMENT 'End date of the campaign.',
+
+    CAMPAIGN_MONTH DATE NOT NULL
+        COMMENT 'Represents the month in which the SMS Campaign was executed.',
+
+    CAMPAIGN_YEAR NUMBER(4,0)
+        COMMENT 'Represents the year in which the SMS Campaign was executed.',
+
+    USER_STORY VARCHAR(25)
+        COMMENT 'User Story ID associated with data ingestion or update.',
+
+    INSERT_DATE TIMESTAMP_NTZ(7) NOT NULL
+        DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago',
+               CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7))
+        COMMENT 'Timestamp recording when the row was first inserted into the table.',
+
+    INSERT_USER VARCHAR(75) NOT NULL
+        DEFAULT CURRENT_USER()
+        COMMENT 'User or system that inserted the row.',
+
+    UPDATE_DATE TIMESTAMP_NTZ(7) NOT NULL
+        DEFAULT CAST(CONVERT_TIMEZONE('America/Chicago',
+               CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(7))
+        COMMENT 'Timestamp recording when the row was last updated.',
+
+    UPDATE_USER VARCHAR(75) NOT NULL
+        DEFAULT CURRENT_USER()
+        COMMENT 'User or system that last updated the row.',
+
+    CONSTRAINT PK_SMS_TEMPLATE PRIMARY KEY (SMS_TEMPLATE_ID)
+)
+COMMENT='The WellMed Central Quality Reporting team maintains the SMS_TEMPLATE table to store the approved SMS message templates used for UHC membership outreach campaigns. Each record represents a business-approved SMS template associated with a campaign period and Template ID. The table serves as the master reference for SMS campaign content used during outbound messaging and supports campaign generation, reporting, and historical template tracking.';
