@@ -1,18 +1,16 @@
-Recommended SMS_TEMPLATE Table
-Column	Data Type	Null?	Comments
-SMS_TEMPLATE_ID	NUMBER(38,0)	NOT NULL	PK generated from sequence
-TEMPLATE_ID	NUMBER(38,0)	NOT NULL	Same datatype as SMS_RESPONSE/SMS_OPT_OUT
-PROGRAM_ID	NUMBER(38,0)	NOT NULL	Matches existing tables
-PROGRAM_NAME	VARCHAR(255)	NOT NULL	Matches existing tables
-CAMPAIGN_START_DATE	DATE	NULL	Same as SMS_RESPONSE
-CAMPAIGN_END_DATE	DATE	NULL	New field
-CAMPAIGN_MONTH	DATE	NOT NULL	Consistent with SMS_RESPONSE (stores month/year)
-CAMPAIGN_YEAR	NUMBER(4,0)	NULL	Optional; can be derived from CAMPAIGN_MONTH
-TEMPLATE_TITLE	VARCHAR(150)	NULL	Business title if available
-SMS_MESSAGE	VARCHAR(2000)	NOT NULL	Complete SMS content
-LANDING_PAGE_URL	VARCHAR(500)	NULL	URL extracted from SMS message
-USER_STORY	VARCHAR(25)	NULL	Same as other tables
-INSERT_DATE	TIMESTAMP_NTZ(7)	NOT NULL	Same default as other tables
-INSERT_USER	VARCHAR(75)	NOT NULL	Same default
-UPDATE_DATE	TIMESTAMP_NTZ(7)	NOT NULL	Same default
-UPDATE_USER	VARCHAR(75)	NOT NULL
+SMS_TEMPLATE_ID	System-generated unique identifier for each SMS Template record populated using a Snowflake Sequence.	NUMBER(38,0)	NOT NULL
+TEMPLATE_ID	Business-defined Identifier represent the SMS Message Template approved and provided by the business team for campaign communications	NUMBER(38,0)	NOT NULL
+TEMPLATE_TITLE	Short descriptive title of the SMS template	VARCHAR(150)	NULL
+SMS_MESSAGE	Complete SMS message content approved by the business team and delivered to eligible members during the campaign.	VARCHAR(2000)	NOT NULL
+LANDING_PAGE_URL	Hyperlink embedded within the SMS message directing members to campaign-specific educational resources or healthcare information.	VARCHAR(500)	NULL
+PROGRAM_ID	Business-defined Identifier represent an SMS program for which the phone is subscribed, which may include one or more associated SMS message templates.	NUMBER(38,0)	NOT NULL
+PROGRAM_NAME	Name of the campaign program	VARCHAR(255)	NOT NULL
+CAMPAIGN_START_DATE	Start date of the campaign.	DATE	NULL
+CAMPAIGN_END_DATE	End date of the campaign.	DATE	NULL
+CAMPAIGN_MONTH	Represents the month in which the SMS Campaign was excecuted.	DATE	NOT NULL
+CAMPAIGN_YEAR	Represents the year in which the SMS Campaign was executed.	NUMBER(38,0)	NULL
+USER_STORY	User Story ID associated with data ingestion or update	VARCHAR(25)	NULL
+INSERT_DATE	Timestamp recording when the row was first inserted into the table	TIMESTAMP_NTZ(7)	NOT NULL
+INSERT_USER	User or system that inserted the row	VARCHAR(75)	NOT NULL
+UPDATE_DATE	Timestamp recording when the row was last updated	TIMESTAMP_NTZ(7)	NOT NULL
+UPDATE_USER	User or system that last updated the row	VARCHAR(75)	NOT NULL
