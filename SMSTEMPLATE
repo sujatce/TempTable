@@ -1,5 +1,6 @@
 TEMPLATE_ID	TEMPLATE_TITLE	SMS_MESSAGE	LANDING_PAGE_URL	PROGRAM_ID	PROGRAM_NAME	CAMPAIGN_START_DATE	CAMPAIGN_END_DATE	CAMPAIGN_MONTH	CAMPAIGN_YEAR	USER_STORY
 1788197	WELCOME	Welcome to WellMed Cares! Msg&data rates may apply. Msg frequency varies. Reply STOP to stop; HELP to help.		798365	SMS OUTREACH					US10799336
+1788189	HELP	WellMed Cares: More help at 1-888-781-WELL		798365	SMS OUTREACH					US10799336
 1788190	UNSUBSCRIBE	WellMed Cares: You are unsubscribed from messages. No more messages will be sent.		798365	SMS OUTREACH					US10799336
 1788409	GETCARE	From WellMed: Get the right care at the right time, discover how we are here for you https://wellmed.care/getcare Reply STOP to stop; HELP to help.	https://wellmed.care/getcare	798365	SMS OUTREACH	10/16/2025	11/16/2025	10/1/2025	2025	US10799336
 1788593	FLUSHOT	From WellMed: Reduce your risk of respiratory infections – learn more about the flu and pneumococcal vaccines https://wellmed.care/flushot Reply STOP to stop; HELP to help.	https://wellmed.care/flushot	798365	SMS OUTREACH	11/24/2025	12/24/2025	11/1/2025	2025	US10799336
@@ -11,19 +12,14 @@ TEMPLATE_ID	TEMPLATE_TITLE	SMS_MESSAGE	LANDING_PAGE_URL	PROGRAM_ID	PROGRAM_NAME	
 1788594	MENTAL	From WellMed: It's time to Talk About Emotional Health on May 8 at 9a CST. Register now to save your spot wellmed.care/mental Reply STOP to stop; Help to help.	https://wellmed.care/mental	798365	SMS OUTREACH	5/6/2026	5/11/2026	5/1/2026	2026	US10799336
 1788409	GETCARE	From WellMed: Get the right care at the right time, discover how we are here for you https://wellmed.care/getcare Reply STOP to stop; HELP to help.	https://wellmed.care/getcare	798365	SMS OUTREACH	6/12/2026	6/17/2026	6/1/2026	2026	US10799336
 1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	6/12/2026	6/17/2026	6/1/2026	2026	US10799336
-1790461 	BLADDER_CONTROL	From WellMed: Visit https://wellmed.care/bladder_control to learn more about bladder health. Reply STOP to stop; Help to help.	https://wellmed.care/bladder_control	798365	SMS OUTREACH	7/10/2026	7/15/2026	7/1/2026	2026	US10799336
+1790461	BLADDER_CONTROL	From WellMed: Visit https://wellmed.care/bladder_control to learn more about bladder health. Reply STOP to stop; Help to help.	https://wellmed.care/bladder_control	798365	SMS OUTREACH	7/10/2026	7/15/2026	7/1/2026	2026	US10799336
 1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	7/10/2026	7/15/2026	7/1/2026	2026	US10799336
-1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	 2026-08-14	8/19/2026	8/1/2026	2026	US10799336
-1790462	FALL_PREVENTION	"From WellMed: 
-Get the facts on falls prevention here https://wellmed.care/fall_prevention
-Reply STOP to stop; HELP to help."	https://wellmed.care/fall_prevention	798365	SMS OUTREACH	9/11/2026	9/16/2026	9/1/2026	2026	US10799336
+1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	8/14/2026	8/19/2026	8/1/2026	2026	US10799336
+1790462	FALL_PREVENTION	From WellMed: Get the facts on falls prevention here https://wellmed.care/fall_prevention Reply STOP to stop; HELP to help.	https://wellmed.care/fall_prevention	798365	SMS OUTREACH	9/11/2026	9/16/2026	9/1/2026	2026	US10799336
 1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	9/11/2026	9/16/2026	9/1/2026	2026	US10799336
-1788593	FLUSHOT	"From WellMed: Reduce your risk of respiratory infections – learn more about the flu and pneumococcal vaccines https://wellmed.care/flushot 
-Reply STOP to stop; HELP to help."	https://wellmed.care/flushot	798365	SMS OUTREACH	10/16/2026	10/21/2026	10/1/2026	2026	US10799336
+1788593	FLUSHOT	From WellMed: Reduce your risk of respiratory infections – learn more about the flu and pneumococcal vaccines https://wellmed.care/flushot Reply STOP to stop; HELP to help.	https://wellmed.care/flushot	798365	SMS OUTREACH	10/16/2026	10/21/2026	10/1/2026	2026	US10799336
 1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	10/16/2026	10/21/2026	10/1/2026	2026	US10799336
-1788594	PHANDHM	"From WellMed: Explore how mental and physical health are connected here https://wellmed.care/Phandhm
-Reply STOP to stop; HELP to help."	https://wellmed.care/Phandhm	798365	SMS OUTREACH	11/13/2026	11/18/2026	11/1/2026	2026	US10799336
+1788594	PHANDHM	From WellMed: Explore how mental and physical health are connected here https://wellmed.care/Phandhm Reply STOP to stop; HELP to help.	https://wellmed.care/Phandhm	798365	SMS OUTREACH	11/13/2026	11/18/2026	11/1/2026	2026	US10799336
 1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	11/13/2026	11/18/2026	11/1/2026	2026	US10799336
-1788595	FIRSTAPPOINTMENT	"From WellMed: Reminders on how to stay involved in your care for the best outcomes https://wellmed.care/firstappointment
-Reply STOP to stop; HELP to help."	https://wellmed.care/firstappointment	798365	SMS OUTREACH	12/11/2026	12/16/2026	12/1/2026	2026	US10799336
+1788595	FIRSTAPPOINTMENT	From WellMed: Reminders on how to stay involved in your care for the best outcomes https://wellmed.care/firstappointment Reply STOP to stop; HELP to help.	https://wellmed.care/firstappointment	798365	SMS OUTREACH	12/11/2026	12/16/2026	12/1/2026	2026	US10799336
 1789223	ANNUALCARE	From WellMed: Gain valuable insights and schedule your annual care visit https://wellmed.care/AnnualCare Reply STOP to stop; HELP to help.	https://wellmed.care/AnnualCare	798365	SMS OUTREACH	12/11/2026	12/16/2026	12/1/2026	2026	US10799336
