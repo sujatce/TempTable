@@ -1,0 +1,4 @@
+IF IsEmpty([CAMPAIGN_START_DATE])
+THEN Null()
+ELSE DateTimeParse([CAMPAIGN_START_DATE], "%m/%d/%Y")
+ENDIF
