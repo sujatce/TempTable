@@ -1,0 +1,55 @@
+To check a particular GMPI ID—for example, the user-story example 706163978—run these queries.
+1. Check the current view output
+SELECT *
+FROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_PREF_RPT
+WHERE GMPI_ID = 706163978
+ORDER BY REPORT_MONTH DESC;
+This shows how many rows and report months currently appear for that GMPI.
+2. Check all source report months
+SELECT
+    DM.GMPI_ID,
+    DM.MEMBER_ID,
+    MRM.REPORT_MONTH,
+    MRM.MEMBER_FIRST_NAME,
+    MRM.MEMBER_LAST_NAME
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
+INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
+    ON DM.MEMBER_ID = MRM.MEMBER_ID
+WHERE DM.GMPI_ID = 706163978
+ORDER BY MRM.REPORT_MONTH DESC;
+This displays every available membership month for that GMPI.
+3. Check the overall latest report month
+SELECT MAX(REPORT_MONTH) AS CURRENT_REPORT_MONTH
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH;
+Compare this result with the report months for GMPI 706163978.
+4. Verify whether the member is active in the current month
+SELECT
+    DM.GMPI_ID,
+    DM.MEMBER_ID,
+    MRM.REPORT_MONTH
+FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.DIM_MEMBER DM
+INNER JOIN FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH MRM
+    ON DM.MEMBER_ID = MRM.MEMBER_ID
+WHERE DM.GMPI_ID = 706163978
+  AND MRM.REPORT_MONTH = (
+      SELECT MAX(REPORT_MONTH)
+      FROM FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
+  );
+Interpret the result:
+A row is returned: GMPI is present in the current report month.
+No row is returned: GMPI’s membership is from an older month, so the corrected view should exclude it.
+5. Check for multiple rows in the view
+SELECT
+    GMPI_ID,
+    COUNT(*) AS ROW_COUNT,
+    COUNT(DISTINCT REPORT_MONTH) AS REPORT_MONTH_COUNT,
+    MIN(REPORT_MONTH) AS EARLIEST_REPORT_MONTH,
+    MAX(REPORT_MONTH) AS LATEST_REPORT_MONTH
+FROM ASQN_PRD_ORCHESTRATION_DB.REPORT.VW_WM_UHC_MBR_PREF_RPT
+WHERE GMPI_ID = 706163978
+GROUP BY GMPI_ID;
+If REPORT_MONTH_COUNT is greater than 1, that GMPI appears across multiple report months.
+
+
+
+
