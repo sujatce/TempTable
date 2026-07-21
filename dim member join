@@ -1,0 +1,17 @@
+select distinct [m].[GMPI_ID],
+	[m].[MEMBER_MBI] 
+from 
+	(
+	select *,
+		Row_Number() 
+	over 
+		(
+		partition by [DIM_MEMBER].[MEMBER_MBI] 
+		order by [DIM_MEMBER].[DW_INSERT_DATE] Desc, [DIM_MEMBER].[DW_UPDATE_DATE] Desc
+		) as [rn] 
+	from [DIM_MEMBER] 
+	where [member_mbi] is not NULL 
+		and [active_flag] = 1 
+		and [DIM_MEMBER].[DATA_ENTITY] = 'Wellmed'
+	) as [m] 
+where [m].[rn] = 1
