@@ -1,29 +1,17 @@
-WITH MRM_LATEST_ACTIVE AS
-(
-    SELECT
-        MEMBER_ID,
-        MBR_ELIG_INSURANCE_COMPANY_ID,
-        GMPI_ID,
-        REPORT_YEAR,
-        REPORT_MONTH,
-        ACTIVE_FLAG,
-        ROW_NUMBER() OVER
-        (
-            PARTITION BY MBR_ELIG_INSURANCE_COMPANY_ID
-            ORDER BY REPORT_MONTH DESC
-        ) AS RN
-    FROM BI_ANALYSIS.dbo.MEMBER_REPORT_MONTH
-    WHERE REPORT_YEAR = 2025
-      AND ACTIVE_FLAG = 1
-      AND MBR_ELIG_INSURANCE_COMPANY_ID IS NOT NULL
-)
-
-SELECT
-    MEMBER_ID,
-    MBR_ELIG_INSURANCE_COMPANY_ID,
-    GMPI_ID,
-    REPORT_YEAR,
-    REPORT_MONTH,
-    ACTIVE_FLAG
-FROM MRM_LATEST_ACTIVE
-WHERE RN = 1;
+select distinct [dm].[GMPI_ID],
+	[dm].[MEMBER_MBI] 
+from 
+	(
+	select [BI_Analysis].[dbo].[DIM_MEMBER].[GMPI_ID],
+		[BI_Analysis].[dbo].[DIM_MEMBER].[MEMBER_MBI],
+		Row_Number() 
+	over 
+		(
+		partition by [gmpi_id] 
+		order by [dw_update_date] Desc, [dw_insert_date] Desc
+		) as [rn] 
+	from [BI_Analysis].[dbo].[DIM_MEMBER] 
+	where [BI_Analysis].[dbo].[DIM_MEMBER].[MEMBER_MBI] is not NULL 
+		and [BI_Analysis].[dbo].[DIM_MEMBER].[ACTIVE_FLAG] = 1
+	) [dm] 
+where [dm].[rn] = 1
