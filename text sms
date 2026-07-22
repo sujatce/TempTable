@@ -1,0 +1,12 @@
+Agenda
+•	Program purpose & description
+•	Opt-in collection method (email, webform)
+•	Storing opt-ins
+•	Monthly scope document
+•	Generating monthly populations
+•	API call to Optum SMS manager
+•	Templates
+•	Storing promotion history to Campaign Target
+•	Processing results files incl Opt outs
+•	Future state: EPMP Text SMS Opt-in data share
+
