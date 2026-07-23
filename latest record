@@ -1,0 +1,28 @@
+with mrm_latest_active as 
+	(
+	select member_id,
+		mbr_elig_insurance_company_id,
+		gmpi_id,
+		report_year,
+		report_month,
+		active_flag,
+		Row_Number() 
+	over 
+		(
+		partition by mbr_elig_insurance_company_id 
+		order by report_month Desc
+		) as rn 
+	from FWRB_PRD_WMIDR_DB.BI_ANALYSIS.MEMBER_REPORT_MONTH
+	where mbr_elig_insurance_company_id is not NULL 
+		and report_year = 2025 
+		and active_flag = 1
+         and gmpi_id = '701477579'
+	) 
+select mrm_latest_active.member_id,
+	mrm_latest_active.mbr_elig_insurance_company_id,
+	mrm_latest_active.gmpi_id,
+	mrm_latest_active.report_year,
+	mrm_latest_active.report_month,
+	mrm_latest_active.active_flag 
+from mrm_latest_active 
+where mrm_latest_active.rn = 1
