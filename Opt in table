@@ -1,0 +1,65 @@
+Slide 3 – Storing Opt-ins
+Objective
+"In this section, I'll explain how member opt-in information is stored and maintained in our system after the member has provided consent."
+What is an Opt-in?
+An opt-in means a member has given permission to receive SMS messages from Optum regarding healthcare programs such as preventive screenings, annual wellness visits, or medication reminders.
+Once the member provides consent, that information needs to be stored securely so that future campaigns know which members can legally receive text messages.
+Why do we store Opt-ins?
+There are several reasons:
+Maintain the member's consent status.
+Ensure compliance with SMS regulations.
+Prevent sending messages to members who have not consented.
+Provide an audit trail showing when and how consent was obtained.
+What information is stored?
+Typically, the system stores information such as:
+Field	Description
+Member ID	Unique member identifier
+Phone Number	Mobile number used for SMS
+Opt-in Status	Yes/No
+Opt-in Date	Date consent was received
+Opt-in Source	Email, Web Form, etc.
+Created Date	Record creation timestamp
+Updated Date	Last modified timestamp
+Where is it stored?
+Technically, the opt-in information is stored in a Snowflake table.
+For example:
+SMS_OPT_IN
+The table acts as the system of record for member consent.
+Every campaign references this table before generating the final member population.
+How is it used?
+The flow is:
+Member Opts In
+        ↓
+Opt-in Record Stored
+        ↓
+Monthly Population Generation
+        ↓
+System Checks Opt-in Status
+        ↓
+Eligible Members Selected
+Only members with a valid opt-in are included in SMS campaigns.
+Data Maintenance
+As part of our process:
+New opt-ins are inserted into the table.
+Existing records can be updated if the member changes their phone number or consent status.
+Audit columns capture who updated the record and when.
+This ensures the data remains accurate and traceable.
+Importance
+Maintaining accurate opt-in data helps us:
+Comply with regulations.
+Avoid sending unwanted messages.
+Improve campaign accuracy.
+Support reporting and audits.
+Closing
+"So in summary, this table serves as the central repository for member SMS consent. Every monthly campaign relies on this data to determine which members are eligible to receive text messages."
+If someone asks a technical question
+Q: Why can't we simply use the phone number?
+Answer:
+Having a phone number alone does not mean we have permission to text that member. The opt-in status determines whether the member has provided consent to receive SMS communications.
+Q: When is this table updated?
+Answer:
+The table is updated whenever a new consent is received or an existing consent status changes. The exact source depends on the business process, such as a web form or other approved intake methods.
+Q: What happens if a member opts out later?
+Answer:
+The opt-out is processed separately and stored in the opt-out table. During population generation, both the opt-in and opt-out information are checked so that members who have opted out are excluded from future campaigns.
+This explanation should fit comfortably into a 3–5 minute KT and is technical enough for developers while still being easy for new team members to follow.
