@@ -580,9 +580,9 @@ class BulkUnsubscribeFetcher:
 
 if __name__ == "__main__":
 
-    AUTH_URL = " "
-    CLIENT_ID = " "
-    CLIENT_SECRET = "YOUR_EXISTING_CLIENT_SECRET"
+    AUTH_URL = "https://ocp.optum.com/oauth2/token"
+    CLIENT_ID = "e3588578-4c78-4266-95a9-c9c87db197fd"
+    CLIENT_SECRET = "70ee81df-c4c6-42b4-b7c4-4f46b5ff5821"
 
     API_BASE_URL = "https://ocp.optum.com/smsmgr/v1"
     PROGRAM_ID = "798365"
@@ -592,7 +592,7 @@ if __name__ == "__main__":
     DELTA_START_DATETIME = datetime(
         2026,
         6,
-        22,
+        23,
         9,
         38,
         54,
@@ -602,10 +602,10 @@ if __name__ == "__main__":
     # Capture one current timestamp for the full run.
     DELTA_END_DATETIME = datetime.now(timezone.utc)
 
-    INPUT_CSV = "Member_Phone_List_20260710.csv"
+    INPUT_CSV = "Member_Phone_List_20260730.csv"
 
     OUTPUT_CSV = (
-        f"SMS_OPT_OUT_REPORT_"
+        f"SMS_OPT_OUT_REPORT_DELTA_"
         f"{datetime.now().strftime('%Y%m%d')}.csv"
     )
 
