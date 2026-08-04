@@ -1,0 +1,45 @@
+script
+“I’ll start with SMS Text 02, which is used to generate the SMS Opt-Out Members Report.
+The main purpose of this step is to identify members who have unsubscribed from the SMS program. These members must be removed from future campaign targeting, so this is an important compliance step.
+We generate this report using a Python script. At the beginning of the script, logging and retry handling are configured. Logging captures the complete execution details, and the retry logic helps the script recover from temporary API or server issues.
+The script then authenticates with the SMS Manager API using OAuth client credentials. It retrieves an access token and automatically renews it when required.”
+Show the token class briefly
+While showing the code, say:
+“This section is responsible for authentication. Rather than requesting a token for every API call, the script checks whether the current token is still valid and renews it only when necessary.”
+Then continue:
+“Once authentication is complete, the script calls the subscriptions endpoint for the required program and requests records where the status is unsubscribed.
+Since the API can return a large number of records, the script processes the results page by page. In this case, it retrieves up to one thousand records per page and continues until all available pages are processed.”
+Show fetch_all_unsubscribed
+Say:
+“This is the main extraction section. It reads each unsubscribe record and captures details such as the GMPI ID, phone ID, program ID, unsubscribe date, source, and phone creation and update dates.”
+Then explain the delta logic:
+“We do not pull the entire history during every run. The script uses a delta start date, which represents the latest unsubscribe date already processed. Only records after that timestamp and up to the current execution time are included.
+This prevents us from repeatedly processing the same members and makes the report more efficient.”
+Show DELTA_START_DATETIME and DELTA_END_DATETIME
+Say:
+“Here, the start timestamp comes from the last successfully processed report, and the end timestamp is captured when the current run begins. So the report covers one clearly defined processing window.”
+Then explain the template logic:
+“For every newly unsubscribed member, the script also checks the outbound message history to identify the most recent applicable template.
+It first checks the current outbound-message endpoint and then the archive endpoint if needed. It skips unsubscribe confirmation messages and the welcome message because those are not the actual campaign message that we want to associate with the opt-out.”
+Show fetch_last_sent_template
+Say:
+“This section sorts the outbound messages from newest to oldest and selects the first valid campaign template after excluding confirmation and welcome messages.”
+Then explain the merge:
+“After the API extraction is complete, the results are matched with the original member file using the GMPI ID.
+This adds the member’s first name, last name, and phone number to the API response. An inner join is used, so the final report contains only members who are present in the campaign file and also have a matching unsubscribe record.”
+Show pd.merge
+Say:
+“Here, the member file and the API unsubscribe results are joined using GMPI ID.”
+Finish with output:
+“Finally, the report is sorted by unsubscribe date and written to a dated CSV file. The script also reports how many members were matched and records the full execution details in a log file.
+The final output from this step is the SMS Opt-Out Members Report, which is then loaded into the SMS Opt-Out table in the next step.”
+Natural shorter version
+Use this if you only have about one minute:
+“SMS Text 02 generates the report of members who have unsubscribed from the SMS program.
+We run a Python script that first authenticates with the SMS Manager API using OAuth. The script then retrieves subscription records with an unsubscribed status for the required program.
+To avoid processing the same data again, it uses a delta date range and selects only the unsubscribe records added since the previous run.
+For each member, it also checks the outbound-message history to capture the most recent applicable campaign template. Confirmation and welcome templates are excluded.
+The API results are then matched with the campaign member file using GMPI ID, and the final report includes the member information, unsubscribe details, program ID, phone ID, and last template ID.
+The output is saved as a dated CSV file, and a separate execution log is created for monitoring and troubleshooting.”
+Transition to SMS Text 02.1
+“Once this report is generated and validated, the next step is SMS Text 02.1, where the opt-out records are loaded into the SMS Opt-Out table.”
