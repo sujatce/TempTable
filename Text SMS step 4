@@ -1,0 +1,29 @@
+Presentation Script
+“After generating the Campaign Target file in the previous step, the next step is to execute the SMS campaign through the SMS API.
+The Python script begins by reading the Campaign Target CSV, which contains the eligible members, their phone numbers, GMPI IDs, and template IDs.
+Before making any API calls, the Python script authenticates using OAuth and retrieves an access token. This token is then used to securely communicate with the SMS platform.
+For each member, the Python script first checks whether the phone number already exists in the SMS platform. If the phone number is not found, the script creates a new phone record.
+Next, the Python script checks whether the member is already subscribed to the SMS program. If the member is not subscribed, the script submits a subscription request.
+Once the subscription is confirmed, or if the member is already subscribed, the Python script sends the SMS using the configured Program ID and Template ID.
+Finally, the Python script captures the phone creation status, subscription status, SMS status, and processing details in the output and log files. These files are useful for monitoring, auditing, and troubleshooting.”
+Detailed Python Script Explanation
+Step 1 – Read Campaign File
+“The Python script reads the Campaign Target CSV generated in the previous step. The file contains the member details, phone number, GMPI ID, country code, and Template ID.”
+Step 2 – Authenticate
+“The Python script requests an OAuth access token using the client ID and client secret. This token is included in every API request sent to the SMS platform.”
+Step 3 – Normalize and Check the Phone Number
+“For each member, the Python script first cleans and standardizes the phone number. It then checks whether that phone number already exists in the SMS platform.”
+Step 4 – Create Phone Record
+“If the phone number does not exist, the Python script creates a new phone record. It also stores member metadata such as the GMPI ID, first name, and last name.”
+Step 5 – Check Subscription
+“The Python script checks whether the phone number is already subscribed to the configured SMS program.”
+Step 6 – Subscribe Member
+“If the member is not already subscribed, the Python script sends a subscription request. After the subscription is successful, it waits briefly before sending the message.”
+Step 7 – Send SMS
+“Once the member is subscribed, or if the member was already subscribed, the Python script sends the outbound SMS using the configured Program ID and the Template ID from the input file.”
+Step 8 – Capture Results
+“The Python script writes the processing results to an output CSV. This includes the Phone ID, GMPI ID, member name, phone number, Template ID, phone creation status, subscription status, and SMS status.”
+Step 9 – Logging and Error Handling
+“The Python script also creates a detailed log file. It records API response statuses, successful actions, skipped records, failures, and retry attempts. This helps us track the campaign execution and troubleshoot any issues.”
+Closing Line
+“So, in summary, the Python script reads the campaign file, authenticates with the SMS platform, validates or creates the phone record, checks and creates the subscription if needed, sends the SMS, and records the result for each member.”
