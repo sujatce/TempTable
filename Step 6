@@ -1,0 +1,88 @@
+After the SMS campaign is executed, the next step is to retrieve the delivery results.
+In this step, we use a Python script to generate the SMS Delivery Report.
+The script reads the campaign member file and checks the delivery response for each member by calling the SMS Manager API.
+It filters the message records using the configured Program ID, Template IDs, and the campaign date range.
+The final report shows whether a message was found, the API status, the carrier response status, and the related delivery timestamps.
+This report is then used in the next step to load the SMS delivery information into the database table.”
+Python script walkthrough
+When you open the code, say:
+“I’ll give a high-level overview of the Python script rather than going through every line.”
+1. Configure the report filters
+Show this section:
+PROGRAM_FILTERS = "798365"
+TEMPLATE_FILTERS = ["1790461", "1789223", "1788197"]
+
+START_DATE_CST = "2026-07-09"
+END_DATE_CST = "2026-07-18"
+Say:
+“At the beginning of the script, we configure the Program ID, the Template IDs, and the campaign date range.
+These values ensure that the report includes only messages related to the campaign we are reviewing.”
+You can add:
+“The date range is inclusive, so both the start date and end date are included.”
+2. Create a retry-enabled session
+“The script creates a reusable API session with retry logic.
+If the API has a temporary server or connection issue, such as a 502, 503, or 504 response, the script automatically retries instead of immediately failing.”
+This is a good reliability point, but don’t spend too long on it.
+3. Authenticate with the API
+“Next, the Python script authenticates using the client ID and client secret and receives an access token.
+The token is then included in the API headers for all phone and outbound-message requests.
+If the token expires during the run, the script requests a new one.”
+4. Read the member file
+“The script reads the input CSV containing the members included in the campaign.
+For each record, it reads fields such as GMPI ID, member phone number, first name, last name, and country code.”
+5. Look up the Phone ID
+“For each member, the script first calls the Phones API using the member’s phone number.
+The purpose is to find the Phone ID stored in the SMS platform, because the outbound messages are retrieved using that Phone ID.
+If no matching phone record is found, the report records the result as NOT_FOUND.”
+6. Retrieve outbound messages
+“Once the Phone ID is found, the script calls the Outbound Messages API.
+It retrieves the message history for that phone and supports pagination, so it can process multiple pages if necessary.”
+7. Apply the campaign filters
+“The script then filters the outbound messages using three conditions:
+the configured Program ID,
+one of the configured Template IDs,
+and the campaign delivery date range.”
+Then explain the timezone logic:
+“The API delivery timestamp is received in UTC. The script converts it to the America/Chicago timezone before applying the date filter.
+This ensures that the report uses the campaign’s Central Time business dates.”
+A small wording note: saying Central Time is more accurate than always saying CST, because the timezone library automatically accounts for daylight saving time.
+8. Capture message status
+“For every matching message, the script captures both the API message status and the carrier response status.
+The carrier response is stored inside the service-response field, so the script parses that JSON value and extracts the status.”
+Examples of fields captured:
+GMPI ID
+Phone ID
+Phone Number
+Member Name
+Service Response Status
+API Response Status
+Deliver On
+Created At
+Updated At
+Program ID
+Template ID
+9. Handle missing messages and errors
+“If the phone exists but no matching outbound message is found for the selected campaign filters, the report records NO_MESSAGES.
+If an exception occurs while processing a member, the error is captured in the report and written to the log instead of stopping the entire run.”
+10. Generate the report
+“After all members are processed, the script creates the SMS Response Report as a CSV file using the current run date.
+It also creates a detailed log file that records authentication, phone lookups, message retrieval, filtered message counts, and any failures.”
+Closing statement
+“So, in summary, the Python script reads the campaign members, authenticates with the SMS platform, finds each member’s Phone ID, retrieves the outbound-message records, applies the campaign filters, captures the delivery statuses, and generates the final SMS Delivery Response Report.”
+Simple flow to remember
+Read Member File
+      ↓
+Authenticate with SMS API
+      ↓
+Find Phone ID
+      ↓
+Retrieve Outbound Messages
+      ↓
+Filter by Program, Template and Date
+      ↓
+Capture API and Carrier Status
+      ↓
+Generate Delivery Report CSV
+One code detail to be aware of: although OUTPUT_CSV is passed into the class, the current script actually creates the file using:
+dated_filename = f"SMSResponse_Report_{datetime.now().strftime('%Y%m%d')}.csv"
+So the value assigned to OUTPUT_CSV is not currently used for the final filename.
