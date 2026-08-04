@@ -1,0 +1,8 @@
+As Rob has already introduced the SMS Text campaign and its overall objective,
+I'll now walk you through the various processing steps involved in executing the SMS Text campaign. I'll be starting from SMS Text 02 and explain each step in the workflow."
+Then point to the slide and continue:
+"The SMS Text campaign consists of several steps,
+beginning with generating the Opt-Out Members Report, 
+followed by loading the Opt-Out table, generating the Campaign Target file,
+calling the SMS API, loading the campaign target data, 
+generating the SMS delivery response report, and finally loading the SMS response data into the database."
