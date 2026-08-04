@@ -1,0 +1,12 @@
+The next step is SMS Text 02.1, which loads the newly identified opt-out members into the centralized SMS Opt-Out table.
+The workflow first reads the latest SMS Opt-Out Report CSV from the shared input directory. It also captures the current user story, program name, and report month through the manual-entry section.
+Next, the workflow dynamically queries the Member Report Month data for the selected reporting period. It retrieves active WellMed member information, including GMPI ID, MBI, birth date, insurance company, contract information, and report month.
+The opt-out report is joined with the MRM data using GMPI ID. This enriches the API results with the required business and member attributes.
+The workflow then converts the unsubscribe and phone activity timestamps from UTC to Central Time. It also captures the source file name and file-creation date for data lineage.
+The data is cleansed by converting text-based NULL values and empty values into proper database nulls. Only the required fields are retained, and the results are sorted by the opt-out update date.
+Before loading, the workflow checks the existing Snowflake table to confirm that the same source file has not already been processed. This prevents duplicate loads.
+If the file is new, the validated records are appended to the SMS Opt-Out table in Snowflake.
+After the load, the QA process compares the workflow record count with the target-table record count. Once the counts match, the input report is archived.
+The final output of this step is an updated SMS Opt-Out table containing the newly unsubscribed members, along with complete source-file and processing information.”
+Transition to the next step
+“Once the updated opt-out table is available, it becomes one of the suppression sources used when generating the campaign target and business-review files.”
