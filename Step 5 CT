@@ -1,0 +1,28 @@
+Presentation Script (1–2 minutes)
+"After generating the Campaign Target file, the next step is to load that file into the Campaign Target table in Snowflake.
+The Alteryx workflow starts by reading the Campaign Target CSV generated in the previous step.
+Before loading the data, the workflow performs several data quality checks. It replaces empty values and text values such as 'NULL' with actual null values so the database can process them correctly.
+Next, the workflow automatically converts the fields to the appropriate data types, such as integers, dates, and strings, based on the data being loaded.
+It then validates the required columns and applies business formatting rules. For example, the Contract PBP field is formatted to always contain three digits by adding leading zeros where necessary.
+After the transformations are complete, only the required columns are selected and the cleansed dataset is loaded into the Campaign Target table in Snowflake using the bulk loader.
+This ensures that the campaign target data is standardized, validated, and ready for the downstream SMS API execution."
+Detailed Tool Explanation (if asked)
+Step 1 – Input Data
+"The workflow reads the Campaign Target CSV file generated from the previous process."
+Step 2 – Replace Empty Values
+"The Multi-Field Formula checks selected fields. If a field is empty, it converts it to a database NULL value."
+Step 3 – Replace 'NULL' Strings
+"The second Multi-Field Formula identifies text values containing the word 'NULL' and converts them into actual NULL values."
+Step 4 – Auto Field
+"The Auto Field tool analyzes the dataset and assigns the most appropriate data types and field sizes to optimize storage and improve performance."
+Step 5 – Select Tool
+"The Select tool reviews the schema, confirms the data types, and keeps only the required columns for loading."
+Step 6 – Data Cleansing
+"The Data Cleansing tool removes leading and trailing spaces, duplicate whitespace, and other unwanted characters to improve data quality."
+Step 7 – Business Rule
+"A Formula tool formats the Contract PBP value by adding leading zeros where needed so that all values follow the required three-digit format."
+Step 8 – Load to Snowflake
+"Finally, the Output Data tool uses the Snowflake Bulk Loader to append the cleansed records into the Campaign Target table in Snowflake."
+Closing Summary
+"In summary, this Alteryx workflow reads the Campaign Target file, cleans and validates the data, standardizes field formats and data types, applies business rules, and loads the final dataset into the Snowflake Campaign Target table for use by the SMS campaign process."
+This script matches the tools shown in your screenshots and is suitable for a project walkthrough or technical presentation.
