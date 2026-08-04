@@ -1,0 +1,111 @@
+Alteryx workflow walkthrough script
+1. Manual entries
+Show the yellow manual-entry container.
+Say:
+“The workflow begins with the manual-entry section. Here, we update the values required for the current campaign run, such as the report month, campaign start date, campaign end date, and user story number.
+These values are used throughout the workflow and also help create the final output file names.”
+Do not explain each tool. Just point to the input and select tools.
+2. Initial member population
+Show the initial population SQL and input section.
+Say:
+“Next, the workflow retrieves the initial member population from the database.
+The SQL query applies the basic eligibility criteria and brings in the required member, provider, contract, market, and contact information.
+The different source tables are joined together using identifiers such as GMPI ID, member ID, and provider ID.
+After the population is retrieved, the workflow selects the required fields and removes duplicate records so that each member is processed correctly.”
+You can briefly mention:
+“This is our starting population before any suppressions are applied.”
+3. Phone-number validation
+Show the bad phone-number container.
+Say:
+“The next section validates the member phone number.
+First, the workflow cleans the phone number by removing spaces, dashes, brackets, or other formatting characters.
+It then checks whether the phone number is present, whether it contains ten digits, and whether it matches the expected phone-number format.
+It also excludes obvious invalid values, such as repeated digits or restricted prefixes.
+Members who fail these checks are categorized under ‘Bad Phone Numbers’ and are excluded from the campaign target population.”
+4. Gryphon RND suppression
+Show the pink Gryphon RND container.
+Say:
+“After the phone validation, the eligible population is compared with the Gryphon RND list.
+RND refers to records that should not be contacted.
+The workflow retrieves the RND records from the suppression table and joins them with the member population using GMPI ID.
+Members who match the Gryphon RND list are removed from the campaign and added to the suppression summary.”
+Avoid defining the acronym more specifically unless your team has confirmed its official meaning.
+5. Gryphon Litigation suppression
+Show the green Gryphon Litigation container.
+Say:
+“The next suppression check is the Gryphon Litigation list.
+The workflow retrieves records where the litigation indicator is set to true and compares those members with the campaign population using GMPI ID.
+Any matching members are excluded from SMS outreach and categorized as Gryphon Litigation suppressions.”
+6. NANPA area-code suppression
+Show the orange area-code container.
+Say:
+“Next, the workflow validates the member’s phone area code.
+It extracts the first three digits of the phone number and creates a member area-code field.
+That area code is compared with the NANPA area-code reference table.
+Invalid, inactive, unsupported, or non-US area codes are suppressed so that the campaign includes only eligible phone numbers.”
+You can keep NANPA simple:
+“NANPA is the area-code reference used for North American phone numbers.”
+7. SMS opt-out suppression
+Show the blue opt-out container.
+Say:
+“The next check is the SMS opt-out suppression.
+The workflow reads the opt-out records that were generated and loaded in the previous process.
+Those records are matched with the current member population using GMPI ID.
+If a member appears in the opt-out table, that member is excluded from the campaign.
+This ensures that members who have unsubscribed do not receive any future SMS communications.”
+This connects nicely to the slides you already prepared for SMS opt-out.
+8. Claims and no-claims classification
+Show the no-claims container.
+Say:
+“After the suppression checks, the workflow also identifies whether the member has a claim or does not have a claim.
+A database query is used to retrieve the claim information for the selected reporting month.
+The data is joined using member ID and GMPI ID.
+Members are then assigned a status of either ‘Claim’ or ‘No Claim.’
+These two streams are combined again so the final output includes the required member status.”
+A small caution: explain this as classification unless the workflow truly suppresses one of the two groups.
+9. Final campaign target file
+Show the Campaign Target output container.
+Say:
+“Once all the suppression rules are complete, the remaining eligible population becomes the Campaign Target population.
+The workflow adds standard campaign fields such as business unit, vendor, outreach mode, program information, campaign date, and tracking fields.
+It then selects the required output columns and writes the Campaign Target file as a CSV.”
+You can add:
+“This is the file used for the actual SMS campaign execution.”
+10. Business Review file
+Show the Business Review output.
+Say:
+“The workflow also generates a Business Review file.
+This file contains the detailed campaign population and supporting member information that can be reviewed before campaign execution.
+The file name is created dynamically using the campaign date, and the output is written as a CSV.”
+11. Suppression Summary
+Show the formula descriptions, union, summarize, sort, and output tools.
+Say:
+“The last section creates the Suppression Summary.
+Each branch of the workflow is given a description, such as Initial Query Population, Bad Phone Numbers, Gryphon RND, Gryphon Litigation, NANPA Area Codes, SMS Opt-Out Members, Members with Claims, and Members with No Claims.
+All these streams are combined using the Union tool.
+The workflow then groups the data by suppression description and counts the number of distinct members in each category.
+The results are arranged in the required order and written to the Suppression Summary CSV.”
+Closing statement
+You can finish with:
+“So, in summary, this workflow starts with the eligible member population, applies all required validation and suppression checks, classifies the members, and generates three final outputs: the Campaign Target file, the Business Review file, and the Suppression Summary.
+These files are reviewed and then used in the next step to execute the SMS campaign.”
+Simple flow you can remember
+Manual inputs
+   ↓
+Initial member population
+   ↓
+Phone validation
+   ↓
+Gryphon RND
+   ↓
+Gryphon Litigation
+   ↓
+NANPA area-code validation
+   ↓
+SMS opt-out suppression
+   ↓
+Claim / No-Claim classification
+   ↓
+Campaign Target + Business Review + Suppression Summary
+One small improvement to your slide title would be:
+SMS TEXT 03 – Generate
