@@ -3,7 +3,7 @@ IIF(IsNull([SMS_UPDATED_DATE]), 'NULL', DateTimeFormat([SMS_UPDATED_DATE], "%Y-%
 IIF(IsNull([SMS_EXPIRE_DATE]), 'NULL', DateTimeFormat([SMS_EXPIRE_DATE], "%Y-%m-%d %H:%M:%S")) + '|' +
 IIF(IsNull([SMS_DELIVER_DATE]), 'NULL', DateTimeFormat([SMS_DELIVER_DATE], "%Y-%m-%d %H:%M:%S")) + '|' +
 IIF(IsNull([SMS_CREATED_DATE]), 'NULL', DateTimeFormat([SMS_CREATED_DATE], "%Y-%m-%d %H:%M:%S")) + '|' +
-IIF(IsNull([MBR_ELIG_INSURANCE_COMPANY_ID]), 'NULL', Trim([MBR_ELIG_INSURANCE_COMPANY_ID])) + '|' +
+IIF(IsNull([MBR_ELIG_INSURANCE_COMPANY]), 'NULL', Trim([MBR_ELIG_INSURANCE_COMPANY])) + '|' +
 IIF(IsNull([CONTRACT_PBP]), 'NULL', Trim([CONTRACT_PBP])) + '|' +
 IIF(IsNull([CONTRACT_ID]), 'NULL', Trim([CONTRACT_ID])) + '|' +
 IIF(IsNull([PROGRAM_NAME]), 'NULL', Trim([PROGRAM_NAME])) + '|' +
