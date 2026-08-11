@@ -1,0 +1,7 @@
+After the SMS campaign is executed for the particular campaign month, the next step would be  to retrieve the delivery results for that campaign run which has result of whether SMS being delivered or not. 
+ The result is based on carrier level and SMS API Manager level.
+To get these results , we use a Python script to generate the SMS Delivery Report.
+The script reads the input member file and checks the delivery response for each member by calling the SMS Manager API.
+It filters the message records using the configured Program ID, Template IDs, and the campaign date range.
+The final report shows whether a message was found, the API status, the carrier response status, and the related delivery timestamps.
+This report is then used in the next step to load the SMS delivery information into the SMS_RESPONSE database table.”
