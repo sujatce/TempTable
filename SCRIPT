@@ -1,0 +1,125 @@
+SMS TEXT STEPS
+
+As Rob has already introduced the SMS Text campaign and the scope document,
+
+1.	I'll now walk you through the various processing steps involved in executing the SMS Text campaign. You can stop me for any questions if you have.
+
+
+2.	"The SMS Text campaign consists of several steps,
+beginning with generating the Opt-Out Members Report, 
+followed by loading the Opt-Out table, generating the Campaign Target file, biz rvw and supp summary, calling the SMS API, loading the campaign target table, generating the SMS delivery response report, and finally loading the SMS response data into the table."
+
+3.	“I’ll start with SMS Text 02, which is used to generate the SMS Opt-Out Members Report.
+
+Text SMS 02: Run SMS Opt-Out Members Report
+
+4.	The main purpose of this step is to identify members who have unsubscribed from the SMS program. These members must be removed from future campaign member list, so this is an important compliance step.
+5.	We run a Python script that first authenticates with the SMS Manager API using OAuth. The script then retrieves subscription records with an unsubscribed status for the required program.
+6.	To avoid processing the same data again, it uses a delta date range and selects only the unsubscribe records added since the previous run.
+7.	For each member, it also checks the outbound-message history to capture the most recent applicable campaign template. Confirmation and welcome templates are excluded.
+8.	The API results are then matched with the campaign member file using GMPI ID, and the final report includes the member information, unsubscribe details, program ID, phone ID, and last template ID.
+9.	The output is saved as a dated CSV file, and a separate execution log is created for monitoring and troubleshooting.”
+10.	“Once this report is generated and validated, the next step is SMS Text 02.1, where the opt-out records are loaded into the SMS Opt-Out table.”
+Slide change Text SMS 02: Load SMS Opt-Out Members Report
+The next step is SMS Text 02.1, which loads the newly identified opt-out members into the SMS Opt-Out table.
+The workflow first reads the latest SMS Opt-Out Report CSV from the shared input directory. It also captures the current user story, program name, and report month through the manual-entry section. This makes sure we can change these values for each report month and workflow can be reused on a monthly basis
+Next, the workflow dynamically queries the Member Report Month data for the selected reporting month. It retrieves active member information, including GMPI ID, MBI, birth date, insurance company, contract information, and report month.
+The opt-out report is joined with the MRM data using GMPI ID. This enriches the API results with the required business and member attributes.
+The workflow then converts the unsubscribe and phone activity timestamps from UTC to Central Time. It also captures the source file name and file-creation
+The data is cleansed by converting text-based NULL values and empty values into proper database nulls. Only the required fields are retained, and the results are sorted by the opt-out update date.
+Before loading, the workflow checks the existing Snowflake table to confirm that the same source file has not already been processed. This prevents duplicate loads.
+If the file is new, the validated records are appended to the SMS Opt-Out table in Snowflake.
+After the load, the QA process compares the workflow record count with the target-table record count. Once the counts match, the input report is archived.
+The final output of this step is an updated SMS Opt-Out table containing the newly unsubscribed members, along with complete source-file and processing information.”
+--Transition to the next step
+“Once the updated opt-out table is available, it becomes one of the suppression sources used when generating the campaign target and business-review files.”
+
+Slide change to SMS TEXT 03 - Generate CT, Biz Rvw and Suppression Summary
+step 3 focuses on generating the monthly campaign files. This process starts with identifying the eligible member population which is got by applying the suppression rules and getting the campaign output files
+
+Show the alteryx workflow 
+We generate these three files using this alteryx  workflow
+
+--Show the yellow manual-entry container.
+“The workflow begins with the manual-entry section. Here, we update the values required for the current campaign run, such as the report month, campaign start date, campaign end date, and user story number.
+These values are used throughout the workflow and also help create the final output file names.”
+
+“Next, the workflow retrieves the initial member population from the database.
+The SQL query applies the basic eligibility criteria according to the scope document which robb explained and brings in the required member, provider, contract, market, and contact information.
+The different source tables are joined together using identifiers such as GMPI ID, member ID, and provider ID.
+After the population is retrieved, the workflow selects the required fields and removes duplicate records so that each member is processed correctly.”
+“This is our starting population before any suppressions are applied.”
+“The next section validates the member phone number and removes any bad phone numbers”
+First, the workflow cleans the phone number by removing spaces, dashes, brackets, or other formatting characters. Members who fail these checks are categorized under ‘Bad Phone Numbers’ and are excluded from the campaign target population. 
+ Bad phone numbers are removed because the sms manager api cannot process or deliver messages to invalid phone numbers”
+Gryphon RND suppression
+“After the phone validation, the eligible population is compared with the Gryphon RND list.
+RND refers to records that are phone numbers that might be permanently disconnected and may have been  reassigned to a different person and should not be contacted
+Members who match the Gryphon RND list are removed from the campaign and added to the suppression summary. This is done to avoid contacting the wrong person and being in compliat with TCPA rules.
+Gryphon Litigation suppression
+“The next suppression check is the Gryphon Litigation list. Litigators are known for filing TCPA related complaints or lawsuits. So they must be suppressed to reduce legal and compliance risk.
+So the  query here retrieves records where the litigation indicator is set to true and joins those members with the campaign population using GMPI ID.
+Any matching members are excluded from SMS outreach and categorized as Gryphon Litigation suppressions.”
+
+6. NANPA area-code suppression
+NANPA has  the approved U S area-code reference used for validating first three digits of  North American phone numbers.”
+Invalid, inactive, unsupported, or non-US area codes are suppressed so that the campaign includes only eligible phone numbers and prevents delivery failures and ensures that the campaign includes only eligible phone numbers”
+7. SMS opt-out suppression
+“The next check is the SMS opt-out suppression.
+The query  gets the opt-out records that were generated and loaded in the previous process.
+Those records are matched with the current member population using GMPI ID.
+If a member appears in the opt-out table, that member is excluded from the campaign.
+This ensures that members who have unsubscribed do not receive any future SMS communications respects their privacy and communication preferences and supports compliance with TCPA requierments.”
+8. Claims and no-claims
+“After the suppression checks, the workflow also identifies whether the member has a claim or does not have a claim.
+Each catefory has a corresponding template id . This makes sure that each member receives the sms message according to their category. These two streams are combined again so the final output includes the required member status and their template id.”
+9. Final campaign target file
+“Once all the suppression rules are complete, the remaining eligible population becomes the Campaign Target population.
+The workflow adds standard campaign fields such as business unit, vendor, outreach mode, program information, campaign date, and tracking fields.
+It then selects the required output columns and writes the Campaign Target file as a CSV.”
+11.	Business Review file
+“The workflow also generates a Business Review file.
+This file contains the detailed campaign population and supporting member information that can be reviewed before campaign execution.
+The file name is created dynamically using the campaign date, and the output is written as a CSV.”
+Last part is the Suppression Summary 
+the workflow groups the data by suppression description and counts the number of distinct members in each category.
+So, in summary, this workflow starts with the eligible member population, applies all required validation and suppression checks, classifies the members, and generates three final outputs: the Campaign Target file, the Business Review file, and the Suppression Summary.
+These files are reviewed and then used in the next step to execute the SMS campaign.
+SMS TEXT 04 - Call API to run SMS Campaign
+
+“After generating the Business review  file in the previous step, the next step is to execute the SMS campaign by calling the SMS API.
+The Python script begins by reading the Input member list  CSV, which contains the eligible members first name last name gmpi id they are the metadata , their phone numbers and their template IDs.
+Before making any API calls, the Python script authenticates using OAuth and retrieves an access token. This token is then used to securely communicate with the SMS platform.
+For each member, the Python script first checks whether the phone number already exists in the SMS platform. If suppose the phone number is not found, the script creates a new phone record.
+Next, the Python script checks whether the member is already subscribed to the SMS program. If the member is not subscribed, the script submits a subscription request.
+Once the subscription is confirmed, or if the member is already subscribed, the Python script sends the SMS using the input Program ID and Template ID.
+Finally, the Python script captures the phone creation status, subscription status, SMS status, and processing details in the output and log files.
+This is the overall flow of the program
+SMS TEXT 05 - Load CT File to CAMPAIGN_TARGET table
+After generating the Campaign Target file, the next step is to load that file from step 3 into the Campaign Target table in Snowflake to keep a record of the run.
+The Alteryx workflow starts by reading the Campaign Target CSV generated in the previous step.
+Before loading the data, the workflow performs several data quality checks. It replaces empty values and text values such as 'NULL' with actual null values so the database can process them correctly.
+Next, the workflow automatically converts the fields to the appropriate data types, such as integers, dates, and strings, based on the data being loaded.
+It then validates the required columns and applies business formatting rules. For example, the Contract PBP field is formatted to always contain three digits by adding leading zeros where necessary.
+ The required columns are selected, and the cleansed dataset is loaded into the Campaign Target table in Snowflake using the bulk loader.
+In a summary, this Alteryx workflow reads the Campaign Target file, cleans and validates the data, standardizes field formats and data types, applies business rules, and loads the into the Snowflake Campaign Target table for future use"
+SMS TEXT 06 - Run Members SMS_RESPONSE Status Report
+After the SMS campaign is executed for a particular campaign month, the next step is to retrieve the delivery results for that campaign run. These results indicate whether each SMS message was successfully delivered, based on both the SMS Manager API status and the carrier-level response.
+
+ To retrieve these results, we use a Python script to generate the SMS Delivery Report. The script reads the campaign member file and calls the SMS Manager API to retrieve the delivery response for each member.
+It filters the message records using the configured Program ID, Template IDs, and campaign date range. The final report shows whether a matching message was found, the SMS Manager API status, the carrier response status, and the associated delivery timestamps.
+
+This report is then used in the next step to load the SMS delivery results into the `SMS_RESPONSE` database table.
+SMS TEXT 6.1
+“Once the SMS delivery report is generated using the Python script which I showed, the next step is to load that report into the SMS response table.
+Show alteryx workflow - 
+This Alteryx workflow reads the generated SMS Response CSV file, then  joins with MRM to get  the required member information, cleans the data standardizes it and finally loads the processed records into the SMS RESPONSE TABLE in Orchestration DB.
+Let me walk through this workflow - 
+The workflow first searches the configured folder for the latest SMS Response Report file. We also update the monthly manual values, such as the User Story and report month and it keeps changing every month.
+The records are then joined with the member report month table using GMPI ID so that all required member information like mbi, dob, contract information are pulled.
+After that, the data is standardized. The API timestamps are converted from UTC to Central Time, the source file name and file-creation date are captured, and issues such as extra spaces and line breaks are removed.
+The workflow also converts empty values and the text value ‘NULL’ into proper database nulls.
+Before loading, it checks whether the same file has already been processed. This prevents duplicate file loads.
+Finally, the required fields are selected, the records are sorted, and the response data is bulk-loaded into the SMS response target table.
+Once this is completed, the message-delivery status is available in the sms response table and it is used for campaign analysis and reporting purposes.”
+
