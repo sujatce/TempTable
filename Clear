@@ -1,7 +1,81 @@
-After the SMS campaign is executed for a particular campaign month, the next step is to retrieve the delivery results for that campaign run. These results indicate whether each SMS message was successfully delivered, based on both the SMS Manager API status and the carrier-level response.
+CBP MODEL FOR WELLMED POPULATION
 
-To retrieve these results, we use a Python script to generate the SMS Delivery Report. The script reads the campaign member file and calls the SMS Manager API to retrieve the delivery response for each member.
+The CBP measure is defined as the percentage of members aged 18–85 who have been diagnosed with hypertension (HTN) and have adequately controlled blood pressure (BP) during the measurement year.  
 
-It filters the message records using the configured Program ID, Template IDs, and campaign date range. The final report shows whether a matching message was found, the SMS Manager API status, the carrier response status, and the associated delivery timestamps.
+Adequate control is specified as having a representative systolic BP of less than 140 mm Hg and a representative diastolic BP of less than 90 mm Hg.  
 
-This report is then used in the next step to load the SMS delivery results into the `SMS_RESPONSE` database table.
+A representative BP reading is the most recent BP reading taken during the measurement year, on or after the second hypertension diagnosis. If multiple BP readings are taken on the same date or recorded in the chart on the same date, the lowest systolic and diastolic BP readings are used.  
+
+If no BP is recorded during the measurement year, the member is assumed to be “not controlled.” 
+
+ 
+
+Model Characteristics  
+
+Machine Learning Classification Model - XGBoost.  
+
+6, 9 &12 months rolling look back period is used for model features. 
+
+Features related to PDC (Proportion of Days Covered) are also used. 
+
+1900 features tested – Only 214 distinct features chosen for the final monthly models. 
+
+Compliant vs Non-Compliant class balance: 75% vs 25%.
+
+ 
+
+ 
+
+Main categories of the features used are summarized in the table below: 
+
+ 
+
+Main Category 
+
+Description 
+
+Claims data 
+
+Medical, procedure, pharmacy and lab claims 
+
+Prior year results 
+
+Prior year HEDIS measure results and contract star rating  
+
+SDOH 
+
+Social determinant of health and disability features  
+
+Utilisation 
+
+Office visits and Telehealth visits  
+
+Engagement 
+
+Housecalls data  
+
+Disabilities 
+
+Flag for disability 
+
+ 
+
+Model Output 
+
+The model output is run monthly with predictions output at weekly level. 
+
+The current output for the View is only for WELLMED population.
+
+ 
+
+
+
+
+
+FOR THIS DOCUMENT CAN YOU CHECK 
+
+WHETHER THIS IS CORRECT OR NOT
+
+
+'This dataset contains Controlling Blood Pressure (CBP) measure prediction results for the WellMed population.The CBP measure is defined as the percentage of members aged 18–85 who have been diagnosed with hypertension (HTN) and have adequately controlled blood pressure (BP) during the measurement year. Adequate control is defined as having a representative systolic BP of less than 140 mm Hg and a representative diastolic BP of less than 90 mm Hg. The representative BP reading is the most recent BP reading taken during the measurement year on or after the second hypertension diagnosis. If multiple BP readings are recorded on the same date, the lowest systolic and diastolic BP readings are used. Members without a recorded BP measurement during the measurement year are considered not controlled. Data is used to identify members at risk of not meeting the CBP measure and support targeted outreach and intervention efforts to improve blood pressure control'
+;
