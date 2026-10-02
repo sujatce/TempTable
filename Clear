@@ -1,5 +1,54 @@
-This dataset contains Controlling Blood Pressure (CBP) measure prediction results for the WellMed population. The CBP measure is defined as the percentage of members aged 18–85 who have been diagnosed with hypertension (HTN) and have adequately controlled blood pressure during the measurement year. Adequate control is defined as having a representative systolic blood pressure of less than 140 mm Hg and a representative diastolic blood pressure of less than 90 mm Hg.
+OPENING + BUSINESS CONTEXT:
+Let me share my screen.
+Hello everyone, I'll give a quick overview of the MAAT tables I've been working on the past couple of weeks.
+MAAT stands for Medication Adherence Analytics Tool.
+It's a tool built by the Ireland Predictive Analytics team -- they take pharmacy claims data and run analytics on top of it to give us detailed medication adherence information.
+Which includes things like NDC codes, refill counts, remaining refills, and PDC scores -- which is Proportion of Days Covered, which means how consistently a patient is taking their medications.
+So using all of this data, the goal is to identify high-risk WellMed patients who are either out of refills or about to run out within the next 30 to 60 days,
+And then the pharmacy call teams and the eClinical Works team use this data to create telephone encounters so the clinics can follow up with those patients.
+"Now let me walk you through the three tables and the workflow for each one."
+TABLE 1 -- RAW TABLE:
+The first one is the raw table -- MAAT2 MA PDC Med Adherence Raw.
+This is the raw landing table for the current measure year.
+"It captures data from the Ireland source view at the drug level -- so for each member, we have a row for every medication they're on within each adherence measure."
+Things like medication fill history, pharmacy and prescriber details, adherence indicators, PDC metrics, and refill timing are some included here.
+It covers three adherence measures: MAD for Diabetes, MAC for Cholesterol, and MAH for Hypertension.
+Let me pull up the Alteryx workflow for this one.
+So as you can see, Input & Prep, we're pulling data from the Ireland source view and joining it with the EID to GMPI mapping table.and then - we only pull records where the refresh date is greater than the max refresh date already in the  raw table.
+So it’s an incremental load - we're only picking up new data that hasn't been loaded yet,     not reloading everything from scratch.
+Then in the Load container, we sort the data by refresh date ascending and load it into the raw table. Its Pretty straightforward and 
+The second one is the history raw table -- MAAT2 Med Adherence PDC History Raw.
+This table stores the measure-period adherence summary.
+Things like the PDC scores, gap days, days to failure all broken out by each measure with both adjusted and unadjusted versions are stored here.
+This is important because it gives the teams a baseline to compare how a member's adherence has trended over time.
+Let me show you the workflow to load this table.
+So, this one is very similar in structure to the first one.
+The Input & Prep we’re pulling from the Ireland history source view, joining with the EID to GMPI mapping, and we have that same incremental filter.
+The main difference here is the source view itself has a lot more columns -- around 90 columns.
+That's because instead of one row per drug like the first table, this one is one row per member with all three measures side by side.
+Then it is sorted by refresh date ascending and load into the history raw table.
+So overall, same pattern as the first workflow -- just a different source view, more columns
 
-The representative blood pressure reading is the most recent reading taken during the measurement year on or after the member’s second hypertension diagnosis. If multiple readings are taken or recorded on the same date, the lowest systolic and diastolic readings are used. Members without a recorded blood pressure reading during the measurement year are considered not controlled.
 
-The prediction results help identify members at risk of not meeting the CBP measure and support targeted outreach and intervention efforts to improve blood pressure control.
+TABLE 3 -- CLEANSED TABLE:
+And then the third one is the cleansed table -- WellMed MAAT Med Adherence Cleansed.
+This is the one that the downstream teams consume.
+It holds data for WellMed members across all three measures and shows the status of a member within each measure.
+Let me show you the workflow.
+So, this one is a bit different from the other two.
+You can see it's all in one Input & Prep container with a few more steps in the pipeline.
+On the left, in the input and prep container we're pulling from the raw table that we just loaded in the first workflow.
+And then we do a left join with the MRM because sometimes the source view comes in with nulls for date of birth, contract, or PBP.
+So, what we do is use a COALESCE -- basically if the source has a value, we keep it, but if it's null, we fill it in from the MRM.
+That way the downstream teams can always have those fields populated.
+We also have an incremental filter here -- we check that the record doesn't already exist in the cleansed table, so we're not reloading data that's already been processed.
+Then there's a data cleanse step to clean up formatting issues
+
+Then same as the other workflows -- sort by refresh date ascending and load into the cleansed table.
+CLOSING:
+And that's the table that the pharmacy call teams and the eCW team end up consuming for their outreach.
+The data is currently being deployed in the cleansed table, and it will be scheduled to refresh daily.
+So yeah, that's all from my side about the MAAT work. Thank you
+
+
+
