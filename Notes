@@ -1,0 +1,19 @@
+MAT Adherence Cleansed – SQL Query Updates
+
+Updated the SQL query based on Elizabeth’s code review recommendations.
+
+1. Updated MRM Join Logic
+    * Added REPORT_MONTH to the existing GMPI_ID join condition.
+    * Used DATE_TRUNC('MONTH', RAW.REFRESH_DATE) to match raw records with the corresponding MRM reporting month.
+    * Retained the existing ROW_NUMBER() logic with PARTITION BY GMPI_ID and ORDER BY REPORT_MONTH DESC.
+2. Implemented Dynamic Refresh Date Lookback
+    * Replaced the hardcoded refresh date range (2026-01-01 to 2026-04-01) with a rolling seven-day lookback.
+    * Added RAW.REFRESH_DATE >= DATEADD(DAY, -7, CURRENT_DATE()) to support incremental processing and reduce historical data scanning.
+3. Updated Duplicate Prevention Logic
+    * Replaced NOT IN with NOT EXISTS to filter records already present in the cleansed table.
+    * Continued using MAAT2_MA_PDC_MED_ADH_RAW_ID as the duplicate-checking key without including REFRESH_DATE.
+4. Removed Unused Column
+    * Removed RAW.USER_STORY from the SQL SELECT statement because the column was already being excluded downstream in the Alteryx Select tool.
+5. Preserved Existing Transformation Logic
+    * Retained the COALESCE logic for Member Date of Birth, Contract ID, and Contract PBP.
+    * Preserved the existing field mappings, selected columns, and SELECT DISTINCT logic.
